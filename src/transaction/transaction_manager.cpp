@@ -7,6 +7,9 @@
 
 namespace edb {
 
+// Latch discipline: TransactionManager never calls storage, WAL, or lock-manager
+// code while holding latch. It only mutates in-memory transaction status maps.
+
 auto TransactionManager::begin() -> Result<Transaction> {
     std::lock_guard guard{latch};
 

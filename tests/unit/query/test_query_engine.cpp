@@ -6,8 +6,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -149,6 +151,32 @@ TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
     auto selected = engine.execute("SELECT * FROM events");
     ASSERT_TRUE(selected.has_value()) << engine.error_message();
     EXPECT_TRUE(selected->rows.empty());
+}
+
+TEST_F(QueryEngineTest, TwoThreadAutocommitInsertsAreVisible) {
+    QueryEngine engine{catalog, registry};
+    auto create = engine.execute("CREATE TABLE events (id INTEGER, payload TEXT)");
+    ASSERT_TRUE(create.has_value()) << engine.error_message();
+
+    std::mutex sql_latch;
+    auto insert_rows = [&engine, &sql_latch](int base) {
+        for (int index = 0; index < 10; ++index) {
+            const auto id = base + index;
+            std::scoped_lock lock{sql_latch};
+            auto inserted = engine.execute("INSERT INTO events VALUES (" + std::to_string(id) +
+                                           ", 'event')");
+            ASSERT_TRUE(inserted.has_value()) << engine.error_message();
+        }
+    };
+
+    std::thread first{insert_rows, 0};
+    std::thread second{insert_rows, 100};
+    first.join();
+    second.join();
+
+    auto selected = engine.execute("SELECT * FROM events");
+    ASSERT_TRUE(selected.has_value()) << engine.error_message();
+    EXPECT_EQ(selected->rows.size(), std::size_t{20});
 }
 
 }  // namespace

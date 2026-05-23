@@ -8,6 +8,10 @@
 
 namespace edb {
 
+// Latch discipline: LockManager waits only on its condition variable while
+// holding its own mutex. Callers must not hold storage/page latches while
+// acquiring transaction locks, which prevents lock waits from blocking I/O paths.
+
 auto LockTag::operator<=>(const LockTag& other) const noexcept {
     return std::tie(kind, relation_oid.value, tuple_id.page_id.value, tuple_id.slot_idx.value) <=>
            std::tie(other.kind, other.relation_oid.value, other.tuple_id.page_id.value,

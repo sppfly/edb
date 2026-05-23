@@ -11,6 +11,10 @@
 
 namespace edb {
 
+// Latch discipline: append/read serialize WAL file-offset state with mutex.
+// flush() performs I/O before updating durable_lsn, so no transaction lock or
+// heap page latch should be held while waiting for WAL durability.
+
 namespace {
 
 constexpr auto WAL_MAGIC = std::uint32_t{0x314C5745U};
