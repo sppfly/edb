@@ -2,6 +2,7 @@ add_executable(test_query
   test_binder.cpp
   test_lexer.cpp
   test_logical_plan.cpp
+  test_physical_plan.cpp
   test_parser.cpp
 )
 

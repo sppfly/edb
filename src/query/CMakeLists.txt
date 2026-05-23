@@ -2,6 +2,7 @@ add_library(edb_query STATIC
   binder.cpp
   lexer.cpp
   logical_plan.cpp
+  physical_plan.cpp
   parser.cpp
 )
 
