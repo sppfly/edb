@@ -32,6 +32,12 @@ class EdbHeapEngine final : public StorageEngineOps {
 
     ~EdbHeapEngine() override = default;
 
+    [[nodiscard]] auto delete_tuple(const Transaction& tx, TupleId id,
+                                    const TransactionStatusReader& statuses) -> VoidResult;
+    [[nodiscard]] auto update_tuple(const Transaction& tx, TupleId id,
+                                    std::span<const std::byte> tuple,
+                                    const TransactionStatusReader& statuses) -> Result<TupleId>;
+
    private:
     auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
     auto close_impl() -> VoidResult override;
@@ -59,7 +65,11 @@ class EdbHeapEngine final : public StorageEngineOps {
     auto scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_id, u16 slot_idx)
         -> Result<std::optional<Tuple>>;
 
-    [[nodiscard]] auto mark_deleted(TupleId id, TxId xmax) -> VoidResult;
+    [[nodiscard]] auto mark_deleted(TupleId id, TxId xmax,
+                                    const TransactionStatusReader* statuses) -> VoidResult;
+    [[nodiscard]] static auto check_delete_conflict(TxId existing_xmax,
+                                                    const TransactionStatusReader* statuses)
+        -> VoidResult;
     [[nodiscard]] auto unpin_clean(FrameHandle& handle) -> VoidResult;
 
     [[nodiscard]] static auto encode_cursor(u64 page_id, u16 slot_idx) -> u64;

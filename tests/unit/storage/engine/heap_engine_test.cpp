@@ -348,3 +348,64 @@ TEST_F(HeapEngineTest, TransactionalDeleteUsesXmaxVisibility) {
     ASSERT_TRUE(later_scan.has_value());
     EXPECT_TRUE(later_scan->empty());
 }
+
+TEST_F(HeapEngineTest, TransactionalDeleteRejectsInProgressDeleteConflict) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::Committed);
+    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
+
+    const auto inserter = make_tx(TxId{u64{1}});
+    const auto first_deleter = make_tx(TxId{u64{2}});
+    const auto second_deleter = make_tx(TxId{u64{3}});
+    auto id = engine.insert(inserter, make_tuple({0x71U}));
+    ASSERT_TRUE(id.has_value());
+    ASSERT_TRUE(engine.delete_tuple(first_deleter, *id).has_value());
+
+    auto conflict = engine.delete_tuple(second_deleter, *id, statuses);
+    ASSERT_FALSE(conflict.has_value());
+    EXPECT_EQ(conflict.error(), Error::TransactionAborted);
+}
+
+TEST_F(HeapEngineTest, TransactionalDeleteCanReplaceAbortedDeleteMarker) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::Committed);
+    statuses.set(TxId{u64{2}}, TxStatus::Aborted);
+    statuses.set(TxId{u64{3}}, TxStatus::Committed);
+
+    const auto inserter = make_tx(TxId{u64{1}});
+    const auto aborted_deleter = make_tx(TxId{u64{2}});
+    const auto committed_deleter = make_tx(TxId{u64{3}});
+    auto id = engine.insert(inserter, make_tuple({0x81U}));
+    ASSERT_TRUE(id.has_value());
+    ASSERT_TRUE(engine.delete_tuple(aborted_deleter, *id).has_value());
+    ASSERT_TRUE(engine.delete_tuple(committed_deleter, *id, statuses).has_value());
+
+    const auto reader = Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
+    auto tuples = collect_scan(
+        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
+    ASSERT_TRUE(tuples.has_value());
+    EXPECT_TRUE(tuples->empty());
+}
+
+TEST_F(HeapEngineTest, TransactionalUpdateRejectsInProgressDeleteConflict) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::Committed);
+    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
+
+    const auto inserter = make_tx(TxId{u64{1}});
+    const auto deleter = make_tx(TxId{u64{2}});
+    const auto updater = make_tx(TxId{u64{3}});
+    auto id = engine.insert(inserter, make_tuple({0x91U}));
+    ASSERT_TRUE(id.has_value());
+    ASSERT_TRUE(engine.delete_tuple(deleter, *id).has_value());
+
+    auto conflict = engine.update_tuple(updater, *id, make_tuple({0x92U}), statuses);
+    ASSERT_FALSE(conflict.has_value());
+    EXPECT_EQ(conflict.error(), Error::TransactionAborted);
+}

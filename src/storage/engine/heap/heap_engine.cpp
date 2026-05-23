@@ -90,12 +90,30 @@ auto EdbHeapEngine::delete_tuple_impl(const Transaction& tx, TupleId id) -> Void
     if (tx.id.value == u64{0}) {
         return std::unexpected(Error::InvalidArgument);
     }
-    return mark_deleted(id, tx.id);
+    return mark_deleted(id, tx.id, nullptr);
 }
 
 auto EdbHeapEngine::update_tuple_impl(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
     -> Result<TupleId> {
     auto delete_status = delete_tuple(tx, id);
+    if (!delete_status) {
+        return std::unexpected(delete_status.error());
+    }
+    return insert(tx, tuple);
+}
+
+auto EdbHeapEngine::delete_tuple(const Transaction& tx, TupleId id,
+                                 const TransactionStatusReader& statuses) -> VoidResult {
+    if (tx.id.value == u64{0}) {
+        return std::unexpected(Error::InvalidArgument);
+    }
+    return mark_deleted(id, tx.id, &statuses);
+}
+
+auto EdbHeapEngine::update_tuple(const Transaction& tx, TupleId id,
+                                 std::span<const std::byte> tuple,
+                                 const TransactionStatusReader& statuses) -> Result<TupleId> {
+    auto delete_status = delete_tuple(tx, id, statuses);
     if (!delete_status) {
         return std::unexpected(delete_status.error());
     }
@@ -388,7 +406,8 @@ auto EdbHeapEngine::scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_i
     return Tuple{.id = tuple_id, .data = std::move(data)};
 }
 
-auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax) -> VoidResult {
+auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax,
+                                 const TransactionStatusReader* statuses) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -412,11 +431,11 @@ auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax) -> VoidResult {
         }
         return std::unexpected(stored.error());
     }
-    if (stored->header.xmax.value != u64{0}) {
-        if (auto status = unpin_clean(*handle); !status) {
-            return status;
+    if (auto status = check_delete_conflict(stored->header.xmax, statuses); !status) {
+        if (auto unpinned = unpin_clean(*handle); !unpinned) {
+            return unpinned;
         }
-        return std::unexpected(Error::TransactionAborted);
+        return status;
     }
 
     auto overwritten = heap::overwrite_tuple(
@@ -431,6 +450,25 @@ auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax) -> VoidResult {
         return overwritten;
     }
     return buffer_pool.unpin(*handle, b8{true});
+}
+
+auto EdbHeapEngine::check_delete_conflict(TxId existing_xmax,
+                                          const TransactionStatusReader* statuses) -> VoidResult {
+    if (existing_xmax.value == u64{0}) {
+        return {};
+    }
+    if (statuses == nullptr) {
+        return std::unexpected(Error::TransactionAborted);
+    }
+
+    auto status = statuses->status(existing_xmax);
+    if (!status) {
+        return std::unexpected(status.error());
+    }
+    if (*status == TxStatus::Aborted) {
+        return {};
+    }
+    return std::unexpected(Error::TransactionAborted);
 }
 
 auto EdbHeapEngine::unpin_clean(FrameHandle& handle) -> VoidResult {
