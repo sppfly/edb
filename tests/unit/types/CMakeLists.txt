@@ -1,4 +1,5 @@
 add_executable(test_types
+  builtin_types_test.cpp
   registry_test.cpp
 )
 

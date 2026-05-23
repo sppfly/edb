@@ -1,4 +1,5 @@
 add_library(edb_types STATIC
+  builtin_types.cpp
   registry.cpp
 )
 
