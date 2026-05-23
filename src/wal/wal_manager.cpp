@@ -159,6 +159,7 @@ auto WalManager::open() -> VoidResult {
     }
     std::scoped_lock lock{mutex};
     next_offset = *size;
+    last_lsn = u64{0};
     durable_lsn = u64{0};
     return {};
 }
@@ -183,6 +184,7 @@ auto WalManager::append(const WalAppendRecord& record) -> Result<u64> {
         return std::unexpected(Error::IoError);
     }
     next_offset = u64{next_offset.value + bytes->size()};
+    last_lsn = lsn;
     return lsn;
 }
 
@@ -243,6 +245,15 @@ auto WalManager::flush(u64 lsn) -> VoidResult {
         durable_lsn = lsn;
     }
     return {};
+}
+
+auto WalManager::flush_through(u64 lsn) -> VoidResult {
+    return flush(lsn);
+}
+
+auto WalManager::appended_lsn() const -> u64 {
+    std::scoped_lock lock{mutex};
+    return last_lsn;
 }
 
 auto WalManager::flushed_lsn() const -> u64 {

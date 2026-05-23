@@ -186,6 +186,23 @@ TEST(WalManager, FlushPersistsRecordsThroughReopen) {
     EXPECT_EQ((*records)[0].payload, payload("done"));
 }
 
+TEST(WalManager, TracksAppendedAndFlushedLsnSeparately) {
+    auto bytes = std::make_shared<std::vector<std::byte>>();
+    SharedMemoryIO io{bytes};
+    WalManager wal{io};
+    ASSERT_TRUE(wal.open().has_value());
+
+    auto lsn = wal.append(WalAppendRecord{.tx_id = TxId{u64{4}},
+                                          .record_type = WalRecordType::Commit,
+                                          .payload = payload("commit")});
+    ASSERT_TRUE(lsn.has_value());
+    EXPECT_EQ(wal.appended_lsn(), *lsn);
+    EXPECT_EQ(wal.flushed_lsn(), u64{0});
+
+    ASSERT_TRUE(wal.flush_through(*lsn).has_value());
+    EXPECT_EQ(wal.flushed_lsn(), *lsn);
+}
+
 TEST(WalManager, ConcurrentAppendAllocatesIncreasingUniqueLsns) {
     auto bytes = std::make_shared<std::vector<std::byte>>();
     SharedMemoryIO io{bytes};
@@ -376,4 +393,65 @@ TEST(WalRecovery, HeapInsertRedoIsIdempotent) {
     ASSERT_TRUE(tuples.has_value());
     ASSERT_EQ(tuples->size(), std::size_t{1});
     EXPECT_EQ((*tuples)[0], payload("once"));
+}
+
+TEST(WalRecovery, CheckpointRedoLsnSkipsEarlierWalRecords) {
+    constexpr auto page_size = usize{256};
+    auto source_bytes = std::make_shared<std::vector<std::byte>>();
+    SharedMemoryIO source_io{source_bytes};
+    PageStore source_store;
+    ASSERT_TRUE(source_store.open(source_io, PageStoreConfig{.page_size = page_size}).has_value());
+    EdbHeapEngine source_engine;
+    ASSERT_TRUE(source_engine
+                    .open(source_store,
+                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+                    .has_value());
+    const auto skipped_payload = std::string(190, 's');
+    auto skipped_id = source_engine.insert(
+        Transaction{.id = TxId{u64{1}}, .snapshot = make_snapshot(TxId{u64{1}})},
+        payload(skipped_payload));
+    ASSERT_TRUE(skipped_id.has_value());
+    auto kept_id = source_engine.insert(
+        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})}, payload("keep"));
+    ASSERT_TRUE(kept_id.has_value());
+    ASSERT_TRUE(source_engine.close().has_value());
+
+    auto wal_bytes = std::make_shared<std::vector<std::byte>>();
+    SharedMemoryIO wal_io{wal_bytes};
+    WalManager wal{wal_io};
+    ASSERT_TRUE(wal.open().has_value());
+    auto skipped_record = make_heap_insert_record(source_store, *skipped_id, page_size);
+    ASSERT_TRUE(skipped_record.has_value());
+    ASSERT_TRUE(wal.append(*skipped_record).has_value());
+    auto kept_record = make_heap_insert_record(source_store, *kept_id, page_size);
+    ASSERT_TRUE(kept_record.has_value());
+    auto redo_lsn = wal.append(*kept_record);
+    ASSERT_TRUE(redo_lsn.has_value());
+    ASSERT_TRUE(wal.append(WalAppendRecord{.tx_id = TxId{u64{2}},
+                                           .resource_manager = WalResourceManager::Transaction,
+                                           .record_type = WalRecordType::Commit,
+                                           .payload = {}})
+                    .has_value());
+    ASSERT_TRUE(wal.append(WalAppendRecord{.resource_manager = WalResourceManager::Transaction,
+                                           .record_type = WalRecordType::Checkpoint,
+                                           .payload = make_checkpoint_payload(*redo_lsn)})
+                    .has_value());
+
+    auto recovered_bytes = std::make_shared<std::vector<std::byte>>();
+    SharedMemoryIO recovered_io{recovered_bytes};
+    PageStore recovered_store;
+    ASSERT_TRUE(
+        recovered_store.open(recovered_io, PageStoreConfig{.page_size = page_size}).has_value());
+    auto recovered = recover_heap(recovered_store, page_size, wal);
+    ASSERT_TRUE(recovered.has_value());
+
+    EdbHeapEngine recovered_engine;
+    ASSERT_TRUE(recovered_engine
+                    .open(recovered_store,
+                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+                    .has_value());
+    auto tuples = collect_visible(recovered_engine, *recovered->statuses);
+    ASSERT_TRUE(tuples.has_value());
+    ASSERT_EQ(tuples->size(), std::size_t{1});
+    EXPECT_EQ((*tuples)[0], payload("keep"));
 }

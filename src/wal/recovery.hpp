@@ -31,6 +31,7 @@ struct HeapRecoveryResult {
 
 [[nodiscard]] auto make_heap_insert_payload(TupleId id, std::span<const std::byte> tuple)
     -> Result<std::vector<std::byte>>;
+[[nodiscard]] auto make_checkpoint_payload(u64 redo_lsn) -> std::vector<std::byte>;
 [[nodiscard]] auto recover_heap(PageStore& store, usize page_size, const WalManager& wal)
     -> Result<HeapRecoveryResult>;
 

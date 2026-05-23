@@ -22,6 +22,7 @@ enum class WalRecordType : std::uint8_t {
     Commit = 1,
     Abort = 2,
     HeapInsert = 3,
+    Checkpoint = 4,
 };
 
 struct WalAppendRecord {
@@ -49,11 +50,14 @@ class WalManager {
     [[nodiscard]] auto append(const WalAppendRecord& record) -> Result<u64>;
     [[nodiscard]] auto read_all() const -> Result<std::vector<WalRecord>>;
     [[nodiscard]] auto flush(u64 lsn) -> VoidResult;
+    [[nodiscard]] auto flush_through(u64 lsn) -> VoidResult;
+    [[nodiscard]] auto appended_lsn() const -> u64;
     [[nodiscard]] auto flushed_lsn() const -> u64;
 
    private:
     StorageIOOps* io{nullptr};
     u64 next_offset{0};
+    u64 last_lsn{0};
     u64 durable_lsn{0};
     mutable std::mutex mutex;
 };

@@ -14,6 +14,7 @@ namespace edb {
 namespace {
 
 constexpr auto HEAP_INSERT_PREFIX_SIZE = std::size_t{14};
+constexpr auto CHECKPOINT_PAYLOAD_SIZE = std::size_t{8};
 
 auto append_u16(std::vector<std::byte>& bytes, u16 value) -> void {
     bytes.push_back(std::byte{static_cast<unsigned char>(value.value & 0xFFU)});
@@ -187,6 +188,34 @@ struct HeapInsertPayload {
     return {};
 }
 
+[[nodiscard]] auto decode_checkpoint_payload(std::span<const std::byte> payload) -> Result<u64> {
+    if (payload.size() != CHECKPOINT_PAYLOAD_SIZE) {
+        return std::unexpected(Error::Corruption);
+    }
+    return read_u64(payload, std::size_t{0});
+}
+
+[[nodiscard]] auto checkpoint_start_index(std::span<const WalRecord> records) -> Result<usize> {
+    auto redo_lsn = u64{0};
+    for (const auto& record : records) {
+        if (record.resource_manager == WalResourceManager::Transaction &&
+            record.record_type == WalRecordType::Checkpoint) {
+            auto checkpoint_redo = decode_checkpoint_payload(record.payload);
+            if (!checkpoint_redo) {
+                return std::unexpected(checkpoint_redo.error());
+            }
+            redo_lsn = *checkpoint_redo;
+        }
+    }
+
+    for (usize index{0}; index < usize{records.size()}; ++index) {
+        if (records[index.value].lsn >= redo_lsn) {
+            return index;
+        }
+    }
+    return usize{records.size()};
+}
+
 }  // namespace
 
 auto RecoveredTransactionStatus::status(TxId id) const -> Result<TxStatus> {
@@ -216,6 +245,13 @@ auto make_heap_insert_payload(TupleId id, std::span<const std::byte> tuple)
     return payload;
 }
 
+auto make_checkpoint_payload(u64 redo_lsn) -> std::vector<std::byte> {
+    std::vector<std::byte> payload;
+    payload.reserve(CHECKPOINT_PAYLOAD_SIZE);
+    append_u64(payload, redo_lsn);
+    return payload;
+}
+
 auto recover_heap(PageStore& store, usize page_size, const WalManager& wal)
     -> Result<HeapRecoveryResult> {
     auto records = wal.read_all();
@@ -223,8 +259,14 @@ auto recover_heap(PageStore& store, usize page_size, const WalManager& wal)
         return std::unexpected(records.error());
     }
 
-    auto statuses = rebuild_statuses(*records);
-    if (auto status = apply_heap_redo(store, page_size, *records, *statuses); !status) {
+    auto start_index = checkpoint_start_index(*records);
+    if (!start_index) {
+        return std::unexpected(start_index.error());
+    }
+    auto recovery_records = std::span<const WalRecord>{*records}.subspan(start_index->value);
+
+    auto statuses = rebuild_statuses(recovery_records);
+    if (auto status = apply_heap_redo(store, page_size, recovery_records, *statuses); !status) {
         return std::unexpected(status.error());
     }
 
