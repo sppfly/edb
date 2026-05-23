@@ -56,7 +56,10 @@ auto EdbBufferPool::open(EdbPageStore& page_store, const EdbBufferPoolConfig& cf
     store = &page_store;
     config = cfg;
     page_bytes = page_store.page_size();
-    clock_hand = usize{0};
+    eviction_policy = make_eviction_policy(cfg.eviction);
+    if (auto status = eviction_policy->reset(cfg.capacity_pages); !status) {
+        return status;
+    }
     frames.clear();
     frames.reserve(cfg.capacity_pages.value);
     for (usize frame_index{0}; frame_index < cfg.capacity_pages; ++frame_index) {
@@ -73,10 +76,10 @@ auto EdbBufferPool::close() -> EdbStatus {
         }
     }
     frames.clear();
+    eviction_policy.reset();
     store = nullptr;
     config = {};
     page_bytes = usize{0};
-    clock_hand = usize{0};
     return {};
 }
 
@@ -89,8 +92,14 @@ auto EdbBufferPool::fetch(u64 page_id) -> EdbResult<EdbFrameHandle> {
     if (cached) {
         auto& frame = frames[cached->value];
         ++frame.pin_count;
-        frame.referenced = b8{true};
+        if (auto status = eviction_policy->record_access(page_id, *cached); !status) {
+            return std::unexpected(status.error());
+        }
         return make_handle(*cached);
+    }
+
+    if (auto status = eviction_policy->record_miss(page_id); !status) {
+        return std::unexpected(status.error());
     }
 
     auto victim = choose_victim();
@@ -112,10 +121,16 @@ auto EdbBufferPool::fetch_new(u64 page_id) -> EdbResult<EdbFrameHandle> {
     if (cached) {
         auto& frame = frames[cached->value];
         ++frame.pin_count;
-        frame.referenced = b8{true};
         frame.dirty = b8{true};
         std::ranges::fill(frame.data, std::byte{0});
+        if (auto status = eviction_policy->record_access(page_id, *cached); !status) {
+            return std::unexpected(status.error());
+        }
         return make_handle(*cached);
+    }
+
+    if (auto status = eviction_policy->record_miss(page_id); !status) {
+        return std::unexpected(status.error());
     }
 
     auto victim = choose_victim();
@@ -205,21 +220,18 @@ auto EdbBufferPool::choose_victim() -> EdbResult<usize> {
         }
     }
 
-    const auto scan_limit = usize{frames.size() * 2U};
-    for (usize scans{0}; scans < scan_limit; ++scans) {
-        auto& frame = frames[clock_hand.value];
-        if (frame.pin_count == usize{0}) {
-            if (frame.referenced.value) {
-                frame.referenced = b8{false};
-            } else {
-                const auto victim = clock_hand;
-                clock_hand = usize{(clock_hand.value + 1U) % frames.size()};
-                return victim;
-            }
-        }
-        clock_hand = usize{(clock_hand.value + 1U) % frames.size()};
+    if (eviction_policy == nullptr) {
+        return std::unexpected(EdbError::IoError);
     }
-    return std::unexpected(EdbError::BufferPoolFull);
+
+    std::vector<EdbEvictionFrameState> states;
+    states.reserve(frames.size());
+    for (const auto& frame : frames) {
+        states.push_back(EdbEvictionFrameState{.page_id = frame.page_id,
+                                               .valid = frame.valid,
+                                               .pinned = b8{frame.pin_count > usize{0}}});
+    }
+    return eviction_policy->choose_victim(states);
 }
 
 auto EdbBufferPool::write_back_if_dirty(Frame& frame) -> EdbStatus {
@@ -236,6 +248,8 @@ auto EdbBufferPool::write_back_if_dirty(Frame& frame) -> EdbStatus {
 
 auto EdbBufferPool::load_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus {
     auto& frame = frames[frame_index.value];
+    const auto evicted_page_id = frame.page_id;
+    const auto had_valid_page = frame.valid;
     if (auto status = write_back_if_dirty(frame); !status) {
         return status;
     }
@@ -243,26 +257,38 @@ auto EdbBufferPool::load_page_into_frame(usize frame_index, u64 page_id) -> EdbS
     if (!status) {
         return status;
     }
+    if (had_valid_page.value) {
+        if (auto evict_status = eviction_policy->record_evict(evicted_page_id, frame_index);
+            !evict_status) {
+            return evict_status;
+        }
+    }
     frame.page_id = page_id;
     frame.valid = b8{true};
     frame.dirty = b8{false};
-    frame.referenced = b8{true};
     frame.pin_count = usize{1};
-    return {};
+    return eviction_policy->record_load(page_id, frame_index);
 }
 
 auto EdbBufferPool::load_blank_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus {
     auto& frame = frames[frame_index.value];
+    const auto evicted_page_id = frame.page_id;
+    const auto had_valid_page = frame.valid;
     if (auto status = write_back_if_dirty(frame); !status) {
         return status;
+    }
+    if (had_valid_page.value) {
+        if (auto evict_status = eviction_policy->record_evict(evicted_page_id, frame_index);
+            !evict_status) {
+            return evict_status;
+        }
     }
     std::ranges::fill(frame.data, std::byte{0});
     frame.page_id = page_id;
     frame.valid = b8{true};
     frame.dirty = b8{true};
-    frame.referenced = b8{true};
     frame.pin_count = usize{1};
-    return {};
+    return eviction_policy->record_load(page_id, frame_index);
 }
 
 auto EdbBufferPool::make_handle(usize frame_index) -> EdbFrameHandle {

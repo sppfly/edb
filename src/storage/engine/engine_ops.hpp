@@ -11,6 +11,7 @@
 #include <span>
 #include <vector>
 
+#include "storage/buffer/eviction_policy.hpp"
 #include "storage/page/page_store.hpp"
 #include "utils/contracts.hpp"
 #include "utils/error.hpp"
@@ -21,6 +22,7 @@ namespace edb {
 struct EdbEngineConfig {
     usize page_size{8192};
     usize buffer_pool_pages{1024};
+    EdbEvictionPolicyConfig buffer_eviction{};
 };
 
 struct EdbTupleId {

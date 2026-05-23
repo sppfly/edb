@@ -6,9 +6,11 @@
 // inspect/mutate raw page bytes, then explicitly unpin with a dirty flag.
 
 #include <cstddef>
+#include <memory>
 #include <span>
 #include <vector>
 
+#include "storage/buffer/eviction_policy.hpp"
 #include "storage/page/page_store.hpp"
 #include "utils/contracts.hpp"
 #include "utils/error.hpp"
@@ -18,6 +20,7 @@ namespace edb {
 
 struct EdbBufferPoolConfig {
     usize capacity_pages{1024};
+    EdbEvictionPolicyConfig eviction{};
 };
 
 class EdbBufferPool;
@@ -80,7 +83,6 @@ class EdbBufferPool {
         std::vector<std::byte> data;
         b8 valid{false};
         b8 dirty{false};
-        b8 referenced{false};
         usize pin_count{0};
     };
 
@@ -96,7 +98,7 @@ class EdbBufferPool {
     EdbBufferPoolConfig config{};
     usize page_bytes{0};
     std::vector<Frame> frames;
-    usize clock_hand{0};
+    std::unique_ptr<EdbEvictionPolicy> eviction_policy;
 };
 
 }  // namespace edb

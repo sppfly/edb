@@ -76,6 +76,7 @@ class BufferPoolTest : public ::testing::Test {
 TEST(EdbBufferPoolConfig, DefaultCapacity) {
     constexpr EdbBufferPoolConfig cfg{};
     EXPECT_EQ(cfg.capacity_pages.value, usize{1024}.value);
+    EXPECT_EQ(cfg.eviction.kind, EdbEvictionPolicyKind::ClockSweep);
 }
 
 TEST_F(BufferPoolTest, OpenSetsCapacityAndPageSize) {
@@ -166,4 +167,45 @@ TEST_F(BufferPoolTest, FetchNewReturnsZeroedDirtyPage) {
     EXPECT_TRUE(
         std::ranges::all_of(handle->data(), [](std::byte value) { return value == std::byte{0}; }));
     ASSERT_TRUE(pool.unpin(*handle, b8{true}).has_value());
+}
+
+TEST_F(BufferPoolTest, FetchWorksWithConfiguredLruKPolicy) {
+    allocate_pages(usize{2});
+    EdbBufferPool pool;
+    ASSERT_TRUE(
+        pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1},
+                                                  .eviction =
+                                                      EdbEvictionPolicyConfig{
+                                                          .kind = EdbEvictionPolicyKind::LruK,
+                                                          .lru_k_history = usize{2},
+                                                      }})
+            .has_value());
+
+    auto first = pool.fetch(u64{0});
+    ASSERT_TRUE(first.has_value());
+    ASSERT_TRUE(pool.unpin(*first, b8{false}).has_value());
+
+    auto second = pool.fetch(u64{1});
+    ASSERT_TRUE(second.has_value());
+    ASSERT_TRUE(pool.unpin(*second, b8{false}).has_value());
+}
+
+TEST_F(BufferPoolTest, FetchWorksWithConfiguredArcPolicy) {
+    allocate_pages(usize{2});
+    EdbBufferPool pool;
+    ASSERT_TRUE(
+        pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1},
+                                                  .eviction =
+                                                      EdbEvictionPolicyConfig{
+                                                          .kind = EdbEvictionPolicyKind::Arc,
+                                                      }})
+            .has_value());
+
+    auto first = pool.fetch(u64{0});
+    ASSERT_TRUE(first.has_value());
+    ASSERT_TRUE(pool.unpin(*first, b8{false}).has_value());
+
+    auto second = pool.fetch(u64{1});
+    ASSERT_TRUE(second.has_value());
+    ASSERT_TRUE(pool.unpin(*second, b8{false}).has_value());
 }

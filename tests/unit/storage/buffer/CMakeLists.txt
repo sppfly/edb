@@ -1,5 +1,6 @@
 add_executable(test_buffer
     buffer_pool_test.cpp
+    eviction_policy_test.cpp
 )
 
 target_link_libraries(test_buffer

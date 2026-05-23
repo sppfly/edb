@@ -2,6 +2,7 @@
 
 add_library(edb_buffer STATIC
     buffer_pool.cpp
+    eviction_policy.cpp
 )
 
 target_link_libraries(edb_buffer

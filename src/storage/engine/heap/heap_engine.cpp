@@ -21,7 +21,8 @@ auto EdbHeapEngine::open_impl(EdbPageStore& store, const EdbEngineConfig& cfg) -
     page_store = &store;
     config = cfg;
     auto status =
-        buffer_pool.open(store, EdbBufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages});
+        buffer_pool.open(store, EdbBufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages,
+                                                    .eviction = cfg.buffer_eviction});
     if (!status) {
         page_store = nullptr;
         return status;

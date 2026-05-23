@@ -121,7 +121,8 @@ Shared page cache used by engines that need paged I/O. Format-agnostic.
 ### Design
 
 - Fixed-size frame array; each frame holds one page (`page_size` bytes)
-- **Clock-sweep** replacement (second-chance bit); O(1) amortized eviction
+- Pluggable replacement policy; default is **clock-sweep** for low overhead and PostgreSQL-like behavior
+- Built-in replacement policies: **clock-sweep**, **LRU-K**, and **ARC**
 - Pin count per frame — pinned frames are never evicted
 - Dirty flag per frame — dirty frames written back to `EdbPageStore` on eviction or explicit flush
 - Thread-safe: one mutex per frame bucket (or a latch-free design later)
@@ -131,6 +132,7 @@ Shared page cache used by engines that need paged I/O. Format-agnostic.
 ```cpp
 struct EdbBufferPoolConfig {
     usize capacity_pages = usize{1024};
+    EdbEvictionPolicyConfig eviction{};
 };
 
 class EdbBufferPool {
@@ -155,7 +157,8 @@ struct FrameHandle {
 
 ### Deliverables
 
-- [x] `EdbBufferPool` with clock-sweep eviction
+- [x] `EdbBufferPool` with pluggable eviction policy
+- [x] Built-in policies: clock-sweep, LRU-K, ARC
 - [x] `EdbFrameHandle`: move-only pinned frame handle with explicit unpin
 - [x] Unit tests: hit/miss/eviction/dirty-writeback/pin-guard
 

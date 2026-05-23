@@ -34,7 +34,7 @@ Query Executor
 EdbStorageEngineOps   (pluggable: Heap, Columnar, PAX, Vector, FullText)
       │
       ▼
-Buffer Pool Manager   (shared, format-agnostic page cache)
+Buffer Pool Manager   (shared page cache; pluggable eviction policy)
       │
       ▼
 Page Store            (page_id → byte offset)
