@@ -2,7 +2,7 @@
 
 > Status legend: 🔲 not started · 🔄 in progress · ✅ done
 >
-> **Current priority**: Phase 3 → 4a. Goal: construct a developer-facing table object, insert typed rows, scan them back, and verify decoded values without SQL.
+> **Current priority**: Phase 5a → 5d. Goal: define a stable query-engine skeleton, then implement the smallest end-to-end SQL path with a reference executor.
 >
 > Detailed per-phase plans live in [`docs/plan/`](plan/).
 
@@ -15,7 +15,7 @@
 | **0** | Project infrastructure (CMake, tooling, primitives, error, logging, gtest) | ✅ | [phase0.md](plan/phase0.md) |
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ | [phase1.md](plan/phase1.md) |
 | **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | ✅ | [phase2.md](plan/phase2.md) |
-| **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | 🔲 | [phase3.md](plan/phase3.md) |
+| **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | ✅ | [phase3.md](plan/phase3.md) |
 | **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache) | ✅ | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic SQL front-end over the table/catalog API | 🔲 | [phase5.md](plan/phase5.md) |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔲 | [phase6.md](plan/phase6.md) |
@@ -70,7 +70,7 @@ Sub-phases: **2a** Page Store · **2b** `EdbStorageEngineOps` interface · **2c*
 
 ---
 
-## Phase 3 — Type System 🔲
+## Phase 3 — Type System ✅
 
 → See [plan/phase3.md](plan/phase3.md) for full detail.
 
@@ -78,7 +78,7 @@ Sub-phases: **3a** Type registry · **3b** Built-in types · **3c** Typed values
 
 ---
 
-## Phase 4 — Table and Catalog Layer 🔲
+## Phase 4 — Table and Catalog Layer ✅
 
 → See [plan/phase4.md](plan/phase4.md) for full detail.
 
@@ -88,9 +88,11 @@ Sub-phases: **4a** Developer table API · **4b** System catalog persistence · *
 
 ---
 
-## Phase 5 — Basic Query Engine 🔲
+## Phase 5 — Query Engine Foundation 🔲
 
 → See [plan/phase5.md](plan/phase5.md) for full detail.
+
+Sub-phases: **5a** SQL frontend · **5b** Binder · **5c** Logical plan · **5d** Reference physical plan + executor · **5e** Physical boundary hardening · **5f** Second backend
 
 ---
 
