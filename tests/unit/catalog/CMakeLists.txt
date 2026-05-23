@@ -1,4 +1,5 @@
 add_executable(test_catalog
+  catalog_test.cpp
   table_test.cpp
 )
 

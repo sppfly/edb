@@ -1,4 +1,5 @@
 add_library(edb_catalog STATIC
+  catalog.cpp
   table.cpp
 )
 

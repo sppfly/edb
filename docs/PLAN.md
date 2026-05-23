@@ -16,7 +16,7 @@
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ | [phase1.md](plan/phase1.md) |
 | **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | ✅ | [phase2.md](plan/phase2.md) |
 | **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | 🔲 | [phase3.md](plan/phase3.md) |
-| **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache) | 🔲 | [phase4.md](plan/phase4.md) |
+| **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache) | ✅ | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic SQL front-end over the table/catalog API | 🔲 | [phase5.md](plan/phase5.md) |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔲 | [phase6.md](plan/phase6.md) |
 | **7** | Network (PostgreSQL wire protocol v3, simple query mode) | 🔲 | [phase7.md](plan/phase7.md) |
