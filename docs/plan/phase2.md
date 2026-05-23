@@ -1,4 +1,4 @@
-# Phase 2 — Storage Layer 🔲
+# Phase 2 — Storage Layer 🔄
 
 Build the storage stack above the I/O backend. The goal is end-to-end write-page / read-page through the full stack, with a clean multi-engine abstraction.
 
@@ -19,7 +19,7 @@ EdbStorageEngineOps        ← pluggable engine interface (the multi-engine seam
 Buffer Pool Manager        ← shared, format-agnostic page cache   Phase 2c
       │
       ▼
-Page Store                 ← maps page_id → byte offset           Phase 2a
+Page Store                 ← maps page_id → byte offset           Phase 2a ✅
       │
       ▼
 EdbStorageIOOps            ✅ Phase 1
@@ -33,7 +33,7 @@ EdbStorageIOOps            ✅ Phase 1
 
 ---
 
-## Phase 2a — Page Store 🔲
+## Phase 2a — Page Store ✅
 
 Thin mapping layer between logical `page_id` and byte offsets. Sits directly on `EdbStorageIOOps`.
 
@@ -63,9 +63,9 @@ public:
 
 ### Deliverables
 
-- [ ] `EdbPageStore` class with contracts
-- [ ] `allocate_page` extends the file via `truncate`
-- [ ] Unit tests: write/read round-trip, multi-page, reopen
+- [x] `EdbPageStore` class with contracts
+- [x] `allocate_page` extends the file via `truncate`
+- [x] Unit tests: write/read round-trip, multi-page, unallocated page errors, corruption detection
 
 ---
 

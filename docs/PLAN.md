@@ -14,7 +14,7 @@
 |-------|-------|--------|--------|
 | **0** | Project infrastructure (CMake, tooling, primitives, error, logging, gtest) | ✅ | [phase0.md](plan/phase0.md) |
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ | [phase1.md](plan/phase1.md) |
-| **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | 🔲 | [phase2.md](plan/phase2.md) |
+| **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | 🔄 | [phase2.md](plan/phase2.md) |
 | **3** | Type system (`EdbTypeRegistry`, `EdbTypeImpl`, built-in types) | 🔲 | [phase3.md](plan/phase3.md) |
 | **4** | Catalog (system tables, initdb bootstrap, catalog cache) | 🔲 | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic (parser, analyzer, Volcano executor) | 🔲 | [phase5.md](plan/phase5.md) |
@@ -62,7 +62,7 @@ Device
 
 ---
 
-## Phase 2 — Storage Layer 🔲
+## Phase 2 — Storage Layer 🔄
 
 → See [plan/phase2.md](plan/phase2.md) for full detail.
 
