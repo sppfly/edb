@@ -13,6 +13,7 @@
 
 #include "storage/buffer/eviction_policy.hpp"
 #include "storage/page/page_store.hpp"
+#include "transaction/visibility.hpp"
 #include "utils/contracts.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
@@ -60,14 +61,33 @@ struct StorageEngineOps {
         return insert_impl(tuple);
     }
 
+    auto insert(const Transaction& tx, std::span<const std::byte> tuple)
+        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+        return insert_impl(tx, tuple);
+    }
+
     auto delete_tuple(TupleId id) -> VoidResult { return delete_tuple_impl(id); }
+
+    auto delete_tuple(const Transaction& tx, TupleId id) -> VoidResult {
+        return delete_tuple_impl(tx, id);
+    }
 
     auto update_tuple(TupleId id, std::span<const std::byte> tuple)
         -> Result<TupleId> EDB_PRE(!tuple.empty()) {
         return update_tuple_impl(id, tuple);
     }
 
+    auto update_tuple(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
+        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+        return update_tuple_impl(tx, id, tuple);
+    }
+
     auto begin_scan() -> Result<ScanHandle> { return begin_scan_impl(); }
+
+    auto begin_scan(const VisibilityContext& context, const TransactionStatusReader& statuses)
+        -> Result<ScanHandle> {
+        return begin_scan_impl(context, statuses);
+    }
 
     auto scan_next(ScanHandle& handle) -> Result<std::optional<Tuple>> {
         return scan_next_impl(handle);
@@ -81,10 +101,26 @@ struct StorageEngineOps {
     virtual auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult = 0;
     virtual auto close_impl() -> VoidResult = 0;
     virtual auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> = 0;
+    virtual auto insert_impl(const Transaction& /*tx*/, std::span<const std::byte> tuple)
+        -> Result<TupleId> {
+        return insert_impl(tuple);
+    }
     virtual auto delete_tuple_impl(TupleId id) -> VoidResult = 0;
+    virtual auto delete_tuple_impl(const Transaction& /*tx*/, TupleId id) -> VoidResult {
+        return delete_tuple_impl(id);
+    }
     virtual auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
         -> Result<TupleId> = 0;
+    virtual auto update_tuple_impl(const Transaction& /*tx*/, TupleId id,
+                                   std::span<const std::byte> tuple) -> Result<TupleId> {
+        return update_tuple_impl(id, tuple);
+    }
     virtual auto begin_scan_impl() -> Result<ScanHandle> = 0;
+    virtual auto begin_scan_impl(const VisibilityContext& /*context*/,
+                                 const TransactionStatusReader& /*statuses*/)
+        -> Result<ScanHandle> {
+        return begin_scan_impl();
+    }
     virtual auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> = 0;
     virtual auto end_scan_impl(ScanHandle& handle) -> VoidResult = 0;
     [[nodiscard]] virtual auto page_size_impl() const -> usize = 0;

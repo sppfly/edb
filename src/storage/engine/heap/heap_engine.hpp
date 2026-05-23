@@ -32,22 +32,21 @@ class EdbHeapEngine final : public StorageEngineOps {
 
     ~EdbHeapEngine() override = default;
 
-    [[nodiscard]] auto insert(const Transaction& tx, std::span<const std::byte> tuple)
-        -> Result<TupleId>;
-    [[nodiscard]] auto delete_tuple(const Transaction& tx, TupleId id) -> VoidResult;
-    [[nodiscard]] auto update_tuple(const Transaction& tx, TupleId id,
-                                    std::span<const std::byte> tuple) -> Result<TupleId>;
-    [[nodiscard]] auto begin_scan(const VisibilityContext& context,
-                                  const TransactionStatusReader& statuses) -> Result<ScanHandle>;
-
    private:
     auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
     auto close_impl() -> VoidResult override;
     auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> override;
+    auto insert_impl(const Transaction& tx, std::span<const std::byte> tuple)
+        -> Result<TupleId> override;
     auto delete_tuple_impl(TupleId id) -> VoidResult override;
+    auto delete_tuple_impl(const Transaction& tx, TupleId id) -> VoidResult override;
     auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
         -> Result<TupleId> override;
+    auto update_tuple_impl(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
+        -> Result<TupleId> override;
     auto begin_scan_impl() -> Result<ScanHandle> override;
+    auto begin_scan_impl(const VisibilityContext& context,
+                         const TransactionStatusReader& statuses) -> Result<ScanHandle> override;
     auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> override;
     auto end_scan_impl(ScanHandle& handle) -> VoidResult override;
     [[nodiscard]] auto page_size_impl() const -> usize override;

@@ -10,6 +10,7 @@
 
 #include "catalog/catalog.hpp"
 #include "query/physical_plan.hpp"
+#include "transaction/visibility.hpp"
 #include "types/row_codec.hpp"
 #include "utils/error.hpp"
 
@@ -18,6 +19,11 @@ namespace edb {
 struct ExecRow {
     std::vector<BoundColumnRef> columns;
     std::vector<Value>          values;
+};
+
+struct ExecTransactionContext {
+    const Transaction*             tx{nullptr};
+    const TransactionStatusReader* statuses{nullptr};
 };
 
 class ExecNode {
@@ -37,6 +43,8 @@ class ExecNode {
 class ExecBuilder {
    public:
     ExecBuilder(Catalog& catalog, const TypeRegistry& types) noexcept;
+    ExecBuilder(Catalog& catalog, const TypeRegistry& types,
+                ExecTransactionContext tx_context) noexcept;
 
     [[nodiscard]] auto build(PhysicalPlan plan) -> Result<std::unique_ptr<ExecNode>>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
@@ -47,6 +55,7 @@ class ExecBuilder {
 
     Catalog*             catalog{nullptr};
     const TypeRegistry*  types{nullptr};
+    ExecTransactionContext tx_context{};
     std::string          last_error;
 };
 

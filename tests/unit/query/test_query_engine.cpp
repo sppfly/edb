@@ -135,4 +135,20 @@ TEST_F(QueryEngineTest, ExecuteRejectsMultipleStatements) {
     EXPECT_EQ(engine.error_message(), std::string_view{"execute expects exactly one SQL statement"});
 }
 
+TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
+    QueryEngine engine{catalog, registry};
+
+    auto create = engine.execute("CREATE TABLE events (id INTEGER, payload TEXT)");
+    ASSERT_TRUE(create.has_value()) << engine.error_message();
+
+    const auto oversized_payload = std::string(700, 'x');
+    auto failed_insert = engine.execute("INSERT INTO events VALUES (1, 'ok'), (2, '" +
+                                        oversized_payload + "')");
+    ASSERT_FALSE(failed_insert.has_value());
+
+    auto selected = engine.execute("SELECT * FROM events");
+    ASSERT_TRUE(selected.has_value()) << engine.error_message();
+    EXPECT_TRUE(selected->rows.empty());
+}
+
 }  // namespace

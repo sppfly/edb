@@ -11,6 +11,26 @@
 
 namespace edb {
 
+namespace {
+
+class ManagerStatusReader final : public TransactionStatusReader {
+   public:
+    explicit ManagerStatusReader(const TransactionManager& transactions) noexcept
+        : transactions{&transactions} {}
+
+    [[nodiscard]] auto status(TxId id) const -> Result<TxStatus> override {
+        if (transactions == nullptr) {
+            return std::unexpected(Error::InvalidArgument);
+        }
+        return transactions->status(id);
+    }
+
+   private:
+    const TransactionManager* transactions{nullptr};
+};
+
+}  // namespace
+
 QueryEngine::QueryEngine(Catalog& catalog, const TypeRegistry& types) noexcept
     : catalog{&catalog}, types{&types} {}
 
@@ -28,33 +48,41 @@ auto QueryEngine::execute(std::string_view sql) -> Result<QueryResult> {
         return query_err("execute expects exactly one SQL statement", Error::InvalidArgument);
     }
 
+    auto tx = transactions.begin();
+    if (!tx) {
+        return query_err("transaction begin failed", tx.error());
+    }
+    const auto tx_id = tx->id;
+
     Binder binder{*catalog, *types};
     auto bound = binder.bind(parsed->front());
     if (!bound) {
-        return query_err(binder.error_message(), bound.error());
+        return abort_query(tx_id, binder.error_message(), bound.error());
     }
 
     LogicalPlanner logical_planner;
     auto logical = logical_planner.build(std::move(*bound));
     if (!logical) {
-        return query_err(logical_planner.error_message(), logical.error());
+        return abort_query(tx_id, logical_planner.error_message(), logical.error());
     }
 
     PhysicalPlanner physical_planner;
     auto physical = physical_planner.build(std::move(*logical));
     if (!physical) {
-        return query_err(physical_planner.error_message(), physical.error());
+        return abort_query(tx_id, physical_planner.error_message(), physical.error());
     }
 
-    ExecBuilder exec_builder{*catalog, *types};
+    ManagerStatusReader status_reader{transactions};
+    ExecBuilder exec_builder{*catalog, *types,
+                             ExecTransactionContext{.tx = &*tx, .statuses = &status_reader}};
     auto exec = exec_builder.build(std::move(*physical));
     if (!exec) {
-        return query_err(exec_builder.error_message(), exec.error());
+        return abort_query(tx_id, exec_builder.error_message(), exec.error());
     }
 
     auto opened = (*exec)->open();
     if (!opened) {
-        return query_err("executor open failed", opened.error());
+        return abort_query(tx_id, "executor open failed", opened.error());
     }
 
     QueryResult result;
@@ -65,9 +93,10 @@ auto QueryEngine::execute(std::string_view sql) -> Result<QueryResult> {
             const auto error = next.error();
             auto closed_after_error = (*exec)->close();
             if (!closed_after_error) {
-                return query_err("executor close after next failure failed", closed_after_error.error());
+                return abort_query(tx_id, "executor close after next failure failed",
+                                   closed_after_error.error());
             }
-            return query_err("executor next failed", error);
+            return abort_query(tx_id, "executor next failed", error);
         }
         if (!static_cast<bool>(*next)) {
             break;
@@ -77,7 +106,11 @@ auto QueryEngine::execute(std::string_view sql) -> Result<QueryResult> {
 
     auto closed = (*exec)->close();
     if (!closed) {
-        return query_err("executor close failed", closed.error());
+        return abort_query(tx_id, "executor close failed", closed.error());
+    }
+    auto committed = transactions.commit(tx_id);
+    if (!committed) {
+        return query_err("transaction commit failed", committed.error());
     }
     return result;
 }
@@ -87,6 +120,14 @@ auto QueryEngine::error_message() const noexcept -> std::string_view { return la
 auto QueryEngine::query_err(std::string_view msg, Error error) -> Result<QueryResult> {
     last_error = std::string{msg};
     return std::unexpected(error);
+}
+
+auto QueryEngine::abort_query(TxId tx_id, std::string_view msg, Error error) -> Result<QueryResult> {
+    const auto aborted = transactions.abort(tx_id);
+    if (!aborted) {
+        return query_err("transaction abort failed", aborted.error());
+    }
+    return query_err(msg, error);
 }
 
 }  // namespace edb

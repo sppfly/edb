@@ -10,6 +10,7 @@
 
 #include "catalog/catalog.hpp"
 #include "query/exec.hpp"
+#include "transaction/transaction_manager.hpp"
 #include "utils/error.hpp"
 
 namespace edb {
@@ -27,9 +28,11 @@ class QueryEngine {
 
    private:
     auto query_err(std::string_view msg, Error error) -> Result<QueryResult>;
+    auto abort_query(TxId tx_id, std::string_view msg, Error error) -> Result<QueryResult>;
 
     Catalog*            catalog{nullptr};
     const TypeRegistry* types{nullptr};
+    TransactionManager  transactions;
     std::string         last_error;
 };
 

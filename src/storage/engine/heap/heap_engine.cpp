@@ -76,7 +76,7 @@ struct StoredHeapTuple {
 
 }  // namespace
 
-auto EdbHeapEngine::insert(const Transaction& tx, std::span<const std::byte> tuple)
+auto EdbHeapEngine::insert_impl(const Transaction& tx, std::span<const std::byte> tuple)
     -> Result<TupleId> {
     if (tx.id.value == u64{0}) {
         return std::unexpected(Error::InvalidArgument);
@@ -86,14 +86,14 @@ auto EdbHeapEngine::insert(const Transaction& tx, std::span<const std::byte> tup
     return insert_encoded_tuple(stored);
 }
 
-auto EdbHeapEngine::delete_tuple(const Transaction& tx, TupleId id) -> VoidResult {
+auto EdbHeapEngine::delete_tuple_impl(const Transaction& tx, TupleId id) -> VoidResult {
     if (tx.id.value == u64{0}) {
         return std::unexpected(Error::InvalidArgument);
     }
     return mark_deleted(id, tx.id);
 }
 
-auto EdbHeapEngine::update_tuple(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
+auto EdbHeapEngine::update_tuple_impl(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
     -> Result<TupleId> {
     auto delete_status = delete_tuple(tx, id);
     if (!delete_status) {
@@ -102,8 +102,8 @@ auto EdbHeapEngine::update_tuple(const Transaction& tx, TupleId id, std::span<co
     return insert(tx, tuple);
 }
 
-auto EdbHeapEngine::begin_scan(const VisibilityContext& context,
-                               const TransactionStatusReader& statuses) -> Result<ScanHandle> {
+auto EdbHeapEngine::begin_scan_impl(const VisibilityContext& context,
+                                    const TransactionStatusReader& statuses) -> Result<ScanHandle> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
