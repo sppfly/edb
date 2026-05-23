@@ -42,8 +42,8 @@ struct EdbIOVec {
 
 struct EdbIOConfig {
     usize page_size     = usize{4096};
-    b8    use_direct_io = b8{false};   // O_DIRECT / xNVMe bypass
-    u32   queue_depth   = u32{1};      // async queue depth (xNVMe)
+    b8    use_direct_io = b8{false};   // O_DIRECT / async-backend bypass of page cache
+    u32   queue_depth   = u32{1};      // async queue depth (io_uring / xNVMe)
 };
 ```
 
@@ -53,7 +53,7 @@ struct EdbIOConfig {
 |---|---|---|---|
 | POSIX | `src/storage/io/posix/` | `pread64`/`pwrite64`, optional `O_DIRECT`, `fsync`/`fdatasync`, `sync_file_range` | ✅ |
 | xNVMe | `src/storage/io/xnvme/` | Phase 8; direct NVMe submission, 4 KB alignment mandatory | 🔲 |
-| io_uring | `src/storage/io/uring/` | Future; async submission ring, zero-copy | 🔲 |
+| io_uring | `src/storage/io/uring/` | Phase 8; Linux async submission/completion backend | 🔲 |
 
 ## Deliverables
 

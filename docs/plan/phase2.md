@@ -29,7 +29,7 @@ EdbStorageIOOps            ✅ Phase 1
 
 - `EdbStorageEngineOps` is at the **tuple/scan** level, not the raw-page level. The query executor never sees page IDs.
 - The Buffer Pool is **format-agnostic** — it caches raw bytes and has no heap-specific knowledge. Columnar engines may bypass it entirely and use `mmap` directly.
-- The Disk Scheduler is **not needed for POSIX sync I/O** — the kernel handles it. A scheduler will be added in Phase 8 alongside xNVMe async submission.
+- The Disk Scheduler is **not needed for POSIX sync I/O** — the kernel handles it. Phase 8 adds it only after the scan/buffer path can keep multiple async requests in flight; it is not tied solely to xNVMe.
 
 ---
 

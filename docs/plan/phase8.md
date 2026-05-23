@@ -1,41 +1,115 @@
-# Phase 8 — xNVMe I/O Backend + Disk Scheduler 🔲
+# Phase 8 — Async I/O Foundation + io_uring/xNVMe + Disk Scheduler 🔲
 
-Second `EdbStorageIOOps` implementation using the [xNVMe](https://xnvme.io/) library for direct NVMe command submission. Also the right phase to introduce a Disk Scheduler, since async submission requires explicit request queueing.
+Phase 8 should not begin by assuming that xNVMe alone will produce meaningful gains. The real prerequisite for async I/O is that the upper storage/query layers can keep multiple independent requests in flight through prefetch, batched scans, or queued page requests.
 
-## Why a Disk Scheduler here (not Phase 2)
+The correct goal for this phase is:
 
-Synchronous POSIX I/O (`pread64`/`pwrite64`) delegates scheduling to the kernel — adding an application-level scheduler buys nothing. With xNVMe and io_uring, commands are submitted to a ring buffer and completed asynchronously; an application-level scheduler can:
-- Merge/reorder requests to saturate the NVMe queue depth
-- Implement priority classes (WAL writes ahead of background scans)
-- Prefetch pages predicted by the access pattern
+1. add an async-capable request boundary above `EdbStorageIOOps`
+2. implement at least one practical async backend for common Linux systems
+3. add a scheduler only once the system can actually benefit from queue depth
+4. keep xNVMe as a hardware-specific backend, not the only reason Phase 8 exists
 
-## Stack (this phase only)
+## Why This Phase Exists
+
+Synchronous POSIX I/O (`pread64`/`pwrite64`) delegates scheduling to the kernel. Replacing it with an async API only matters once EDB can issue more than one useful request at a time.
+
+That does not require transactions first. It requires asynchronous consumers such as:
+
+- scan readahead windows
+- queued page fetches in the buffer pool or page store
+- batched read/write submission for scans, spills, or maintenance
+- future multi-query concurrency, WAL, and background flushing
+
+So the dependency is not "wait for Phase 6 transactions". The dependency is "first create a request model that can exploit queue depth".
+
+## Stack
 
 ```
-Buffer Pool
+Executor / Scan Path
       │
       ▼
-Disk Scheduler            ← new in Phase 8
-  (submission ring, priority queue, merge window)
+Buffer Pool / Page Store
       │
       ▼
-EdbStorageIOOps (xNVMe backend)
+Async Request Boundary    ← introduced in Phase 8
       │
       ▼
-NVMe device (via xNVMe / SPDK)
+Disk Scheduler            ← introduced only when requests can queue
+      │
+      ▼
+EdbStorageIOOps
+  ├─ POSIX sync backend (existing)
+  ├─ io_uring backend (common Linux async path)
+  └─ xNVMe backend (hardware-specific direct NVMe path)
 ```
 
-## Key Constraints (xNVMe)
+## Phase 8 Sub-Phases
 
-- I/O buffers **must** be aligned to device sector size (typically 4 KB) — use `posix_memalign` or xNVMe DMA allocator
-- Offsets **must** be sector-aligned: `EDB_PRE(offset % sector_size == u64{0})`
-- No kernel page cache involvement — explicit buffer management required
-- Command queue depth is configured at `open()` time; never exceed it
+### 8a. Async Request Foundation
+
+Add the minimal abstractions needed for upper layers to benefit from async I/O later.
+
+Examples:
+
+- page fetch requests that may be pending or completed
+- scan readahead / prefetch windows
+- buffer/page interfaces that can express multiple outstanding reads
+- queue-depth-aware benchmark harnesses
+
+This can be introduced before transactions and before any complex scheduler.
+
+### 8b. io_uring Backend
+
+Implement a Linux async backend that is practical on commodity SSDs and developer machines.
+
+Why first:
+
+- available on ordinary Linux systems
+- lower integration friction than SPDK
+- good reference backend for async submission/completion semantics
+- likely the most realistic async backend to benchmark in this repository early
+
+### 8c. Disk Scheduler
+
+Introduce a scheduler only after 8a exists and there are real queued requests to manage.
+
+Scheduler responsibilities:
+
+- track in-flight requests and queue depth
+- batch submission / completion
+- issue prefetches
+- optionally prioritize foreground reads over background work
+
+Without async consumers, a scheduler is mostly ceremony.
+
+### 8d. xNVMe Backend
+
+Implement xNVMe as an additional backend for environments where direct NVMe submission is available and operationally justified.
+
+This backend is valuable, but it should not be the only success criterion for Phase 8. On simple single-SSD developer setups, `io_uring` may be the more practical async comparison point.
+
+## Key Constraints
+
+### Async Foundation Constraints
+
+- the request boundary must work in single-threaded execution first
+- queue depth must be explicit and measurable
+- synchronous fallback paths must remain available for correctness and debugging
+- benchmarks must separate buffered I/O, direct I/O, and queue depth effects
+
+### xNVMe Constraints
+
+- I/O buffers **must** be aligned to device sector size (typically 4 KB) — use `posix_memalign` or an xNVMe DMA allocator
+- offsets **must** be sector-aligned: `EDB_PRE(offset % sector_size == u64{0})`
+- no kernel page cache involvement — explicit buffer management required
+- command queue depth is configured at `open()` time; never exceed it
 
 ## Deliverables
 
+- [ ] Async request boundary above `EdbStorageIOOps`
+- [ ] Scan/buffer prefetch or queued-fetch capability sufficient to keep multiple requests in flight
+- [ ] `io_uring` backend implementing async submission/completion semantics
+- [ ] Queue-depth-aware benchmark matrix: POSIX vs `io_uring` under buffered/direct I/O and multiple access patterns
+- [ ] Disk scheduler: async queue, submission/completion handling, optional priority / merge policy
 - [ ] xNVMe backend implementing full `EdbStorageIOOps`
-- [ ] Alignment contracts on `read`/`write` preconditions
-- [ ] Queue depth management (submission / completion ring)
-- [ ] Disk scheduler: async queue, priority levels, merge window
-- [ ] Benchmark: POSIX vs xNVMe — latency p50/p99, throughput (4 KB / 64 KB pages)
+- [ ] Benchmark: POSIX vs `io_uring` vs xNVMe where hardware support exists

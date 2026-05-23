@@ -19,9 +19,9 @@
 | **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache) | ✅ | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic SQL front-end over the table/catalog API | 🔲 | [phase5.md](plan/phase5.md) |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔲 | [phase6.md](plan/phase6.md) |
-| **7** | Network (PostgreSQL wire protocol v3, simple query mode) | 🔲 | [phase7.md](plan/phase7.md) |
-| **8** | xNVMe I/O backend + Disk Scheduler + POSIX vs xNVMe benchmark | 🔲 | [phase8.md](plan/phase8.md) |
-| **9** | Distributed — Raft, partitioning, 2PC (future) | 🔲 | [phase9.md](plan/phase9.md) |
+| **7** | Local REPL / embedded session API; optional network later | 🔲 | [phase7.md](plan/phase7.md) |
+| **8** | Async I/O foundation + io_uring/xNVMe + Disk Scheduler | 🔲 | [phase8.md](plan/phase8.md) |
+| **9** | Distributed shared-nothing cluster — coordinators, shard groups, Raft, 2PC | 🔲 | [phase9.md](plan/phase9.md) |
 
 ---
 
@@ -40,13 +40,13 @@ Buffer Pool Manager   (shared page cache; pluggable eviction policy)
 Page Store            (page_id → byte offset)
       │
       ▼
-EdbStorageIOOps       (pluggable: POSIX ✅, xNVMe Phase 8, io_uring future)
+EdbStorageIOOps       (pluggable: POSIX ✅, io_uring/xNVMe Phase 8)
       │
       ▼
 Device
 ```
 
-> **Disk Scheduler** sits between the Buffer Pool and the xNVMe I/O backend, added in Phase 8 when async submission makes it worthwhile. POSIX sync I/O relies on the kernel scheduler.
+> **Disk Scheduler** is a Phase 8 component that only becomes worthwhile once the buffer/page path can keep multiple async requests in flight. POSIX sync I/O still relies on the kernel scheduler.
 
 ---
 
@@ -102,19 +102,21 @@ Sub-phases: **5a** SQL frontend · **5b** Binder · **5c** Logical plan · **5d*
 
 ---
 
-## Phase 7 — Network 🔲
+## Phase 7 — Local REPL / Embedded Session API 🔲
 
 → See [plan/phase7.md](plan/phase7.md) for full detail.
 
+Sub-phases: **7a** Embedded session API · **7b** Local REPL · **7c** Optional PostgreSQL wire protocol
+
 ---
 
-## Phase 8 — xNVMe I/O Backend + Disk Scheduler 🔲
+## Phase 8 — Async I/O Foundation + io_uring/xNVMe + Disk Scheduler 🔲
 
 → See [plan/phase8.md](plan/phase8.md) for full detail.
 
 ---
 
-## Phase 9 — Distributed (Future) 🔲
+## Phase 9 — Distributed Shared-Nothing Cluster 🔲
 
 → See [plan/phase9.md](plan/phase9.md) for full detail.
 
