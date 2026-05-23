@@ -8,8 +8,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <vector>
 
 using namespace edb;
 
@@ -56,42 +58,45 @@ TEST(EdbIOVec, FieldTypes) {
 class MockIOOps : public EdbStorageIOOps {
    public:
     // Storage: flat byte buffer simulating a file.
-    std::vector<std::byte> storage_;
+    std::vector<std::byte> storage;
 
-    auto open(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
-        storage_.resize(65536);
+   private:
+    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+        storage.resize(65536);
         return {};
     }
 
-    auto close() -> EdbStatus override { return {}; }
+    auto close_impl() -> EdbStatus override { return {}; }
 
-    auto read(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
         const auto off = offset.value;
-        if (off >= storage_.size()) {
+        if (off >= storage.size()) {
             return usize{0};
         }
-        const auto avail = storage_.size() - off;
+        const auto avail = storage.size() - off;
         const auto n = std::min(avail, buf.size());
-        std::copy_n(storage_.data() + off, n, buf.data());
+        auto src = std::span<const std::byte>{storage}.subspan(off, n);
+        std::ranges::copy(src, buf.begin());
         return usize{n};
     }
 
-    auto write(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
         const auto off = offset.value;
-        if (off + buf.size() > storage_.size()) {
-            storage_.resize(off + buf.size());
+        if (off + buf.size() > storage.size()) {
+            storage.resize(off + buf.size());
         }
-        std::copy(buf.begin(), buf.end(), storage_.data() + off);
+        auto dst = std::span<std::byte>{storage}.subspan(off, buf.size());
+        std::ranges::copy(buf, dst.begin());
         return usize{buf.size()};
     }
 
-    auto sync() -> EdbStatus override { return {}; }
-    auto datasync() -> EdbStatus override { return {}; }
-    auto truncate(u64 size) -> EdbStatus override {
-        storage_.resize(size.value);
+    auto sync_impl() -> EdbStatus override { return {}; }
+    auto datasync_impl() -> EdbStatus override { return {}; }
+    auto truncate_impl(u64 size) -> EdbStatus override {
+        storage.resize(size.value);
         return {};
     }
-    auto file_size() -> EdbResult<u64> override { return u64{storage_.size()}; }
+    auto file_size_impl() -> EdbResult<u64> override { return u64{storage.size()}; }
 };
 
 // ---------------------------------------------------------------------------
@@ -112,7 +117,8 @@ TEST(EdbStorageIOOpsDefaults, ReadvLoopsOverRead) {
     // Read both back via the default readv().
     std::array<std::byte, 4> dst0{};
     std::array<std::byte, 2> dst1{};
-    std::array<EdbIOVec, 2> iov{EdbIOVec{u64{0}, dst0}, EdbIOVec{u64{4}, dst1}};
+    std::array<EdbIOVec, 2> iov{EdbIOVec{.offset = u64{0}, .buf = dst0},
+                                EdbIOVec{.offset = u64{4}, .buf = dst1}};
 
     auto res = backend.readv(iov);
     ASSERT_TRUE(res.has_value());
@@ -133,7 +139,8 @@ TEST(EdbStorageIOOpsDefaults, WritevLoopsOverWrite) {
                                   std::byte{0xEF}};
     std::array<std::byte, 3> buf1{std::byte{0x0A}, std::byte{0x0B}, std::byte{0x0C}};
 
-    std::array<EdbIOVec, 2> wv{EdbIOVec{u64{100}, buf0}, EdbIOVec{u64{200}, buf1}};
+    std::array<EdbIOVec, 2> wv{EdbIOVec{.offset = u64{100}, .buf = buf0},
+                               EdbIOVec{.offset = u64{200}, .buf = buf1}};
     // writev takes span<const EdbIOVec>
     auto res = backend.writev(std::span<const EdbIOVec>{wv});
     ASSERT_TRUE(res.has_value());

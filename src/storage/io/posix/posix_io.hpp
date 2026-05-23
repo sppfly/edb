@@ -26,35 +26,40 @@ namespace edb {
 class PosixIO final : public EdbStorageIOOps {
    public:
     PosixIO() = default;
+    PosixIO(const PosixIO&) = delete;
+    PosixIO& operator=(const PosixIO&) = delete;
+    PosixIO(PosixIO&&) = delete;
+    PosixIO& operator=(PosixIO&&) = delete;
     ~PosixIO() override;
 
+   private:
     // Lifecycle
-    auto open(const char* path, const EdbIOConfig& cfg) -> EdbStatus override;
-    auto close() -> EdbStatus override;
+    auto open_impl(const char* path, const EdbIOConfig& cfg) -> EdbStatus override;
+    auto close_impl() -> EdbStatus override;
 
     // Synchronous I/O
-    auto read(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override;
-    auto write(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override;
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override;
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override;
 
     // Memory mapping
-    auto mmap(u64 offset, usize len, i32 prot) -> EdbResult<std::byte*> override;
-    auto munmap(std::byte* addr, usize len) -> EdbStatus override;
+    auto mmap_impl(u64 offset, usize len, i32 prot) -> EdbResult<std::byte*> override;
+    auto munmap_impl(std::byte* addr, usize len) -> EdbStatus override;
 
     // Durability
-    auto sync() -> EdbStatus override;
-    auto datasync() -> EdbStatus override;
-    auto sync_range(u64 offset, usize len) -> EdbStatus override;
+    auto sync_impl() -> EdbStatus override;
+    auto datasync_impl() -> EdbStatus override;
+    auto sync_range_impl(u64 offset, usize len) -> EdbStatus override;
 
     // File management
-    auto truncate(u64 size) -> EdbStatus override;
-    auto file_size() -> EdbResult<u64> override;
+    auto truncate_impl(u64 size) -> EdbStatus override;
+    auto file_size_impl() -> EdbResult<u64> override;
 
-   private:
     // Returns EdbError::IoError if the file is not open.
+    [[nodiscard]]
     auto check_open() const -> EdbStatus;
 
-    int fd_{-1};        // raw-primitive: POSIX fd is a signed int
-    std::string path_;  // stored for diagnostics / error messages
+    int fd{-1};             // raw-primitive: POSIX fd is a signed int
+    std::string path_name;  // stored for diagnostics / error messages
 };
 
 }  // namespace edb

@@ -1,5 +1,25 @@
 cmake_minimum_required(VERSION 3.25)
+
+# EDB requires GCC 16 for C++26 contracts via -fcontracts.
+find_program(EDB_GXX16_EXECUTABLE NAMES g++-16 REQUIRED)
+
+# Pick the project compiler before project() performs compiler detection.
+if(NOT DEFINED CMAKE_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${EDB_GXX16_EXECUTABLE} CACHE FILEPATH "C++ compiler")
+endif()
+
 project(edb LANGUAGES CXX)
+
+get_filename_component(EDB_REQUIRED_CXX_REAL ${EDB_GXX16_EXECUTABLE} REALPATH)
+get_filename_component(EDB_ACTUAL_CXX_REAL ${CMAKE_CXX_COMPILER} REALPATH)
+if(NOT EDB_ACTUAL_CXX_REAL STREQUAL EDB_REQUIRED_CXX_REAL)
+  message(FATAL_ERROR
+    "EDB must be built with g++-16. "
+    "Detected '${CMAKE_CXX_COMPILER}', required '${EDB_GXX16_EXECUTABLE}'. "
+    "Reconfigure with -DCMAKE_CXX_COMPILER=${EDB_GXX16_EXECUTABLE} "
+    "or clear the build directory."
+  )
+endif()
 
 # ---------------------------------------------------------------------------
 # Language standard
@@ -7,13 +27,6 @@ project(edb LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)          # -fno-gnu-extensions / ISO C++ only
-
-# ---------------------------------------------------------------------------
-# Compiler
-# ---------------------------------------------------------------------------
-if(NOT CMAKE_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER g++-16)
-endif()
 
 # ---------------------------------------------------------------------------
 # compile_commands.json  (used by clang-tidy)
@@ -59,8 +72,8 @@ add_subdirectory(tests)
 # ---------------------------------------------------------------------------
 # format / format-check / tidy targets
 # ---------------------------------------------------------------------------
-find_program(CLANG_FORMAT clang-format)
-find_program(CLANG_TIDY   clang-tidy)
+find_program(CLANG_FORMAT clang-format REQUIRED)
+find_program(CLANG_TIDY   clang-tidy REQUIRED)
 
 file(GLOB_RECURSE EDB_ALL_SOURCES
   "${CMAKE_SOURCE_DIR}/src/**/*.cpp"
@@ -69,29 +82,24 @@ file(GLOB_RECURSE EDB_ALL_SOURCES
   "${CMAKE_SOURCE_DIR}/tests/**/*.hpp"
 )
 
-if(CLANG_FORMAT)
-  add_custom_target(format
-    COMMAND ${CLANG_FORMAT} -i ${EDB_ALL_SOURCES}
-    COMMENT "Formatting all sources with clang-format"
-  )
-  add_custom_target(format-check
-    COMMAND ${CLANG_FORMAT} --dry-run --Werror ${EDB_ALL_SOURCES}
-    COMMENT "Checking format (no files modified)"
-  )
-else()
-  message(WARNING "clang-format not found — 'format' and 'format-check' targets unavailable")
-endif()
+add_custom_target(format
+  COMMAND ${CLANG_FORMAT} -i ${EDB_ALL_SOURCES}
+  COMMENT "Formatting all sources with clang-format"
+)
+add_custom_target(format-check
+  COMMAND ${CLANG_FORMAT} --dry-run --Werror ${EDB_ALL_SOURCES}
+  COMMENT "Checking format (no files modified)"
+)
 
-if(CLANG_TIDY)
-  add_custom_target(tidy
-    # clang-tidy uses clang which doesn't understand -fcontracts (GCC-only).
-    # Strip it from compile_commands before running. Use sh -c for shell redirect.
-    COMMAND sh -c "sed 's/ -fcontracts//g' ${CMAKE_BINARY_DIR}/compile_commands.json > ${CMAKE_BINARY_DIR}/compile_commands_tidy.json"
-    COMMAND ${CLANG_TIDY}
-            -p ${CMAKE_BINARY_DIR}/compile_commands_tidy.json
-            ${EDB_ALL_SOURCES}
-    COMMENT "Running clang-tidy"
-  )
-else()
-  message(WARNING "clang-tidy not found — 'tidy' target unavailable")
-endif()
+add_custom_target(tidy
+  # clang-tidy uses clang which doesn't understand -fcontracts (GCC-only).
+  # Strip it from compile_commands before running.
+  COMMAND ${CMAKE_COMMAND}
+    -DINPUT=${CMAKE_BINARY_DIR}/compile_commands.json
+      -DOUTPUT=${CMAKE_BINARY_DIR}/tidy/compile_commands.json
+    -P ${CMAKE_SOURCE_DIR}/cmake/StripContracts.cmake
+  COMMAND ${CLANG_TIDY}
+      -p ${CMAKE_BINARY_DIR}/tidy
+          ${EDB_ALL_SOURCES}
+  COMMENT "Running clang-tidy"
+)

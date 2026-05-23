@@ -21,12 +21,15 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <numeric>
 #include <print>
+#include <span>
 #include <vector>
 
 #include "storage/io/posix/posix_io.hpp"
@@ -52,14 +55,14 @@ double elapsed_s(std::chrono::steady_clock::time_point start,
 // Simple LCG for pseudo-random page order (reproducible, no stdlib overhead).
 class Lcg {
    public:
-    explicit Lcg(std::uint64_t seed) : state_(seed) {}
+    explicit Lcg(std::uint64_t seed) : state(seed) {}
     std::uint64_t next() {
-        state_ = state_ * 6364136223846793005ULL + 1442695040888963407ULL;
-        return state_;
+        state = (state * 6364136223846793005ULL) + 1442695040888963407ULL;
+        return state;
     }
 
    private:
-    std::uint64_t state_;
+    std::uint64_t state;
 };
 
 // ---------------------------------------------------------------------------
@@ -72,7 +75,7 @@ void run_sequential_write(PosixIO& io, const std::vector<std::byte>& page, std::
     auto start = std::chrono::steady_clock::now();
     for (std::size_t i = 0; i < page_count; ++i) {
         // raw-primitive: multiplication for offset
-        const std::uint64_t off = static_cast<std::uint64_t>(i * psz);
+        const auto off = static_cast<std::uint64_t>(i * psz);
         auto res = io.write(u64{off}, std::span<const std::byte>{page});
         if (!res) {
             std::println(stderr, "write error at page {}", i);
@@ -92,7 +95,7 @@ void run_sequential_read(PosixIO& io, std::size_t page_size, std::size_t page_co
 
     auto start = std::chrono::steady_clock::now();
     for (std::size_t i = 0; i < page_count; ++i) {
-        const std::uint64_t off = static_cast<std::uint64_t>(i * page_size);  // raw-primitive
+        const auto off = static_cast<std::uint64_t>(i * page_size);  // raw-primitive
         auto res = io.read(u64{off}, std::span<std::byte>{buf});
         if (!res) {
             std::println(stderr, "read error at page {}", i);
@@ -110,17 +113,17 @@ void run_sequential_read(PosixIO& io, std::size_t page_size, std::size_t page_co
 void run_random_read(PosixIO& io, std::size_t page_size, std::size_t page_count) {
     // Build a shuffled page index.
     std::vector<std::size_t> order(page_count);
-    std::iota(order.begin(), order.end(), std::size_t{0});
+    std::ranges::iota(order, std::size_t{0});
     Lcg lcg{0xDEADBEEF'CAFEBABE};
     for (std::size_t i = page_count - 1; i > 0; --i) {
-        const std::size_t j = static_cast<std::size_t>(lcg.next() % (i + 1));  // raw-primitive
+        const auto j = static_cast<std::size_t>(lcg.next() % (i + 1));  // raw-primitive
         std::swap(order[i], order[j]);
     }
 
     std::vector<std::byte> buf(page_size);
     auto start = std::chrono::steady_clock::now();
     for (std::size_t idx : order) {
-        const std::uint64_t off = static_cast<std::uint64_t>(idx * page_size);  // raw-primitive
+        const auto off = static_cast<std::uint64_t>(idx * page_size);  // raw-primitive
         auto res = io.read(u64{off}, std::span<std::byte>{buf});
         if (!res) {
             std::println(stderr, "read error at page {}", idx);
@@ -141,11 +144,13 @@ void run_random_read(PosixIO& io, std::size_t page_size, std::size_t page_count)
 // main
 // ---------------------------------------------------------------------------
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) try {
     // Defaults: 4 KiB pages, 4096 pages = 16 MiB total.
     // raw-primitive: atol / argc are POSIX / C main signature (no wrappers there)
-    std::size_t page_size = (argc > 1) ? static_cast<std::size_t>(std::atol(argv[1])) : 4096;
-    std::size_t page_count = (argc > 2) ? static_cast<std::size_t>(std::atol(argv[2])) : 4096;
+    const std::span<char*> args{argv, static_cast<std::size_t>(argc)};
+    std::size_t page_size = (args.size() > 1) ? static_cast<std::size_t>(std::atol(args[1])) : 4096;
+    std::size_t page_count =
+        (args.size() > 2) ? static_cast<std::size_t>(std::atol(args[2])) : 4096;
 
     if (page_size == 0 || page_count == 0) {
         std::println(stderr, "Usage: io_bench [page_size_bytes [page_count]]");
@@ -153,15 +158,15 @@ int main(int argc, char* argv[]) {
     }
 
     // Temp file for the benchmark.
-    char tmpl[] = "/tmp/edb_io_bench_XXXXXX";
+    std::array<char, 25> tmpl{"/tmp/edb_io_bench_XXXXXX"};
     // raw-primitive: mkstemp returns int
-    const int tmp_fd = ::mkstemp(tmpl);
+    const int tmp_fd = ::mkstemp(tmpl.data());
     if (tmp_fd < 0) {
         std::println(stderr, "mkstemp failed");
         return 1;
     }
     ::close(tmp_fd);  // raw-primitive: close takes int
-    const std::string bench_path = tmpl;
+    const std::string bench_path = tmpl.data();
 
     std::println("io_bench: page_size={} bytes, page_count={}, total={:.1f} MiB", page_size,
                  page_count, bytes_to_mib(page_size * page_count));
@@ -182,11 +187,27 @@ int main(int argc, char* argv[]) {
     }
 
     run_sequential_write(io, page, page_count);
-    (void)io.sync();
+    if (auto sync_res = io.sync(); !sync_res) {
+        std::println(stderr, "sync failed");
+        std::filesystem::remove(bench_path);
+        return 1;
+    }
     run_sequential_read(io, page_size, page_count);
     run_random_read(io, page_size, page_count);
 
-    (void)io.close();
+    if (auto close_res = io.close(); !close_res) {
+        std::println(stderr, "close failed");
+        std::filesystem::remove(bench_path);
+        return 1;
+    }
     std::filesystem::remove(bench_path);
     return 0;
+} catch (const std::exception& ex) {
+    std::fputs("io_bench failed: ", stderr);
+    std::fputs(ex.what(), stderr);
+    std::fputc('\n', stderr);
+    return 1;
+} catch (...) {
+    std::fputs("io_bench failed with an unknown exception\n", stderr);
+    return 1;
 }
