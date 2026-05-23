@@ -1,1 +1,23 @@
+# Build output
 build/
+out/
+
+# CMake user-local files
+CMakeUserPresets.json
+cmake-build-*/
+
+# clangd / LSP caches
+.cache/
+.clangd/
+compile_commands.json
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

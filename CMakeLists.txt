@@ -83,8 +83,11 @@ endif()
 
 if(CLANG_TIDY)
   add_custom_target(tidy
+    # clang-tidy uses clang which doesn't understand -fcontracts (GCC-only).
+    # Strip it from compile_commands before running. Use sh -c for shell redirect.
+    COMMAND sh -c "sed 's/ -fcontracts//g' ${CMAKE_BINARY_DIR}/compile_commands.json > ${CMAKE_BINARY_DIR}/compile_commands_tidy.json"
     COMMAND ${CLANG_TIDY}
-            -p ${CMAKE_BINARY_DIR}
+            -p ${CMAKE_BINARY_DIR}/compile_commands_tidy.json
             ${EDB_ALL_SOURCES}
     COMMENT "Running clang-tidy"
   )

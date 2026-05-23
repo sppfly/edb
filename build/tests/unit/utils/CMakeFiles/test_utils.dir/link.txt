@@ -1,1 +1,0 @@
-/usr/bin/g++-16 -g -Wl,--dependency-file=CMakeFiles/test_utils.dir/link.d CMakeFiles/test_utils.dir/primitives_test.cpp.o CMakeFiles/test_utils.dir/error_test.cpp.o CMakeFiles/test_utils.dir/log_test.cpp.o -o test_utils  ../../../lib/libgtest_main.a ../../../lib/libgtest.a

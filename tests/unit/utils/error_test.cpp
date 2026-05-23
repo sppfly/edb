@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+
 using namespace edb;
 
 // ---------------------------------------------------------------------------
@@ -40,7 +42,7 @@ TEST(EdbError, StatusErrorCarriesCode) {
 // ---------------------------------------------------------------------------
 
 TEST(EdbError, ErrorNameNonEmpty) {
-    constexpr EdbError codes[] = {
+    constexpr std::array codes = {
         EdbError::Ok,
         EdbError::InvalidArgument,
         EdbError::OutOfMemory,
@@ -66,7 +68,9 @@ TEST(EdbError, ErrorNameNonEmpty) {
         EdbError::ExecutorError,
     };
     for (auto code : codes) {
-        EXPECT_FALSE(edb_error_name(code).empty()) << "Missing name for code " << static_cast<int>(code);  // raw-primitive: enum underlying cast for message
+        EXPECT_FALSE(edb_error_name(code).empty())
+            << "Missing name for code "
+            << static_cast<int>(code);  // raw-primitive: enum underlying cast for message
     }
 }
 
@@ -80,7 +84,7 @@ TEST(EdbError, ErrorNameOkIsOk) {
 
 TEST(EdbError, ValueOr) {
     EdbResult<int> bad{std::unexpected(EdbError::NotFound)};  // raw-primitive: gtest int
-    EXPECT_EQ(bad.value_or(-1), -1);  // raw-primitive: gtest int
+    EXPECT_EQ(bad.value_or(-1), -1);                          // raw-primitive: gtest int
 }
 
 TEST(EdbError, AndThenChaining) {

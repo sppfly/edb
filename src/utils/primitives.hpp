@@ -43,56 +43,105 @@ struct Primitive {
     constexpr Primitive& operator=(const Primitive&) noexcept = default;
     constexpr Primitive(Primitive&&) noexcept = default;
     constexpr Primitive& operator=(Primitive&&) noexcept = default;
+    constexpr ~Primitive() noexcept = default;
 
     // Comparison — full set via spaceship.
     constexpr auto operator<=>(const Primitive&) const noexcept = default;
     constexpr bool operator==(const Primitive&) const noexcept = default;
 
     // Arithmetic — same type only (cross-type is a compile error).
-    constexpr Primitive operator+(Primitive rhs) const noexcept { return Primitive{static_cast<T>(value + rhs.value)}; }
-    constexpr Primitive operator-(Primitive rhs) const noexcept { return Primitive{static_cast<T>(value - rhs.value)}; }
-    constexpr Primitive operator*(Primitive rhs) const noexcept { return Primitive{static_cast<T>(value * rhs.value)}; }
-    constexpr Primitive operator/(Primitive rhs) const noexcept { return Primitive{static_cast<T>(value / rhs.value)}; }
+    constexpr Primitive operator+(Primitive rhs) const noexcept {
+        return Primitive{static_cast<T>(value + rhs.value)};
+    }
+    constexpr Primitive operator-(Primitive rhs) const noexcept {
+        return Primitive{static_cast<T>(value - rhs.value)};
+    }
+    constexpr Primitive operator*(Primitive rhs) const noexcept {
+        return Primitive{static_cast<T>(value * rhs.value)};
+    }
+    constexpr Primitive operator/(Primitive rhs) const noexcept {
+        return Primitive{static_cast<T>(value / rhs.value)};
+    }
     constexpr Primitive operator%(Primitive rhs) const noexcept
         requires std::integral<T>
     {
         return Primitive{static_cast<T>(value % rhs.value)};
     }
 
-    constexpr Primitive& operator+=(Primitive rhs) noexcept { value = static_cast<T>(value + rhs.value); return *this; }
-    constexpr Primitive& operator-=(Primitive rhs) noexcept { value = static_cast<T>(value - rhs.value); return *this; }
-    constexpr Primitive& operator*=(Primitive rhs) noexcept { value = static_cast<T>(value * rhs.value); return *this; }
-    constexpr Primitive& operator/=(Primitive rhs) noexcept { value = static_cast<T>(value / rhs.value); return *this; }
+    constexpr Primitive& operator+=(Primitive rhs) noexcept {
+        value = static_cast<T>(value + rhs.value);
+        return *this;
+    }
+    constexpr Primitive& operator-=(Primitive rhs) noexcept {
+        value = static_cast<T>(value - rhs.value);
+        return *this;
+    }
+    constexpr Primitive& operator*=(Primitive rhs) noexcept {
+        value = static_cast<T>(value * rhs.value);
+        return *this;
+    }
+    constexpr Primitive& operator/=(Primitive rhs) noexcept {
+        value = static_cast<T>(value / rhs.value);
+        return *this;
+    }
 
-    constexpr Primitive& operator++() noexcept { ++value; return *this; }
-    constexpr Primitive  operator++(int) noexcept { auto old = *this; ++value; return old; }
-    constexpr Primitive& operator--() noexcept { --value; return *this; }
-    constexpr Primitive  operator--(int) noexcept { auto old = *this; --value; return old; }
+    constexpr Primitive& operator++() noexcept {
+        ++value;
+        return *this;
+    }
+    constexpr Primitive operator++(int) noexcept {
+        auto old = *this;
+        ++value;
+        return old;
+    }
+    constexpr Primitive& operator--() noexcept {
+        --value;
+        return *this;
+    }
+    constexpr Primitive operator--(int) noexcept {
+        auto old = *this;
+        --value;
+        return old;
+    }
 
     // Bitwise — integers only.
     constexpr Primitive operator&(Primitive rhs) const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(value & rhs.value)}; }
+    {
+        return Primitive{static_cast<T>(value & rhs.value)};
+    }
     constexpr Primitive operator|(Primitive rhs) const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(value | rhs.value)}; }
+    {
+        return Primitive{static_cast<T>(value | rhs.value)};
+    }
     constexpr Primitive operator^(Primitive rhs) const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(value ^ rhs.value)}; }
+    {
+        return Primitive{static_cast<T>(value ^ rhs.value)};
+    }
     constexpr Primitive operator~() const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(~value)}; }
+    {
+        return Primitive{static_cast<T>(~value)};
+    }
     constexpr Primitive operator<<(Primitive rhs) const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(value << rhs.value)}; }
+    {
+        return Primitive{static_cast<T>(value << rhs.value)};
+    }
     constexpr Primitive operator>>(Primitive rhs) const noexcept
         requires std::integral<T>
-    { return Primitive{static_cast<T>(value >> rhs.value)}; }
+    {
+        return Primitive{static_cast<T>(value >> rhs.value)};
+    }
 
     // Unary minus — signed / float only.
     constexpr Primitive operator-() const noexcept
         requires(std::signed_integral<T> || std::floating_point<T>)
-    { return Primitive{static_cast<T>(-value)}; }
+    {
+        return Primitive{static_cast<T>(-value)};
+    }
 
     // Deleted: implicit conversion to underlying type.
     explicit operator T() const noexcept { return value; }
@@ -105,40 +154,40 @@ struct Primitive {
 // ---------------------------------------------------------------------------
 
 // Signed integers
-struct i8_tag {};
-struct i16_tag {};
-struct i32_tag {};
-struct i64_tag {};
-using i8  = detail::Primitive<int8_t,  i8_tag>;
-using i16 = detail::Primitive<int16_t, i16_tag>;
-using i32 = detail::Primitive<int32_t, i32_tag>;
-using i64 = detail::Primitive<int64_t, i64_tag>;
+struct I8Tag {};
+struct I16Tag {};
+struct I32Tag {};
+struct I64Tag {};
+using i8 = detail::Primitive<int8_t, I8Tag>;
+using i16 = detail::Primitive<int16_t, I16Tag>;
+using i32 = detail::Primitive<int32_t, I32Tag>;
+using i64 = detail::Primitive<int64_t, I64Tag>;
 
 // Unsigned integers
-struct u8_tag {};
-struct u16_tag {};
-struct u32_tag {};
-struct u64_tag {};
-using u8   = detail::Primitive<uint8_t,  u8_tag>;
-using u16  = detail::Primitive<uint16_t, u16_tag>;
-using u32  = detail::Primitive<uint32_t, u32_tag>;
-using u64  = detail::Primitive<uint64_t, u64_tag>;
+struct U8Tag {};
+struct U16Tag {};
+struct U32Tag {};
+struct U64Tag {};
+using u8 = detail::Primitive<uint8_t, U8Tag>;
+using u16 = detail::Primitive<uint16_t, U16Tag>;
+using u32 = detail::Primitive<uint32_t, U32Tag>;
+using u64 = detail::Primitive<uint64_t, U64Tag>;
 
 // Floating-point
-struct f32_tag {};
-struct f64_tag {};
-using f32 = detail::Primitive<float,  f32_tag>;
-using f64 = detail::Primitive<double, f64_tag>;
+struct F32Tag {};
+struct F64Tag {};
+using f32 = detail::Primitive<float, F32Tag>;
+using f64 = detail::Primitive<double, F64Tag>;
 
 // Boolean
-struct b8_tag {};
-using b8 = detail::Primitive<bool, b8_tag>;
+struct B8Tag {};
+using b8 = detail::Primitive<bool, B8Tag>;
 
 // Size types
-struct usize_tag {};
-struct isize_tag {};
-using usize = detail::Primitive<std::size_t,    usize_tag>;
-using isize = detail::Primitive<std::ptrdiff_t, isize_tag>;
+struct UsizeTag {};
+struct IsizeTag {};
+using usize = detail::Primitive<std::size_t, UsizeTag>;
+using isize = detail::Primitive<std::ptrdiff_t, IsizeTag>;
 
 // ---------------------------------------------------------------------------
 // User-defined literals  (optional convenience)
@@ -146,12 +195,24 @@ using isize = detail::Primitive<std::ptrdiff_t, isize_tag>;
 // ---------------------------------------------------------------------------
 namespace literals {
 
-constexpr i32   operator""_i32(unsigned long long v) { return i32{static_cast<int32_t>(v)}; }   // raw-primitive: ULL literal
-constexpr i64   operator""_i64(unsigned long long v) { return i64{static_cast<int64_t>(v)}; }   // raw-primitive: ULL literal
-constexpr u32   operator""_u32(unsigned long long v) { return u32{static_cast<uint32_t>(v)}; }  // raw-primitive: ULL literal
-constexpr u64   operator""_u64(unsigned long long v) { return u64{static_cast<uint64_t>(v)}; }  // raw-primitive: ULL literal
-constexpr usize operator""_uz (unsigned long long v) { return usize{static_cast<std::size_t>(v)}; } // raw-primitive: ULL literal
-constexpr f64   operator""_f64(long double v)        { return f64{static_cast<double>(v)}; }    // raw-primitive: LD literal
+constexpr i32 operator""_i32(unsigned long long v) {
+    return i32{static_cast<int32_t>(v)};
+}  // raw-primitive: ULL literal
+constexpr i64 operator""_i64(unsigned long long v) {
+    return i64{static_cast<int64_t>(v)};
+}  // raw-primitive: ULL literal
+constexpr u32 operator""_u32(unsigned long long v) {
+    return u32{static_cast<uint32_t>(v)};
+}  // raw-primitive: ULL literal
+constexpr u64 operator""_u64(unsigned long long v) {
+    return u64{static_cast<uint64_t>(v)};
+}  // raw-primitive: ULL literal
+constexpr usize operator""_uz(unsigned long long v) {
+    return usize{static_cast<std::size_t>(v)};
+}  // raw-primitive: ULL literal
+constexpr f64 operator""_f64(long double v) {
+    return f64{static_cast<double>(v)};
+}  // raw-primitive: LD literal
 
 }  // namespace literals
 

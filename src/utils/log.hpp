@@ -13,16 +13,17 @@
 //   [LEVEL] [module] message
 //
 // Thread-safety: edb_log() is safe to call from multiple threads.
-//   The underlying write to stderr is a single fprintf call, which is
-//   atomic at the OS level for typical message sizes.
+//   std::println is internally synchronized per the C++23 standard.
 //
 // Log level filtering: set EDB_LOG_LEVEL env var at runtime:
 //   EDB_LOG_LEVEL=debug ./edb
 //   Levels: debug < info < warn < error < none
 //   Default level: info (debug messages suppressed).
 
-#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 #include <format>
+#include <print>
 #include <string_view>
 
 namespace edb {
@@ -30,21 +31,26 @@ namespace edb {
 // ---------------------------------------------------------------------------
 // Log levels
 // ---------------------------------------------------------------------------
-enum class LogLevel : int {
+enum class LogLevel : uint8_t {  // raw-primitive: enum base type requires stdint typedef
     Debug = 0,
-    Info  = 1,
-    Warn  = 2,
+    Info = 1,
+    Warn = 2,
     Error = 3,
-    None  = 4,  // suppress all output
+    None = 4,  // suppress all output
 };
 
 constexpr std::string_view log_level_name(LogLevel level) noexcept {
     switch (level) {
-        case LogLevel::Debug: return "DEBUG";
-        case LogLevel::Info:  return "INFO ";
-        case LogLevel::Warn:  return "WARN ";
-        case LogLevel::Error: return "ERROR";
-        case LogLevel::None:  return "NONE ";
+        case LogLevel::Debug:
+            return "DEBUG";
+        case LogLevel::Info:
+            return "INFO ";
+        case LogLevel::Warn:
+            return "WARN ";
+        case LogLevel::Error:
+            return "ERROR";
+        case LogLevel::None:
+            return "NONE ";
     }
     return "?????";
 }
@@ -55,19 +61,30 @@ constexpr std::string_view log_level_name(LogLevel level) noexcept {
 namespace detail {
 
 inline LogLevel active_log_level() noexcept {
-    // Called once per process; result is stored in a function-local static.
-    static const LogLevel level = [] {
+    static const LogLevel active = [] {
         const char* env = std::getenv("EDB_LOG_LEVEL");  // raw-primitive: C env API returns char*
-        if (env == nullptr) return LogLevel::Info;
-        std::string_view s{env};
-        if (s == "debug") return LogLevel::Debug;
-        if (s == "info")  return LogLevel::Info;
-        if (s == "warn")  return LogLevel::Warn;
-        if (s == "error") return LogLevel::Error;
-        if (s == "none")  return LogLevel::None;
+        if (env == nullptr) {
+            return LogLevel::Info;
+        }
+        const std::string_view s{env};
+        if (s == "debug") {
+            return LogLevel::Debug;
+        }
+        if (s == "info") {
+            return LogLevel::Info;
+        }
+        if (s == "warn") {
+            return LogLevel::Warn;
+        }
+        if (s == "error") {
+            return LogLevel::Error;
+        }
+        if (s == "none") {
+            return LogLevel::None;
+        }
         return LogLevel::Info;
     }();
-    return level;
+    return active;
 }
 
 }  // namespace detail
@@ -76,20 +93,14 @@ inline LogLevel active_log_level() noexcept {
 // Core logging function
 // ---------------------------------------------------------------------------
 template <typename... Args>
-void edb_log(LogLevel level, std::string_view module,
-             std::format_string<Args...> fmt, Args&&... args) {
-    if (level < detail::active_log_level()) return;
-
-    // Format the message using std::format (C++20/23/26).
+void edb_log(LogLevel level, std::string_view module, std::format_string<Args...> fmt,
+             Args&&... args) {
+    if (level < detail::active_log_level()) {
+        return;
+    }
     const auto msg = std::format(fmt, std::forward<Args>(args)...);
-
-    // Single fprintf call — atomic for small messages on POSIX.
-    std::fprintf(  // raw-primitive: C stdio API
-        stderr, "[%s] [%.*s] %.*s\n",
-        log_level_name(level).data(),
-        static_cast<int>(module.size()), module.data(),  // raw-primitive: fprintf %.*s needs int
-        static_cast<int>(msg.size()),    msg.data()       // raw-primitive: fprintf %.*s needs int
-    );
+    // std::println to FILE* is C++23; synchronized per standard (no torn lines).
+    std::println(stderr, "[{}] [{}] {}", log_level_name(level), module, msg);
 }
 
 }  // namespace edb
@@ -98,13 +109,13 @@ void edb_log(LogLevel level, std::string_view module,
 // Convenience macros — reduce boilerplate at call sites.
 // ---------------------------------------------------------------------------
 #define EDB_LOG_DEBUG(module, fmt, ...) \
-    ::edb::edb_log(::edb::LogLevel::Debug, (module), (fmt) __VA_OPT__(, __VA_ARGS__))
+    ::edb::edb_log(::edb::LogLevel::Debug, (module), (fmt)__VA_OPT__(, __VA_ARGS__))
 
 #define EDB_LOG_INFO(module, fmt, ...) \
-    ::edb::edb_log(::edb::LogLevel::Info, (module), (fmt) __VA_OPT__(, __VA_ARGS__))
+    ::edb::edb_log(::edb::LogLevel::Info, (module), (fmt)__VA_OPT__(, __VA_ARGS__))
 
 #define EDB_LOG_WARN(module, fmt, ...) \
-    ::edb::edb_log(::edb::LogLevel::Warn, (module), (fmt) __VA_OPT__(, __VA_ARGS__))
+    ::edb::edb_log(::edb::LogLevel::Warn, (module), (fmt)__VA_OPT__(, __VA_ARGS__))
 
 #define EDB_LOG_ERROR(module, fmt, ...) \
-    ::edb::edb_log(::edb::LogLevel::Error, (module), (fmt) __VA_OPT__(, __VA_ARGS__))
+    ::edb::edb_log(::edb::LogLevel::Error, (module), (fmt)__VA_OPT__(, __VA_ARGS__))

@@ -1,6 +1,7 @@
 #include "utils/primitives.hpp"
 
 #include <gtest/gtest.h>
+
 #include <unordered_set>
 
 using namespace edb;
@@ -24,7 +25,7 @@ TEST(Primitives, DefaultConstructionIsZero) {
 TEST(Primitives, UserDefinedLiterals) {
     EXPECT_EQ(42_i32, i32{42});
     EXPECT_EQ(10_u64, u64{10});
-    EXPECT_EQ(1_uz,   usize{1});
+    EXPECT_EQ(1_uz, usize{1});
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +140,7 @@ TEST(Primitives, HashUsableInUnorderedSet) {
     std::unordered_set<u64> s;
     s.insert(u64{1});
     s.insert(u64{2});
-    s.insert(u64{1});  // duplicate
+    s.insert(u64{1});                                  // duplicate
     EXPECT_EQ(s.size(), static_cast<std::size_t>(2));  // raw-primitive: gtest size_t
 }
 
