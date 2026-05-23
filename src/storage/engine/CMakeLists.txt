@@ -2,6 +2,8 @@
 
 add_library(edb_engine STATIC
     engine_ops.cpp
+    heap/page.cpp
+    heap/heap_engine.cpp
 )
 
 target_include_directories(edb_engine
@@ -9,5 +11,5 @@ target_include_directories(edb_engine
 )
 
 target_link_libraries(edb_engine
-    PUBLIC edb_page
+    PUBLIC edb_buffer
 )

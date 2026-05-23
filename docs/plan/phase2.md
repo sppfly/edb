@@ -1,4 +1,4 @@
-# Phase 2 — Storage Layer 🔄
+# Phase 2 — Storage Layer ✅
 
 Build the storage stack above the I/O backend. The goal is end-to-end write-page / read-page through the full stack, with a clean multi-engine abstraction.
 
@@ -9,14 +9,14 @@ Query Executor
       │  scan_next() / insert_tuple()
       ▼
 EdbStorageEngineOps        ← pluggable engine interface (the multi-engine seam) ✅
-  ├── HeapEngine           (row-store, slot array)     Phase 2d
+    ├── HeapEngine           (row-store, slot array)     Phase 2d ✅
   ├── ColumnarEngine       (column stripes)            future
   ├── PAXEngine            (columns within pages)      future
   ├── VectorEngine         (ANN / HNSW)                future
   └── FullTextEngine       (inverted index)            future
       │ (engines that need paged I/O use the buffer pool)
       ▼
-Buffer Pool Manager        ← shared, format-agnostic page cache   Phase 2c
+Buffer Pool Manager        ← shared, format-agnostic page cache   Phase 2c ✅
       │
       ▼
 Page Store                 ← maps page_id → byte offset           Phase 2a ✅
@@ -114,7 +114,7 @@ struct TupleId {
 
 ---
 
-## Phase 2c — Buffer Pool Manager 🔲
+## Phase 2c — Buffer Pool Manager ✅
 
 Shared page cache used by engines that need paged I/O. Format-agnostic.
 
@@ -155,13 +155,13 @@ struct FrameHandle {
 
 ### Deliverables
 
-- [ ] `EdbBufferPool` with clock-sweep eviction
-- [ ] `FrameHandle`: move-only RAII; asserts unpin before destruction
-- [ ] Unit tests: hit/miss/eviction/dirty-writeback/pin-guard
+- [x] `EdbBufferPool` with clock-sweep eviction
+- [x] `EdbFrameHandle`: move-only pinned frame handle with explicit unpin
+- [x] Unit tests: hit/miss/eviction/dirty-writeback/pin-guard
 
 ---
 
-## Phase 2d — Heap Storage Engine 🔲
+## Phase 2d — Heap Storage Engine ✅
 
 First concrete implementation of `EdbStorageEngineOps`. Row-store with slot-array page format.
 
@@ -186,10 +186,13 @@ Each tuple is opaque bytes from the engine's perspective; the type system (Phase
 
 ### Deliverables
 
-- [ ] `HeapEngine : EdbStorageEngineOps`
-- [ ] `page.hpp`: page header layout, slot array helpers, free-space calculation
-- [ ] `insert`: find page with free space (free-space map), write slot + tuple
-- [ ] `delete_`: mark slot as dead (tombstone), no immediate compaction
-- [ ] `scan_next`: iterate live slots across all pages, skip tombstones
-- [ ] `vacuum`: compact dead slots, reclaim free space (can be a later sub-task)
-- [ ] Integration test: insert N tuples → reopen → scan → verify all present
+- [x] `EdbHeapEngine : EdbStorageEngineOps`
+- [x] `page.hpp`: page header layout, slot array helpers, free-space calculation
+- [x] `insert`: find page with free space, write slot + tuple
+- [x] `delete_tuple`: mark slot as dead (tombstone), no immediate compaction
+- [x] `scan_next`: iterate live slots across all pages, skip tombstones
+- [x] Integration test: insert N tuples → reopen → scan → verify all present
+
+### Deferred Follow-up
+
+- `vacuum`: compact dead slots and reclaim free space after MVCC / WAL semantics are defined

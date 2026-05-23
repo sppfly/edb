@@ -20,6 +20,7 @@ namespace edb {
 
 struct EdbEngineConfig {
     usize page_size{8192};
+    usize buffer_pool_pages{1024};
 };
 
 struct EdbTupleId {

@@ -1,5 +1,6 @@
 add_executable(test_engine
     engine_ops_test.cpp
+    heap_engine_test.cpp
 )
 
 target_link_libraries(test_engine
