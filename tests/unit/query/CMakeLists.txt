@@ -1,4 +1,5 @@
 add_executable(test_query
+  test_binder.cpp
   test_lexer.cpp
   test_parser.cpp
 )
