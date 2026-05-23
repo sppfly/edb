@@ -87,6 +87,7 @@ add_subdirectory(src/storage)
 add_subdirectory(src/types)
 add_subdirectory(src/catalog)
 add_subdirectory(src/query)
+add_subdirectory(src/transaction)
 
 # ---------------------------------------------------------------------------
 # Tests
