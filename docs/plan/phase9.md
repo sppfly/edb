@@ -4,6 +4,8 @@ The long-term distributed shape should be a shared-nothing database with explici
 
 The important design rule is that distributed mode should reuse as much of the single-node engine as possible. A distributed node is still an EDB instance with catalog, storage engine, executor, transaction manager, and WAL; the cluster layer adds routing, replication, metadata placement, and cross-shard coordination.
 
+Just as importantly, the distributed roadmap must not erase EDB's single-node extensibility story. New storage engines, access methods, and executor backends should remain implementable and testable locally before they are made distributed.
+
 ## Target Shape
 
 ```
@@ -44,12 +46,22 @@ The coordinator should not own durable table data.
 Each data node runs the normal local EDB stack for the shards it owns:
 
 - storage engine
+- access methods / indexes
 - buffer pool
 - WAL / recovery
 - local transaction manager
 - local executor
 
 This keeps single-node and distributed code paths closely aligned.
+
+That alignment matters because many research ideas should first land as local-node plugins:
+
+- a new storage layout
+- a new index/access method
+- a new join or aggregation implementation
+- a new execution backend
+
+Only after they work locally should the cluster layer decide how to route to them, replicate them, or coordinate them across shards.
 
 ### Shard Group
 
@@ -197,6 +209,7 @@ It does not need to solve every rebalancing and network-partition corner case in
 - not a global buffer pool across nodes
 - not a design that assumes every query is distributed by default
 - not a requirement that PostgreSQL wire protocol exist before cluster internals
+- not a design where distributed concerns replace single-node experimentation as the primary goal
 
 ## Deliverables
 

@@ -9,6 +9,7 @@ By Phase 5, table usability already exists for developers through Phase 4. Phase
 - Keep SQL frontend, semantic binding, logical planning, and physical execution as separate layers.
 - Make the first implementation the simplest correct reference path.
 - Preserve room for later execution backends: Volcano, vectorized, morsel-driven, and specialized scan/execution paths.
+- Preserve room for later access paths and physical algorithms: indexes, join algorithms, aggregation strategies, and scan variants.
 - Reuse the Phase 4 table/catalog API instead of duplicating storage logic in the query layer.
 
 ## Stable Skeleton
@@ -63,6 +64,8 @@ Examples:
 - `LogicalScan` → `PhysicalVectorScan` for a vectorized backend
 - `LogicalScan` → `PhysicalMorselScan` for a morsel-driven backend
 - `LogicalScan` → `PhysicalFtsScan` / `PhysicalAnnScan` for specialized access paths
+- `LogicalJoin` → nested-loop / hash join / merge join physical variants
+- `LogicalAggregate` → row-wise / vectorized / hash / sort-based aggregate variants
 
 ### 2. Expression Layer Independent of Execution Style
 
@@ -98,6 +101,17 @@ Examples:
 - Vectorized executor: scan/filter/project/aggregate first
 - Morsel-driven executor: scan/join/aggregate once scheduling exists
 - Specialized executor: only selected scan and predicate forms
+
+### 6. Access Methods and Join Algorithms Must Remain Pluggable
+
+EDB should be able to test new physical ideas without changing parser, binder, or catalog semantics.
+
+Important future extension points include:
+
+- index access paths: B-tree, hash, inverted/full-text, ANN/vector, learned or hybrid methods
+- join implementations: nested-loop, hash join, merge join, index nested-loop, repartition join
+- aggregation paths: hash aggregate, sort aggregate, vector aggregate, approximate aggregate variants
+- materialization/layout choices: row materialization, column batches, late materialization
 
 ## Phase 5 Sub-Phases
 
@@ -142,6 +156,7 @@ Initial logical operators:
 - `LogicalScan`
 - `LogicalFilter`
 - `LogicalProject`
+- later extensibility targets: `LogicalJoin`, `LogicalAggregate`, `LogicalSort`, `LogicalIndexScan`
 
 Deliverables:
 
@@ -173,6 +188,15 @@ Initial physical operators:
 - `PhysicalProject`
 - `PhysicalInsert`
 - `PhysicalCreateTable`
+
+Later physical experimentation targets:
+
+- `PhysicalIndexScan`
+- `PhysicalNestedLoopJoin`
+- `PhysicalHashJoin`
+- `PhysicalMergeJoin`
+- `PhysicalHashAggregate`
+- `PhysicalSortAggregate`
 
 Deliverables:
 
@@ -216,6 +240,8 @@ In other words: design for multiple execution backends now, but implement only t
 
 - cost-based optimization
 - join reordering
+- alternative join algorithms beyond the minimum reference path
+- index-driven access path selection
 - vectorized execution
 - morsel scheduling
 - JIT / compiled execution

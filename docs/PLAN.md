@@ -50,6 +50,39 @@ Device
 
 ---
 
+## Design Philosophy
+
+EDB is not primarily trying to be the fastest or most feature-complete database first. Its primary goal is to be a strong single-node database kernel with explicit extension boundaries so that new storage layouts, access methods, execution strategies, and research ideas can be implemented without rewriting unrelated subsystems.
+
+### Guiding Rules
+
+- single-node correctness and local usability come before networked or distributed deployment
+- each major layer should expose at least one explicit extension boundary
+- new work should reuse existing boundaries instead of bypassing layers for short-term convenience
+- distributed features must build on top of the single-node engine, not redefine its core abstractions
+- experiments should be possible by replacing one component while leaving the rest of the stack unchanged
+
+### Primary Experimentation Tracks
+
+The plan should preserve room for experimentation in at least these areas:
+
+- type system: new built-in or extension types, casts, and encodings
+- storage I/O backends: POSIX, `io_uring`, xNVMe, future device-specific paths
+- storage engines and layouts: heap, columnar, PAX, vector-aware, full-text-aware layouts
+- access methods: B-tree, hash, inverted index, ANN/vector index, learned or hybrid index ideas
+- execution backends: reference row executor, vectorized execution, morsel-driven scheduling, specialized operators
+- physical algorithms: scan strategies, join algorithms, aggregation layouts, sorting/materialization strategies
+- distributed placement/routing: shard mapping, replica placement, coordinator policies
+
+### What The Plan Must Avoid
+
+- hardwiring one storage layout into the catalog or query layers forever
+- making the first reference executor the only possible execution model
+- treating indexes as fixed built-ins instead of access-method plugins
+- letting network or distributed work distort single-node interfaces too early
+
+---
+
 ## Phase 0 — Project Infrastructure ✅
 
 → See [plan/phase0.md](plan/phase0.md) for full detail.
