@@ -5,6 +5,7 @@ add_library(edb_query STATIC
   logical_plan.cpp
   physical_plan.cpp
   parser.cpp
+  query_engine.cpp
 )
 
 target_include_directories(edb_query PUBLIC
