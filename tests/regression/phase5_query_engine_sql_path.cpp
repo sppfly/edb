@@ -5,15 +5,23 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
 #include "catalog/catalog.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
+
+#ifndef EDB_REGRESSION_SOURCE_DIR
+#define EDB_REGRESSION_SOURCE_DIR "tests/regression"
+#endif
 
 using namespace edb;
 
@@ -85,6 +93,99 @@ auto value_text(const TypeRegistry& registry, const Value& value) -> std::string
     return (*type)->to_text(value.bytes);
 }
 
+auto read_text_file(const std::filesystem::path& path) -> std::string {
+    std::ifstream input{path};
+    EXPECT_TRUE(input.is_open()) << path;
+    std::ostringstream text;
+    text << input.rdbuf();
+    return text.str();
+}
+
+auto trim_sql(std::string_view text) -> std::string_view {
+    const auto start = text.find_first_not_of(" \t\r\n");
+    if (start == std::string_view::npos) {
+        return {};
+    }
+
+    const auto end = text.find_last_not_of(" \t\r\n");
+    return text.substr(start, (end - start) + 1U);
+}
+
+auto split_sql_statements(std::string_view sql) -> std::vector<std::string> {
+    std::vector<std::string> statements;
+    std::string current;
+    b8 in_string{false};
+
+    for (const auto ch : sql) {
+        if (ch == ';' && !static_cast<bool>(in_string)) {
+            const auto statement = trim_sql(current);
+            if (!statement.empty()) {
+                statements.emplace_back(statement);
+            }
+            current.clear();
+            continue;
+        }
+
+        current.push_back(ch);
+        if (ch == '\'') {
+            in_string = b8{!static_cast<bool>(in_string)};
+        }
+    }
+
+    const auto statement = trim_sql(current);
+    if (!statement.empty()) {
+        statements.emplace_back(statement);
+    }
+    return statements;
+}
+
+auto append_query_result(std::ostringstream& output, const QueryResult& result,
+                         const TypeRegistry& registry) -> void {
+    if (result.rows.empty()) {
+        output << "OK\n\n";
+        return;
+    }
+
+    const auto& first_row = result.rows.front();
+    for (std::size_t index = 0; index < first_row.columns.size(); ++index) {
+        if (index != std::size_t{0}) {
+            output << " | ";
+        }
+        output << first_row.columns[index].name;
+    }
+    output << '\n';
+
+    for (const auto& row : result.rows) {
+        for (std::size_t index = 0; index < row.values.size(); ++index) {
+            if (index != std::size_t{0}) {
+                output << " | ";
+            }
+            output << value_text(registry, row.values[index]);
+        }
+        output << '\n';
+    }
+    output << '(' << result.rows.size() << " row";
+    if (result.rows.size() != std::size_t{1}) {
+        output << 's';
+    }
+    output << ")\n\n";
+}
+
+auto run_regression_script(std::string_view sql, QueryEngine& engine,
+                           const TypeRegistry& registry) -> std::string {
+    std::ostringstream output;
+    for (const auto& statement : split_sql_statements(sql)) {
+        auto result = engine.execute(statement);
+        if (!result) {
+            output << "ERROR: " << edb_error_name(result.error()) << ": "
+                   << engine.error_message() << "\n\n";
+            continue;
+        }
+        append_query_result(output, *result, registry);
+    }
+    return output.str();
+}
+
 class Phase5QueryEngineRegression : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -102,28 +203,13 @@ class Phase5QueryEngineRegression : public ::testing::Test {
     Catalog catalog{registry, factory, default_engine_config()};
 };
 
-TEST_F(Phase5QueryEngineRegression, CreateInsertSelectRoundTripUsesCatalogAndStorage) {
+TEST_F(Phase5QueryEngineRegression, BasicSqlFileMatchesExpectedOutput) {
     QueryEngine engine{catalog, registry};
 
-    auto created = engine.execute("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)");
-    ASSERT_TRUE(created.has_value()) << engine.error_message();
-    EXPECT_TRUE(created->rows.empty());
-
-    auto first_insert = engine.execute("INSERT INTO users VALUES (1, 'alice', TRUE)");
-    ASSERT_TRUE(first_insert.has_value()) << engine.error_message();
-    EXPECT_TRUE(first_insert->rows.empty());
-    auto second_insert = engine.execute("INSERT INTO users VALUES (2, 'bob', FALSE)");
-    ASSERT_TRUE(second_insert.has_value()) << engine.error_message();
-    EXPECT_TRUE(second_insert->rows.empty());
-
-    auto selected = engine.execute("SELECT id, name FROM users WHERE active = TRUE");
-    ASSERT_TRUE(selected.has_value()) << engine.error_message();
-    ASSERT_EQ(selected->rows.size(), std::size_t{1});
-    ASSERT_EQ(selected->rows[0].values.size(), std::size_t{2});
-    EXPECT_EQ(selected->rows[0].columns[0].name, std::string{"id"});
-    EXPECT_EQ(selected->rows[0].columns[1].name, std::string{"name"});
-    EXPECT_EQ(value_text(registry, selected->rows[0].values[0]), std::string{"1"});
-    EXPECT_EQ(value_text(registry, selected->rows[0].values[1]), std::string{"alice"});
+    const auto root = std::filesystem::path{EDB_REGRESSION_SOURCE_DIR};
+    const auto sql = read_text_file(root / "sql" / "phase5_basic.sql");
+    const auto expected = read_text_file(root / "expected" / "phase5_basic.out");
+    EXPECT_EQ(run_regression_script(sql, engine, registry), expected);
 
     auto table = catalog.open_table("users");
     ASSERT_TRUE(table.has_value());
