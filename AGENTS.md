@@ -41,8 +41,8 @@ When working on any task, break it into the smallest independently buildable and
 2. Write the interface + C++26 contracts  (pre/post clauses)
 3. Write tests  (happy path · boundary · contract-violation)
 4. Implement until tests pass
-5. make format && make tidy  →  fix any issues
-6. make -j$(nproc) && ctest --output-on-failure  →  must be green
+5. ninja format  →  fix any issues
+6. ninja -j$(nproc) && ctest --output-on-failure  →  must be green
 7. git add -p && git commit  →  one focused commit per unit
 8. Repeat
 ```

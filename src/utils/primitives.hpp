@@ -221,6 +221,11 @@ constexpr f64 operator""_f64(long double v) {
 // ---------------------------------------------------------------------------
 // std::hash specialisations so wrappers can be used in unordered containers.
 // ---------------------------------------------------------------------------
+// Specialising std::hash for user-defined types is explicitly permitted by the
+// C++ standard ([namespace.std]). NOLINT is required because clang-tidy's
+// bugprone-std-namespace-modification check does not distinguish specialisations
+// from modifications.
+// NOLINTBEGIN(bugprone-std-namespace-modification)
 namespace std {
 
 template <typename T, typename Tag>
@@ -231,3 +236,4 @@ struct hash<edb::detail::Primitive<T, Tag>> {
 };
 
 }  // namespace std
+// NOLINTEND(bugprone-std-namespace-modification)

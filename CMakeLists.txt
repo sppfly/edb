@@ -34,6 +34,28 @@ set(CMAKE_CXX_EXTENSIONS OFF)          # -fno-gnu-extensions / ISO C++ only
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---------------------------------------------------------------------------
+# ccache
+# ---------------------------------------------------------------------------
+find_program(CCACHE_EXECUTABLE ccache)
+if(CCACHE_EXECUTABLE)
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+  message(STATUS "Using ccache: ${CCACHE_EXECUTABLE}")
+else()
+  message(STATUS "ccache not found; building without it")
+endif()
+
+# ---------------------------------------------------------------------------
+# Linker: mold
+# ---------------------------------------------------------------------------
+find_program(EDB_MOLD_LINKER mold)
+if(EDB_MOLD_LINKER)
+  add_link_options(-fuse-ld=mold)
+  message(STATUS "Using linker: mold (${EDB_MOLD_LINKER})")
+else()
+  message(STATUS "mold not found; using default linker")
+endif()
+
+# ---------------------------------------------------------------------------
 # Compiler flags
 # ---------------------------------------------------------------------------
 set(EDB_WARN_FLAGS
@@ -64,6 +86,7 @@ add_subdirectory(src/utils)
 add_subdirectory(src/storage)
 add_subdirectory(src/types)
 add_subdirectory(src/catalog)
+add_subdirectory(src/query)
 
 # ---------------------------------------------------------------------------
 # Tests
