@@ -1,0 +1,122 @@
+{
+  "tests": 22,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "Primitives",
+      "tests": 22,
+      "testsuite": [
+        {
+          "name": "ExplicitConstruction",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 13
+        },
+        {
+          "name": "DefaultConstructionIsZero",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 19
+        },
+        {
+          "name": "UserDefinedLiterals",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 24
+        },
+        {
+          "name": "AdditionSameType",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 34
+        },
+        {
+          "name": "SubtractionSameType",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 38
+        },
+        {
+          "name": "MultiplicationSameType",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 42
+        },
+        {
+          "name": "DivisionSameType",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 46
+        },
+        {
+          "name": "ModuloIntegralOnly",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 50
+        },
+        {
+          "name": "UnaryMinus",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 54
+        },
+        {
+          "name": "PreIncrement",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 59
+        },
+        {
+          "name": "PostIncrement",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 65
+        },
+        {
+          "name": "CompoundAssignment",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 71
+        },
+        {
+          "name": "BitwiseAnd",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 87
+        },
+        {
+          "name": "BitwiseOr",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 91
+        },
+        {
+          "name": "BitwiseXor",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 95
+        },
+        {
+          "name": "BitwiseNot",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 99
+        },
+        {
+          "name": "LeftShift",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 103
+        },
+        {
+          "name": "RightShift",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 107
+        },
+        {
+          "name": "LessThan",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 115
+        },
+        {
+          "name": "Spaceship",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 119
+        },
+        {
+          "name": "BooleanEquality",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 129
+        },
+        {
+          "name": "HashUsableInUnorderedSet",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
+          "line": 138
+        }
+      ]
+    }
+  ]
+}

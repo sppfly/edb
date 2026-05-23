@@ -1,0 +1,49 @@
+---
+Language: Cpp
+Standard: c++20        # clang-format doesn't have c++26 yet; c++20 is close enough
+BasedOnStyle: Google
+
+# Indentation
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Line length
+ColumnLimit: 100
+
+# Braces
+BreakBeforeBraces: Attach
+
+# Includes
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+
+# Alignment
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInAngles: Never
+
+# Pointers / references
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Short forms on one line
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Return type
+AlwaysBreakAfterReturnType: None
+
+# Template
+AlwaysBreakTemplateDeclarations: Yes
+
+# Constructor initialiser lists
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4

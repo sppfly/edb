@@ -1,0 +1,597 @@
+Start testing: May 23 15:36 CST
+----------------------------------------------------------
+1/22 Testing: Primitives.ExplicitConstruction
+1/22 Test: Primitives.ExplicitConstruction
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.ExplicitConstruction" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.ExplicitConstruction" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.ExplicitConstruction
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.ExplicitConstruction
+[       OK ] Primitives.ExplicitConstruction (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.ExplicitConstruction" end time: May 23 15:36 CST
+"Primitives.ExplicitConstruction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/22 Testing: Primitives.DefaultConstructionIsZero
+2/22 Test: Primitives.DefaultConstructionIsZero
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.DefaultConstructionIsZero" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.DefaultConstructionIsZero" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.DefaultConstructionIsZero
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.DefaultConstructionIsZero
+[       OK ] Primitives.DefaultConstructionIsZero (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.DefaultConstructionIsZero" end time: May 23 15:36 CST
+"Primitives.DefaultConstructionIsZero" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/22 Testing: Primitives.UserDefinedLiterals
+3/22 Test: Primitives.UserDefinedLiterals
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.UserDefinedLiterals" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.UserDefinedLiterals" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.UserDefinedLiterals
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.UserDefinedLiterals
+[       OK ] Primitives.UserDefinedLiterals (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.UserDefinedLiterals" end time: May 23 15:36 CST
+"Primitives.UserDefinedLiterals" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/22 Testing: Primitives.AdditionSameType
+4/22 Test: Primitives.AdditionSameType
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.AdditionSameType" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.AdditionSameType" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.AdditionSameType
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.AdditionSameType
+[       OK ] Primitives.AdditionSameType (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.AdditionSameType" end time: May 23 15:36 CST
+"Primitives.AdditionSameType" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/22 Testing: Primitives.SubtractionSameType
+5/22 Test: Primitives.SubtractionSameType
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.SubtractionSameType" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.SubtractionSameType" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.SubtractionSameType
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.SubtractionSameType
+[       OK ] Primitives.SubtractionSameType (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.SubtractionSameType" end time: May 23 15:36 CST
+"Primitives.SubtractionSameType" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/22 Testing: Primitives.MultiplicationSameType
+6/22 Test: Primitives.MultiplicationSameType
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.MultiplicationSameType" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.MultiplicationSameType" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.MultiplicationSameType
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.MultiplicationSameType
+[       OK ] Primitives.MultiplicationSameType (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.MultiplicationSameType" end time: May 23 15:36 CST
+"Primitives.MultiplicationSameType" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/22 Testing: Primitives.DivisionSameType
+7/22 Test: Primitives.DivisionSameType
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.DivisionSameType" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.DivisionSameType" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.DivisionSameType
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.DivisionSameType
+[       OK ] Primitives.DivisionSameType (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.DivisionSameType" end time: May 23 15:36 CST
+"Primitives.DivisionSameType" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/22 Testing: Primitives.ModuloIntegralOnly
+8/22 Test: Primitives.ModuloIntegralOnly
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.ModuloIntegralOnly" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.ModuloIntegralOnly" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.ModuloIntegralOnly
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.ModuloIntegralOnly
+[       OK ] Primitives.ModuloIntegralOnly (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.ModuloIntegralOnly" end time: May 23 15:36 CST
+"Primitives.ModuloIntegralOnly" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/22 Testing: Primitives.UnaryMinus
+9/22 Test: Primitives.UnaryMinus
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.UnaryMinus" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.UnaryMinus" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.UnaryMinus
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.UnaryMinus
+[       OK ] Primitives.UnaryMinus (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.UnaryMinus" end time: May 23 15:36 CST
+"Primitives.UnaryMinus" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/22 Testing: Primitives.PreIncrement
+10/22 Test: Primitives.PreIncrement
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.PreIncrement" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.PreIncrement" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.PreIncrement
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.PreIncrement
+[       OK ] Primitives.PreIncrement (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.PreIncrement" end time: May 23 15:36 CST
+"Primitives.PreIncrement" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/22 Testing: Primitives.PostIncrement
+11/22 Test: Primitives.PostIncrement
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.PostIncrement" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.PostIncrement" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.PostIncrement
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.PostIncrement
+[       OK ] Primitives.PostIncrement (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.PostIncrement" end time: May 23 15:36 CST
+"Primitives.PostIncrement" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/22 Testing: Primitives.CompoundAssignment
+12/22 Test: Primitives.CompoundAssignment
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.CompoundAssignment" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.CompoundAssignment" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.CompoundAssignment
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.CompoundAssignment
+[       OK ] Primitives.CompoundAssignment (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.CompoundAssignment" end time: May 23 15:36 CST
+"Primitives.CompoundAssignment" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/22 Testing: Primitives.BitwiseAnd
+13/22 Test: Primitives.BitwiseAnd
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseAnd" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.BitwiseAnd" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.BitwiseAnd
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.BitwiseAnd
+[       OK ] Primitives.BitwiseAnd (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.BitwiseAnd" end time: May 23 15:36 CST
+"Primitives.BitwiseAnd" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/22 Testing: Primitives.BitwiseOr
+14/22 Test: Primitives.BitwiseOr
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseOr" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.BitwiseOr" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.BitwiseOr
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.BitwiseOr
+[       OK ] Primitives.BitwiseOr (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.BitwiseOr" end time: May 23 15:36 CST
+"Primitives.BitwiseOr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/22 Testing: Primitives.BitwiseXor
+15/22 Test: Primitives.BitwiseXor
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseXor" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.BitwiseXor" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.BitwiseXor
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.BitwiseXor
+[       OK ] Primitives.BitwiseXor (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.BitwiseXor" end time: May 23 15:36 CST
+"Primitives.BitwiseXor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/22 Testing: Primitives.BitwiseNot
+16/22 Test: Primitives.BitwiseNot
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseNot" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.BitwiseNot" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.BitwiseNot
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.BitwiseNot
+[       OK ] Primitives.BitwiseNot (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.BitwiseNot" end time: May 23 15:36 CST
+"Primitives.BitwiseNot" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/22 Testing: Primitives.LeftShift
+17/22 Test: Primitives.LeftShift
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.LeftShift" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.LeftShift" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.LeftShift
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.LeftShift
+[       OK ] Primitives.LeftShift (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.LeftShift" end time: May 23 15:36 CST
+"Primitives.LeftShift" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/22 Testing: Primitives.RightShift
+18/22 Test: Primitives.RightShift
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.RightShift" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.RightShift" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.RightShift
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.RightShift
+[       OK ] Primitives.RightShift (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.RightShift" end time: May 23 15:36 CST
+"Primitives.RightShift" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/22 Testing: Primitives.LessThan
+19/22 Test: Primitives.LessThan
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.LessThan" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.LessThan" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.LessThan
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.LessThan
+[       OK ] Primitives.LessThan (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.LessThan" end time: May 23 15:36 CST
+"Primitives.LessThan" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/22 Testing: Primitives.Spaceship
+20/22 Test: Primitives.Spaceship
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.Spaceship" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.Spaceship" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.Spaceship
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.Spaceship
+[       OK ] Primitives.Spaceship (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.Spaceship" end time: May 23 15:36 CST
+"Primitives.Spaceship" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/22 Testing: Primitives.BooleanEquality
+21/22 Test: Primitives.BooleanEquality
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BooleanEquality" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.BooleanEquality" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.BooleanEquality
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.BooleanEquality
+[       OK ] Primitives.BooleanEquality (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.BooleanEquality" end time: May 23 15:36 CST
+"Primitives.BooleanEquality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/22 Testing: Primitives.HashUsableInUnorderedSet
+22/22 Test: Primitives.HashUsableInUnorderedSet
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.HashUsableInUnorderedSet" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Primitives.HashUsableInUnorderedSet" start time: May 23 15:36 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Primitives.HashUsableInUnorderedSet
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Primitives
+[ RUN      ] Primitives.HashUsableInUnorderedSet
+[       OK ] Primitives.HashUsableInUnorderedSet (0 ms)
+[----------] 1 test from Primitives (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Primitives.HashUsableInUnorderedSet" end time: May 23 15:36 CST
+"Primitives.HashUsableInUnorderedSet" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 23 15:36 CST

@@ -1,0 +1,23 @@
+Primitives.ExplicitConstruction 1 0.00169438
+Primitives.DefaultConstructionIsZero 1 0.00139808
+Primitives.UserDefinedLiterals 1 0.00129803
+Primitives.AdditionSameType 1 0.0012678
+Primitives.SubtractionSameType 1 0.00133565
+Primitives.MultiplicationSameType 1 0.00142459
+Primitives.DivisionSameType 1 0.00140565
+Primitives.ModuloIntegralOnly 1 0.00136238
+Primitives.UnaryMinus 1 0.00141708
+Primitives.PreIncrement 1 0.00135368
+Primitives.PostIncrement 1 0.00130555
+Primitives.CompoundAssignment 1 0.00133246
+Primitives.BitwiseAnd 1 0.00130314
+Primitives.BitwiseOr 1 0.00129136
+Primitives.BitwiseXor 1 0.00127735
+Primitives.BitwiseNot 1 0.00130684
+Primitives.LeftShift 1 0.00124129
+Primitives.RightShift 1 0.00124358
+Primitives.LessThan 1 0.00126447
+Primitives.Spaceship 1 0.00122519
+Primitives.BooleanEquality 1 0.00122641
+Primitives.HashUsableInUnorderedSet 1 0.00122932
+---
