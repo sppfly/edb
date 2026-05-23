@@ -62,6 +62,7 @@ endif()
 # ---------------------------------------------------------------------------
 add_subdirectory(src/utils)
 add_subdirectory(src/storage)
+add_subdirectory(src/types)
 
 # ---------------------------------------------------------------------------
 # Tests

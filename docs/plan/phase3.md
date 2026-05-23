@@ -9,12 +9,13 @@ Phase 3 also provides the typed value and row-encoding primitives needed by Phas
 ```cpp
 /// Concept every concrete type must satisfy.
 template <typename T>
-concept EdbTypeImpl = requires(T v, std::string_view text,
-                                const T& a, const T& b) {
-    { T::from_text(text) } -> std::same_as<EdbResult<T>>;
-    { T::to_text(v)      } -> std::same_as<std::string>;
+concept EdbTypeImpl = requires(std::string_view text,
+                               std::span<const std::byte> a,
+                               std::span<const std::byte> b) {
+    { T::from_text(text) } -> std::same_as<EdbResult<std::vector<std::byte>>>;
+    { T::to_text(a)      } -> std::same_as<std::string>;
     { T::compare(a, b)   } -> std::same_as<std::strong_ordering>;
-    { T::hash(v)         } -> std::same_as<usize>;
+    { T::hash(a)         } -> std::same_as<usize>;
     { T::fixed_size()    } -> std::same_as<std::optional<usize>>;
 };
 
