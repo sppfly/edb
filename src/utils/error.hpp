@@ -23,7 +23,7 @@ namespace edb {
 // ---------------------------------------------------------------------------
 // Error codes
 // ---------------------------------------------------------------------------
-enum class EdbError : uint8_t {  // raw-primitive: enum base type requires stdint typedef
+enum class Error : uint8_t {  // raw-primitive: enum base type requires stdint typedef
     // Generic
     Ok = 0,           // not an error; used as a sentinel
     InvalidArgument,  // precondition violated by caller
@@ -64,61 +64,61 @@ enum class EdbError : uint8_t {  // raw-primitive: enum base type requires stdin
 // EdbResult<T>
 // ---------------------------------------------------------------------------
 template <typename T>
-using EdbResult = std::expected<T, EdbError>;
+using Result = std::expected<T, Error>;
 
 // Convenience: a result carrying no value (just success/failure).
-using EdbStatus = EdbResult<void>;
+using VoidResult = Result<void>;
 
 // ---------------------------------------------------------------------------
 // Human-readable description (useful in logs and error messages).
 // ---------------------------------------------------------------------------
-constexpr std::string_view edb_error_name(EdbError e) noexcept {
+constexpr std::string_view edb_error_name(Error e) noexcept {
     switch (e) {
-        case EdbError::Ok:
+        case Error::Ok:
             return "Ok";
-        case EdbError::InvalidArgument:
+        case Error::InvalidArgument:
             return "InvalidArgument";
-        case EdbError::OutOfMemory:
+        case Error::OutOfMemory:
             return "OutOfMemory";
-        case EdbError::NotSupported:
+        case Error::NotSupported:
             return "NotSupported";
-        case EdbError::NotFound:
+        case Error::NotFound:
             return "NotFound";
-        case EdbError::AlreadyExists:
+        case Error::AlreadyExists:
             return "AlreadyExists";
-        case EdbError::Overflow:
+        case Error::Overflow:
             return "Overflow";
-        case EdbError::Corruption:
+        case Error::Corruption:
             return "Corruption";
-        case EdbError::IoError:
+        case Error::IoError:
             return "IoError";
-        case EdbError::IoTimeout:
+        case Error::IoTimeout:
             return "IoTimeout";
-        case EdbError::IoAlignment:
+        case Error::IoAlignment:
             return "IoAlignment";
-        case EdbError::PageNotFound:
+        case Error::PageNotFound:
             return "PageNotFound";
-        case EdbError::BufferPoolFull:
+        case Error::BufferPoolFull:
             return "BufferPoolFull";
-        case EdbError::InvalidPageId:
+        case Error::InvalidPageId:
             return "InvalidPageId";
-        case EdbError::TransactionAborted:
+        case Error::TransactionAborted:
             return "TransactionAborted";
-        case EdbError::DeadlockDetected:
+        case Error::DeadlockDetected:
             return "DeadlockDetected";
-        case EdbError::SnapshotTooOld:
+        case Error::SnapshotTooOld:
             return "SnapshotTooOld";
-        case EdbError::TypeNotFound:
+        case Error::TypeNotFound:
             return "TypeNotFound";
-        case EdbError::TypeAlreadyRegistered:
+        case Error::TypeAlreadyRegistered:
             return "TypeAlreadyRegistered";
-        case EdbError::CatalogCorrupted:
+        case Error::CatalogCorrupted:
             return "CatalogCorrupted";
-        case EdbError::ParseError:
+        case Error::ParseError:
             return "ParseError";
-        case EdbError::AnalyzerError:
+        case Error::AnalyzerError:
             return "AnalyzerError";
-        case EdbError::ExecutorError:
+        case Error::ExecutorError:
             return "ExecutorError";
     }
     return "UnknownError";

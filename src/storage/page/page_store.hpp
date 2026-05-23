@@ -16,43 +16,43 @@
 
 namespace edb {
 
-struct EdbPageStoreConfig {
+struct PageStoreConfig {
     usize page_size{8192};
 };
 
-class EdbPageStore {
+class PageStore {
    public:
-    EdbPageStore() = default;
+    PageStore() = default;
 
-    EdbPageStore(const EdbPageStore&) = delete;
-    EdbPageStore& operator=(const EdbPageStore&) = delete;
-    EdbPageStore(EdbPageStore&&) = delete;
-    EdbPageStore& operator=(EdbPageStore&&) = delete;
+    PageStore(const PageStore&) = delete;
+    PageStore& operator=(const PageStore&) = delete;
+    PageStore(PageStore&&) = delete;
+    PageStore& operator=(PageStore&&) = delete;
 
-    ~EdbPageStore() = default;
+    ~PageStore() = default;
 
-    auto open(EdbStorageIOOps& backend, const EdbPageStoreConfig& cfg) -> EdbStatus
+    auto open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult
         EDB_PRE(cfg.page_size > usize{0});
-    auto close() -> EdbStatus;
+    auto close() -> VoidResult;
 
-    auto read_page(u64 page_id, std::span<std::byte> buf) -> EdbStatus
+    auto read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult
         EDB_PRE(buf.size() >= page_size().value);
-    auto write_page(u64 page_id, std::span<const std::byte> buf) -> EdbStatus
+    auto write_page(u64 page_id, std::span<const std::byte> buf) -> VoidResult
         EDB_PRE(buf.size() >= page_size().value);
 
-    auto allocate_page() -> EdbResult<u64>;
-    auto page_count() -> EdbResult<u64>;
+    auto allocate_page() -> Result<u64>;
+    auto page_count() -> Result<u64>;
     [[nodiscard]] auto page_size() const -> usize;
-    auto sync() -> EdbStatus;
+    auto sync() -> VoidResult;
 
    private:
-    [[nodiscard]] auto check_open() const -> EdbStatus;
-    [[nodiscard]] auto byte_size_for_page_count(u64 count) const -> EdbResult<u64>;
-    [[nodiscard]] auto byte_offset_for_page(u64 page_id) const -> EdbResult<u64>;
-    [[nodiscard]] auto validate_existing_page(u64 page_id) -> EdbStatus;
+    [[nodiscard]] auto check_open() const -> VoidResult;
+    [[nodiscard]] auto byte_size_for_page_count(u64 count) const -> Result<u64>;
+    [[nodiscard]] auto byte_offset_for_page(u64 page_id) const -> Result<u64>;
+    [[nodiscard]] auto validate_existing_page(u64 page_id) -> VoidResult;
 
-    EdbStorageIOOps* io{nullptr};
-    EdbPageStoreConfig config{};
+    StorageIOOps* io{nullptr};
+    PageStoreConfig config{};
 };
 
 }  // namespace edb

@@ -14,19 +14,19 @@
 
 namespace edb {
 
-class EdbTypeRegistry {
+class TypeRegistry {
    public:
-    EdbTypeRegistry() = default;
+    TypeRegistry() = default;
 
-    EdbTypeRegistry(const EdbTypeRegistry&) = delete;
-    EdbTypeRegistry& operator=(const EdbTypeRegistry&) = delete;
-    EdbTypeRegistry(EdbTypeRegistry&&) = delete;
-    EdbTypeRegistry& operator=(EdbTypeRegistry&&) = delete;
-    ~EdbTypeRegistry() = default;
+    TypeRegistry(const TypeRegistry&) = delete;
+    TypeRegistry& operator=(const TypeRegistry&) = delete;
+    TypeRegistry(TypeRegistry&&) = delete;
+    TypeRegistry& operator=(TypeRegistry&&) = delete;
+    ~TypeRegistry() = default;
 
-    template <EdbTypeImpl T>
-    auto register_type(std::string_view name) -> EdbStatus EDB_PRE(!name.empty()) {
-        EdbType type{};
+    template <TypeImpl T>
+    auto register_type(std::string_view name) -> VoidResult EDB_PRE(!name.empty()) {
+        Type type{};
         type.name = std::string{name};
         type.fixed_size = T::fixed_size();
         type.from_text = [](std::string_view text) { return T::from_text(text); };
@@ -38,16 +38,16 @@ class EdbTypeRegistry {
         return register_type_impl(std::move(type));
     }
 
-    auto lookup(std::string_view name) const -> EdbResult<const EdbType*> EDB_PRE(!name.empty());
-    auto lookup(u32 oid) const -> EdbResult<const EdbType*> EDB_PRE(oid > u32{0});
+    auto lookup(std::string_view name) const -> Result<const Type*> EDB_PRE(!name.empty());
+    auto lookup(u32 oid) const -> Result<const Type*> EDB_PRE(oid > u32{0});
     [[nodiscard]] auto size() const -> usize;
 
    private:
-    auto register_type_impl(EdbType type) -> EdbStatus;
+    auto register_type_impl(Type type) -> VoidResult;
 
-    std::deque<EdbType> types;
-    std::unordered_map<std::string, const EdbType*> by_name;
-    std::unordered_map<u32, const EdbType*> by_oid;
+    std::deque<Type> types;
+    std::unordered_map<std::string, const Type*> by_name;
+    std::unordered_map<u32, const Type*> by_oid;
     u32 next_oid{1};
 };
 

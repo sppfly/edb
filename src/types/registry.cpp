@@ -7,32 +7,32 @@
 
 namespace edb {
 
-auto EdbTypeRegistry::lookup(std::string_view name) const -> EdbResult<const EdbType*> {
+auto TypeRegistry::lookup(std::string_view name) const -> Result<const Type*> {
     const auto found = by_name.find(std::string{name});
     if (found == by_name.end()) {
-        return std::unexpected(EdbError::NotFound);
+        return std::unexpected(Error::NotFound);
     }
     return found->second;
 }
 
-auto EdbTypeRegistry::lookup(u32 oid) const -> EdbResult<const EdbType*> {
+auto TypeRegistry::lookup(u32 oid) const -> Result<const Type*> {
     const auto found = by_oid.find(oid);
     if (found == by_oid.end()) {
-        return std::unexpected(EdbError::NotFound);
+        return std::unexpected(Error::NotFound);
     }
     return found->second;
 }
 
-auto EdbTypeRegistry::size() const -> usize {
+auto TypeRegistry::size() const -> usize {
     return usize{types.size()};
 }
 
-auto EdbTypeRegistry::register_type_impl(EdbType type) -> EdbStatus {
+auto TypeRegistry::register_type_impl(Type type) -> VoidResult {
     if (type.name.empty()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     if (by_name.contains(type.name)) {
-        return std::unexpected(EdbError::AlreadyExists);
+        return std::unexpected(Error::AlreadyExists);
     }
 
     type.oid = next_oid;

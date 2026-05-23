@@ -11,7 +11,7 @@ using namespace edb;
 
 namespace {
 
-auto lookup_registered_type(EdbTypeRegistry& registry, std::string_view name) -> const EdbType& {
+auto lookup_registered_type(TypeRegistry& registry, std::string_view name) -> const Type& {
     auto found = registry.lookup(name);
     EXPECT_TRUE(found.has_value());
     return **found;
@@ -20,7 +20,7 @@ auto lookup_registered_type(EdbTypeRegistry& registry, std::string_view name) ->
 }  // namespace
 
 TEST(BuiltinTypes, RegisterBuiltinTypesAddsAllCoreTypes) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
 
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
@@ -33,7 +33,7 @@ TEST(BuiltinTypes, RegisterBuiltinTypesAddsAllCoreTypes) {
 }
 
 TEST(BuiltinTypes, IntTypesRoundTripAndCompare) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto& int32_type = lookup_registered_type(registry, "int32");
@@ -53,7 +53,7 @@ TEST(BuiltinTypes, IntTypesRoundTripAndCompare) {
 }
 
 TEST(BuiltinTypes, FloatBoolAndTextRoundTrip) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto& float_type = lookup_registered_type(registry, "float64");
@@ -77,7 +77,7 @@ TEST(BuiltinTypes, FloatBoolAndTextRoundTrip) {
 }
 
 TEST(BuiltinTypes, InvalidBuiltinTextInputIsRejected) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto& int32_type = lookup_registered_type(registry, "int32");
@@ -91,17 +91,17 @@ TEST(BuiltinTypes, InvalidBuiltinTextInputIsRejected) {
     ASSERT_FALSE(bad_int.has_value());
     ASSERT_FALSE(bad_bool.has_value());
     ASSERT_FALSE(bad_float.has_value());
-    EXPECT_EQ(bad_int.error(), EdbError::InvalidArgument);
-    EXPECT_EQ(bad_bool.error(), EdbError::InvalidArgument);
-    EXPECT_EQ(bad_float.error(), EdbError::InvalidArgument);
+    EXPECT_EQ(bad_int.error(), Error::InvalidArgument);
+    EXPECT_EQ(bad_bool.error(), Error::InvalidArgument);
+    EXPECT_EQ(bad_float.error(), Error::InvalidArgument);
 }
 
 TEST(BuiltinTypes, RegisterBuiltinTypesRejectsDuplicates) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
 
     ASSERT_TRUE(register_builtin_types(registry).has_value());
     auto duplicate = register_builtin_types(registry);
 
     ASSERT_FALSE(duplicate.has_value());
-    EXPECT_EQ(duplicate.error(), EdbError::AlreadyExists);
+    EXPECT_EQ(duplicate.error(), Error::AlreadyExists);
 }

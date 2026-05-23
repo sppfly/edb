@@ -27,17 +27,17 @@ namespace {
 
 }  // namespace
 
-class MockHeapIOOps : public EdbStorageIOOps {
+class MockHeapIOOps : public StorageIOOps {
    public:
     std::vector<std::byte> storage;
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -49,7 +49,7 @@ class MockHeapIOOps : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage.size()) {
             storage.resize(off + buf.size());
@@ -59,30 +59,30 @@ class MockHeapIOOps : public EdbStorageIOOps {
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override { return {}; }
-    auto datasync_impl() -> EdbStatus override { return {}; }
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto sync_impl() -> VoidResult override { return {}; }
+    auto datasync_impl() -> VoidResult override { return {}; }
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage.size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
 };
 
 class HeapEngineTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        ASSERT_TRUE(page_store.open(io, EdbPageStoreConfig{.page_size = usize{256}}).has_value());
+        ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{256}}).has_value());
     }
 
     auto open_engine(EdbHeapEngine& engine) -> void {
         ASSERT_TRUE(engine
-                        .open(page_store, EdbEngineConfig{.page_size = usize{256},
+                        .open(page_store, EngineConfig{.page_size = usize{256},
                                                           .buffer_pool_pages = usize{2}})
                         .has_value());
     }
 
     [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine)
-        -> EdbResult<std::vector<std::vector<std::byte>>> {
+        -> Result<std::vector<std::vector<std::byte>>> {
         auto handle = engine.begin_scan();
         if (!handle) {
             return std::unexpected(handle.error());
@@ -107,7 +107,7 @@ class HeapEngineTest : public ::testing::Test {
     }
 
     MockHeapIOOps io;
-    EdbPageStore page_store;
+    PageStore page_store;
 };
 
 TEST(HeapPage, InsertReadDeleteTuple) {

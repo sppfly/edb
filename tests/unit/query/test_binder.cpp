@@ -21,19 +21,19 @@ using namespace edb;
 
 namespace {
 
-class SharedMemoryIO final : public EdbStorageIOOps {
+class SharedMemoryIO final : public StorageIOOps {
    public:
     explicit SharedMemoryIO(std::shared_ptr<std::vector<std::byte>> bytes)
         : storage{std::move(bytes)} {}
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
 
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage->size()) {
             return usize{0};
@@ -45,7 +45,7 @@ class SharedMemoryIO final : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage->size()) {
             storage->resize(off + buf.size());
@@ -55,21 +55,21 @@ class SharedMemoryIO final : public EdbStorageIOOps {
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override { return {}; }
-    auto datasync_impl() -> EdbStatus override { return {}; }
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto sync_impl() -> VoidResult override { return {}; }
+    auto datasync_impl() -> VoidResult override { return {}; }
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage->resize(size.value);
         return {};
     }
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage->size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage->size()}; }
 
     std::shared_ptr<std::vector<std::byte>> storage;
 };
 
-class MemoryRelationBackendFactory final : public EdbRelationBackendFactory {
+class MemoryRelationBackendFactory final : public RelationBackendFactory {
    public:
     auto open_backend(u32 relation_oid, std::string_view /*relation_name*/)
-        -> EdbResult<std::unique_ptr<EdbStorageIOOps>> override {
+        -> Result<std::unique_ptr<StorageIOOps>> override {
         auto& bytes = relations[relation_oid];
         if (bytes == nullptr) {
             bytes = std::make_shared<std::vector<std::byte>>();
@@ -96,14 +96,14 @@ class BinderTest : public ::testing::Test {
         ASSERT_TRUE(catalog.open().has_value());
     }
 
-    [[nodiscard]] static auto default_engine_config() -> EdbEngineConfig {
-        return EdbEngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}};
+    [[nodiscard]] static auto default_engine_config() -> EngineConfig {
+        return EngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}};
     }
 
    public:
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     MemoryRelationBackendFactory factory;
-    EdbCatalog catalog{registry, factory, default_engine_config()};
+    Catalog catalog{registry, factory, default_engine_config()};
 };
 
 TEST_F(BinderTest, BindCreateTableResolvesBuiltinTypesAndNullability) {
@@ -140,7 +140,7 @@ TEST_F(BinderTest, BindCreateTableRejectsUnknownType) {
     Binder binder{catalog};
     auto bound = binder.bind(stmt);
     ASSERT_FALSE(bound.has_value());
-    EXPECT_EQ(bound.error(), EdbError::TypeNotFound);
+    EXPECT_EQ(bound.error(), Error::TypeNotFound);
     EXPECT_NE(binder.error_message().find("unknown type"), std::string_view::npos);
 }
 
@@ -150,7 +150,7 @@ TEST_F(BinderTest, BindCreateTableRejectsDuplicateColumns) {
     Binder binder{catalog};
     auto bound = binder.bind(stmt);
     ASSERT_FALSE(bound.has_value());
-    EXPECT_EQ(bound.error(), EdbError::AnalyzerError);
+    EXPECT_EQ(bound.error(), Error::AnalyzerError);
     EXPECT_NE(binder.error_message().find("duplicate column"), std::string_view::npos);
 }
 

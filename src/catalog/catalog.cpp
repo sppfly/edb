@@ -10,10 +10,10 @@ namespace edb {
 
 namespace {
 
-constexpr auto EDB_TYPE_RELATION_OID = u32{1};
-constexpr auto EDB_CLASS_RELATION_OID = u32{2};
-constexpr auto EDB_ATTRIBUTE_RELATION_OID = u32{3};
-constexpr auto EDB_INDEX_RELATION_OID = u32{4};
+constexpr auto TYPE_RELATION_OID = u32{1};
+constexpr auto CLASS_RELATION_OID = u32{2};
+constexpr auto ATTRIBUTE_RELATION_OID = u32{3};
+constexpr auto INDEX_RELATION_OID = u32{4};
 
 constexpr auto RELKIND_SYSTEM = std::string_view{"system"};
 constexpr auto RELKIND_TABLE = std::string_view{"table"};
@@ -41,14 +41,14 @@ auto compare_attnum(const CatalogAttribute& lhs, const CatalogAttribute& rhs) ->
 
 }  // namespace
 
-EdbCatalog::EdbCatalog(const EdbTypeRegistry& registry, EdbRelationBackendFactory& backend_factory,
-                       const EdbEngineConfig& engine_config)
+Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
+                       const EngineConfig& engine_config)
     : types{&registry}, backends{&backend_factory}, config{engine_config} {}
 
-auto EdbCatalog::OpenedTableBundle::open(const EdbTypeRegistry& registry,
-                                         EdbRelationBackendFactory& factory,
-                                         const EdbTableSchema& schema,
-                                         const EdbEngineConfig& engine_config) -> EdbStatus {
+auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry,
+                                         RelationBackendFactory& factory,
+                                         const TableSchema& schema,
+                                         const EngineConfig& engine_config) -> VoidResult {
     auto opened_backend = factory.open_backend(schema.relation_oid, schema.name);
     if (!opened_backend) {
         return std::unexpected(opened_backend.error());
@@ -56,7 +56,7 @@ auto EdbCatalog::OpenedTableBundle::open(const EdbTypeRegistry& registry,
 
     backend = std::move(*opened_backend);
     auto page_status =
-        page_store.open(*backend, EdbPageStoreConfig{.page_size = engine_config.page_size});
+        page_store.open(*backend, PageStoreConfig{.page_size = engine_config.page_size});
     if (!page_status) {
         backend.reset();
         return page_status;
@@ -71,11 +71,11 @@ auto EdbCatalog::OpenedTableBundle::open(const EdbTypeRegistry& registry,
         return engine_status;
     }
 
-    table = std::make_unique<EdbTable>(registry, engine, schema);
+    table = std::make_unique<Table>(registry, engine, schema);
     return {};
 }
 
-auto EdbCatalog::OpenedTableBundle::close() -> EdbStatus {
+auto Catalog::OpenedTableBundle::close() -> VoidResult {
     table.reset();
 
     auto engine_status = engine.close();
@@ -96,7 +96,7 @@ auto EdbCatalog::OpenedTableBundle::close() -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::open() -> EdbStatus {
+auto Catalog::open() -> VoidResult {
     if (auto status = open_system_tables(); !status) {
         return status;
     }
@@ -107,7 +107,7 @@ auto EdbCatalog::open() -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::close() -> EdbStatus {
+auto Catalog::close() -> VoidResult {
     for (auto& [relation_oid, table] : user_tables) {
         (void)relation_oid;
         if (auto status = table->close(); !status) {
@@ -136,43 +136,43 @@ auto EdbCatalog::close() -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::check_open() const -> EdbStatus {
+auto Catalog::check_open() const -> VoidResult {
     if (!opened.value) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     return {};
 }
 
-auto EdbCatalog::open_system_tables() -> EdbStatus {
+auto Catalog::open_system_tables() -> VoidResult {
     const auto int32_type = types->lookup("int32");
     const auto text_type = types->lookup("text");
     const auto bool_type = types->lookup("bool");
     if (!int32_type || !text_type || !bool_type) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
 
-    const EdbTableSchema type_schema{
-        .relation_oid = EDB_TYPE_RELATION_OID,
+    const TableSchema type_schema{
+        .relation_oid = TYPE_RELATION_OID,
         .name = "edb_type",
         .columns = {{.name = "oid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
                     {.name = "typlen", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
-    const EdbTableSchema class_schema{
-        .relation_oid = EDB_CLASS_RELATION_OID,
+    const TableSchema class_schema{
+        .relation_oid = CLASS_RELATION_OID,
         .name = "edb_class",
         .columns = {{.name = "oid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
                     {.name = "relkind", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
-    const EdbTableSchema attribute_schema{
-        .relation_oid = EDB_ATTRIBUTE_RELATION_OID,
+    const TableSchema attribute_schema{
+        .relation_oid = ATTRIBUTE_RELATION_OID,
         .name = "edb_attribute",
         .columns = {{.name = "attrelid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "attnum", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
                     {.name = "type_oid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "nullable", .type_oid = (*bool_type)->oid, .nullable = b8{false}}}};
-    const EdbTableSchema index_schema{
-        .relation_oid = EDB_INDEX_RELATION_OID,
+    const TableSchema index_schema{
+        .relation_oid = INDEX_RELATION_OID,
         .name = "edb_index",
         .columns = {{.name = "oid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "indrelid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
@@ -190,7 +190,7 @@ auto EdbCatalog::open_system_tables() -> EdbStatus {
     return index_table.open(*types, *backends, index_schema, config);
 }
 
-auto EdbCatalog::bootstrap_if_needed() -> EdbStatus {
+auto Catalog::bootstrap_if_needed() -> VoidResult {
     auto classes = class_table.table->scan_rows();
     if (!classes) {
         return std::unexpected(classes.error());
@@ -201,7 +201,7 @@ auto EdbCatalog::bootstrap_if_needed() -> EdbStatus {
     return bootstrap_catalog();
 }
 
-auto EdbCatalog::bootstrap_catalog() -> EdbStatus {
+auto Catalog::bootstrap_catalog() -> VoidResult {
     if (auto status = bootstrap_types(); !status) {
         return status;
     }
@@ -211,7 +211,7 @@ auto EdbCatalog::bootstrap_catalog() -> EdbStatus {
     return bootstrap_attributes();
 }
 
-auto EdbCatalog::bootstrap_types() -> EdbStatus {
+auto Catalog::bootstrap_types() -> VoidResult {
     for (const auto* const name : {"int32", "int64", "float64", "bool", "text"}) {
         auto builtin = types->lookup(name);
         if (!builtin) {
@@ -222,11 +222,11 @@ auto EdbCatalog::bootstrap_types() -> EdbStatus {
         auto type_name = make_text_value((*builtin)->name);
         auto type_length = make_int32_value(fixed_size_to_catalog_length((*builtin)->fixed_size));
         if (!oid || !type_name || !type_length) {
-            return std::unexpected(EdbError::TypeNotFound);
+            return std::unexpected(Error::TypeNotFound);
         }
 
         auto status =
-            type_table.table->insert(std::vector<EdbValue>{*oid, *type_name, *type_length});
+            type_table.table->insert(std::vector<Value>{*oid, *type_name, *type_length});
         if (!status) {
             return std::unexpected(status.error());
         }
@@ -234,12 +234,12 @@ auto EdbCatalog::bootstrap_types() -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::bootstrap_classes() -> EdbStatus {
+auto Catalog::bootstrap_classes() -> VoidResult {
     const auto system_rows = std::array<std::pair<u32, std::string_view>, 4>{
-        {{EDB_TYPE_RELATION_OID, "edb_type"},
-         {EDB_CLASS_RELATION_OID, "edb_class"},
-         {EDB_ATTRIBUTE_RELATION_OID, "edb_attribute"},
-         {EDB_INDEX_RELATION_OID, "edb_index"}}};
+        {{TYPE_RELATION_OID, "edb_type"},
+         {CLASS_RELATION_OID, "edb_class"},
+         {ATTRIBUTE_RELATION_OID, "edb_attribute"},
+         {INDEX_RELATION_OID, "edb_index"}}};
 
     for (const auto& [oid_value, name] : system_rows) {
         auto oid = make_int32_value(i32{static_cast<std::int32_t>(oid_value.value)});
@@ -247,10 +247,10 @@ auto EdbCatalog::bootstrap_classes() -> EdbStatus {
         auto relkind =
             make_text_value(name == std::string_view{"edb_index"} ? RELKIND_INDEX : RELKIND_SYSTEM);
         if (!oid || !class_name || !relkind) {
-            return std::unexpected(EdbError::TypeNotFound);
+            return std::unexpected(Error::TypeNotFound);
         }
 
-        auto status = class_table.table->insert(std::vector<EdbValue>{*oid, *class_name, *relkind});
+        auto status = class_table.table->insert(std::vector<Value>{*oid, *class_name, *relkind});
         if (!status) {
             return std::unexpected(status.error());
         }
@@ -258,14 +258,14 @@ auto EdbCatalog::bootstrap_classes() -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::bootstrap_attributes() -> EdbStatus {
+auto Catalog::bootstrap_attributes() -> VoidResult {
     const auto class_scan = class_table.table->scan_rows();
     if (!class_scan) {
         return std::unexpected(class_scan.error());
     }
 
     auto write_schema_attributes =
-        [this](u32 relation_oid, const std::vector<EdbColumnSchema>& columns) -> EdbStatus {
+        [this](u32 relation_oid, const std::vector<ColumnSchema>& columns) -> VoidResult {
         for (usize index{0}; index < usize{columns.size()}; ++index) {
             const auto& column = columns[index.value];
             auto relid = make_int32_value(i32{static_cast<std::int32_t>(relation_oid.value)});
@@ -274,10 +274,10 @@ auto EdbCatalog::bootstrap_attributes() -> EdbStatus {
             auto type_oid = make_int32_value(i32{static_cast<std::int32_t>(column.type_oid.value)});
             auto nullable = make_bool_value(column.nullable);
             if (!relid || !attnum || !name || !type_oid || !nullable) {
-                return std::unexpected(EdbError::TypeNotFound);
+                return std::unexpected(Error::TypeNotFound);
             }
             auto inserted = attribute_table.table->insert(
-                std::vector<EdbValue>{*relid, *attnum, *name, *type_oid, *nullable});
+                std::vector<Value>{*relid, *attnum, *name, *type_oid, *nullable});
             if (!inserted) {
                 return std::unexpected(inserted.error());
             }
@@ -286,55 +286,55 @@ auto EdbCatalog::bootstrap_attributes() -> EdbStatus {
     };
 
     if (auto status =
-            write_schema_attributes(EDB_TYPE_RELATION_OID, type_table.table->schema().columns);
+            write_schema_attributes(TYPE_RELATION_OID, type_table.table->schema().columns);
         !status) {
         return status;
     }
     if (auto status =
-            write_schema_attributes(EDB_CLASS_RELATION_OID, class_table.table->schema().columns);
+            write_schema_attributes(CLASS_RELATION_OID, class_table.table->schema().columns);
         !status) {
         return status;
     }
-    if (auto status = write_schema_attributes(EDB_ATTRIBUTE_RELATION_OID,
+    if (auto status = write_schema_attributes(ATTRIBUTE_RELATION_OID,
                                               attribute_table.table->schema().columns);
         !status) {
         return status;
     }
-    return write_schema_attributes(EDB_INDEX_RELATION_OID, index_table.table->schema().columns);
+    return write_schema_attributes(INDEX_RELATION_OID, index_table.table->schema().columns);
 }
 
-auto EdbCatalog::decode_type(const EdbTableRow& row) -> EdbResult<CatalogType> {
+auto Catalog::decode_type(const TableRow& row) -> Result<CatalogType> {
     if (row.values.size() != 3U) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     const auto oid = parse_i32(row.values[0]);
     const auto name = parse_text(row.values[1]);
     const auto length = parse_i32(row.values[2]);
     if (!oid || !name || !length || oid->value < 0) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     return CatalogType{.oid = u32{static_cast<std::uint32_t>(oid->value)},
                        .name = *name,
                        .fixed_size = catalog_length_to_fixed_size(*length)};
 }
 
-auto EdbCatalog::decode_class(const EdbTableRow& row) -> EdbResult<CatalogClass> {
+auto Catalog::decode_class(const TableRow& row) -> Result<CatalogClass> {
     if (row.values.size() != 3U) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     const auto oid = parse_i32(row.values[0]);
     const auto name = parse_text(row.values[1]);
     const auto relkind = parse_text(row.values[2]);
     if (!oid || !name || !relkind || oid->value < 0) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     return CatalogClass{
         .oid = u32{static_cast<std::uint32_t>(oid->value)}, .name = *name, .relkind = *relkind};
 }
 
-auto EdbCatalog::decode_attribute(const EdbTableRow& row) -> EdbResult<CatalogAttribute> {
+auto Catalog::decode_attribute(const TableRow& row) -> Result<CatalogAttribute> {
     if (row.values.size() != 5U) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     const auto relid = parse_i32(row.values[0]);
     const auto attnum = parse_i32(row.values[1]);
@@ -343,7 +343,7 @@ auto EdbCatalog::decode_attribute(const EdbTableRow& row) -> EdbResult<CatalogAt
     const auto nullable = parse_bool(row.values[4]);
     if (!relid || !attnum || !name || !type_oid || !nullable || relid->value < 0 ||
         attnum->value < 0 || type_oid->value < 0) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     return CatalogAttribute{.relation_oid = u32{static_cast<std::uint32_t>(relid->value)},
                             .attnum = u32{static_cast<std::uint32_t>(attnum->value)},
@@ -352,7 +352,7 @@ auto EdbCatalog::decode_attribute(const EdbTableRow& row) -> EdbResult<CatalogAt
                             .nullable = *nullable};
 }
 
-auto EdbCatalog::make_int32_value(i32 value) const -> EdbResult<EdbValue> {
+auto Catalog::make_int32_value(i32 value) const -> Result<Value> {
     auto type = types->lookup("int32");
     if (!type) {
         return std::unexpected(type.error());
@@ -361,10 +361,10 @@ auto EdbCatalog::make_int32_value(i32 value) const -> EdbResult<EdbValue> {
     if (!bytes) {
         return std::unexpected(bytes.error());
     }
-    return EdbValue{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
+    return Value{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
 }
 
-auto EdbCatalog::make_text_value(std::string_view text) const -> EdbResult<EdbValue> {
+auto Catalog::make_text_value(std::string_view text) const -> Result<Value> {
     auto type = types->lookup("text");
     if (!type) {
         return std::unexpected(type.error());
@@ -373,10 +373,10 @@ auto EdbCatalog::make_text_value(std::string_view text) const -> EdbResult<EdbVa
     if (!bytes) {
         return std::unexpected(bytes.error());
     }
-    return EdbValue{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
+    return Value{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
 }
 
-auto EdbCatalog::make_bool_value(b8 value) const -> EdbResult<EdbValue> {
+auto Catalog::make_bool_value(b8 value) const -> Result<Value> {
     auto type = types->lookup("bool");
     if (!type) {
         return std::unexpected(type.error());
@@ -385,34 +385,34 @@ auto EdbCatalog::make_bool_value(b8 value) const -> EdbResult<EdbValue> {
     if (!bytes) {
         return std::unexpected(bytes.error());
     }
-    return EdbValue{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
+    return Value{.type_oid = (*type)->oid, .bytes = *bytes, .is_null = b8{false}};
 }
 
-auto EdbCatalog::parse_i32(const EdbValue& value) const -> EdbResult<i32> {
+auto Catalog::parse_i32(const Value& value) const -> Result<i32> {
     auto type = types->lookup(value.type_oid);
     if (!type) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
     const auto text = (*type)->to_text(value.bytes);
     try {
         return i32{std::stoi(text)};  // raw-primitive: std::stoi parses primitive scalar
     } catch (...) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
 }
 
-auto EdbCatalog::parse_text(const EdbValue& value) const -> EdbResult<std::string> {
+auto Catalog::parse_text(const Value& value) const -> Result<std::string> {
     auto type = types->lookup(value.type_oid);
     if (!type) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
     return (*type)->to_text(value.bytes);
 }
 
-auto EdbCatalog::parse_bool(const EdbValue& value) const -> EdbResult<b8> {
+auto Catalog::parse_bool(const Value& value) const -> Result<b8> {
     auto type = types->lookup(value.type_oid);
     if (!type) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
     const auto text = (*type)->to_text(value.bytes);
     if (text == "true") {
@@ -421,19 +421,19 @@ auto EdbCatalog::parse_bool(const EdbValue& value) const -> EdbResult<b8> {
     if (text == "false") {
         return b8{false};
     }
-    return std::unexpected(EdbError::Corruption);
+    return std::unexpected(Error::Corruption);
 }
 
-auto EdbCatalog::invalidate_type_cache() -> void {
+auto Catalog::invalidate_type_cache() -> void {
     type_cache_by_name.clear();
 }
 
-auto EdbCatalog::invalidate_class_cache(u32 class_oid, std::string_view class_name) -> void {
+auto Catalog::invalidate_class_cache(u32 class_oid, std::string_view class_name) -> void {
     class_cache_by_name.erase(std::string{class_name});
     attribute_cache_by_relid.erase(class_oid);
 }
 
-auto EdbCatalog::get_type(std::string_view name) -> EdbResult<CatalogType> {
+auto Catalog::get_type(std::string_view name) -> Result<CatalogType> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -456,10 +456,10 @@ auto EdbCatalog::get_type(std::string_view name) -> EdbResult<CatalogType> {
             return *decoded;
         }
     }
-    return std::unexpected(EdbError::NotFound);
+    return std::unexpected(Error::NotFound);
 }
 
-auto EdbCatalog::get_class(std::string_view name) -> EdbResult<CatalogClass> {
+auto Catalog::get_class(std::string_view name) -> Result<CatalogClass> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -482,10 +482,10 @@ auto EdbCatalog::get_class(std::string_view name) -> EdbResult<CatalogClass> {
             return *decoded;
         }
     }
-    return std::unexpected(EdbError::NotFound);
+    return std::unexpected(Error::NotFound);
 }
 
-auto EdbCatalog::get_attributes(u32 class_oid) -> EdbResult<std::vector<CatalogAttribute>> {
+auto Catalog::get_attributes(u32 class_oid) -> Result<std::vector<CatalogAttribute>> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -510,13 +510,13 @@ auto EdbCatalog::get_attributes(u32 class_oid) -> EdbResult<std::vector<CatalogA
     }
     std::ranges::sort(attributes, compare_attnum);
     if (attributes.empty()) {
-        return std::unexpected(EdbError::NotFound);
+        return std::unexpected(Error::NotFound);
     }
     attribute_cache_by_relid.emplace(class_oid, attributes);
     return attributes;
 }
 
-auto EdbCatalog::next_relation_oid() -> EdbResult<u32> {
+auto Catalog::next_relation_oid() -> Result<u32> {
     auto rows = class_table.table->scan_rows();
     if (!rows) {
         return std::unexpected(rows.error());
@@ -535,24 +535,24 @@ auto EdbCatalog::next_relation_oid() -> EdbResult<u32> {
     return u32{max_oid.value + 1U};
 }
 
-auto EdbCatalog::create_table(const CreateTableSpec& spec) -> EdbResult<u32> {
+auto Catalog::create_table(const CreateTableSpec& spec) -> Result<u32> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
     if (spec.name.empty() || spec.columns.empty()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     auto existing = get_class(spec.name);
     if (existing.has_value()) {
-        return std::unexpected(EdbError::AlreadyExists);
+        return std::unexpected(Error::AlreadyExists);
     }
-    if (existing.error() != EdbError::NotFound) {
+    if (existing.error() != Error::NotFound) {
         return std::unexpected(existing.error());
     }
 
     for (const auto& column : spec.columns) {
         if (!types->lookup(column.type_oid)) {
-            return std::unexpected(EdbError::TypeNotFound);
+            return std::unexpected(Error::TypeNotFound);
         }
     }
 
@@ -565,10 +565,10 @@ auto EdbCatalog::create_table(const CreateTableSpec& spec) -> EdbResult<u32> {
     auto class_name = make_text_value(spec.name);
     auto relkind = make_text_value(RELKIND_TABLE);
     if (!class_oid || !class_name || !relkind) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
     auto inserted =
-        class_table.table->insert(std::vector<EdbValue>{*class_oid, *class_name, *relkind});
+        class_table.table->insert(std::vector<Value>{*class_oid, *class_name, *relkind});
     if (!inserted) {
         return std::unexpected(inserted.error());
     }
@@ -581,10 +581,10 @@ auto EdbCatalog::create_table(const CreateTableSpec& spec) -> EdbResult<u32> {
         auto type_oid = make_int32_value(i32{static_cast<std::int32_t>(column.type_oid.value)});
         auto nullable = make_bool_value(column.nullable);
         if (!relid || !attnum || !name || !type_oid || !nullable) {
-            return std::unexpected(EdbError::TypeNotFound);
+            return std::unexpected(Error::TypeNotFound);
         }
         auto attr_inserted = attribute_table.table->insert(
-            std::vector<EdbValue>{*relid, *attnum, *name, *type_oid, *nullable});
+            std::vector<Value>{*relid, *attnum, *name, *type_oid, *nullable});
         if (!attr_inserted) {
             return std::unexpected(attr_inserted.error());
         }
@@ -599,7 +599,7 @@ auto EdbCatalog::create_table(const CreateTableSpec& spec) -> EdbResult<u32> {
     return *relation_oid;
 }
 
-auto EdbCatalog::lookup_class_row(u32 class_oid) -> EdbResult<std::optional<EdbTableRow>> {
+auto Catalog::lookup_class_row(u32 class_oid) -> Result<std::optional<TableRow>> {
     auto rows = class_table.table->scan_rows();
     if (!rows) {
         return std::unexpected(rows.error());
@@ -613,16 +613,16 @@ auto EdbCatalog::lookup_class_row(u32 class_oid) -> EdbResult<std::optional<EdbT
             return row;
         }
     }
-    return std::optional<EdbTableRow>{};
+    return std::optional<TableRow>{};
 }
 
-auto EdbCatalog::lookup_attribute_rows(u32 class_oid) -> EdbResult<std::vector<EdbTableRow>> {
+auto Catalog::lookup_attribute_rows(u32 class_oid) -> Result<std::vector<TableRow>> {
     auto rows = attribute_table.table->scan_rows();
     if (!rows) {
         return std::unexpected(rows.error());
     }
 
-    std::vector<EdbTableRow> matched;
+    std::vector<TableRow> matched;
     for (const auto& row : *rows) {
         auto decoded = decode_attribute(row);
         if (!decoded) {
@@ -635,7 +635,7 @@ auto EdbCatalog::lookup_attribute_rows(u32 class_oid) -> EdbResult<std::vector<E
     return matched;
 }
 
-auto EdbCatalog::drop_table(u32 class_oid) -> EdbStatus {
+auto Catalog::drop_table(u32 class_oid) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -645,7 +645,7 @@ auto EdbCatalog::drop_table(u32 class_oid) -> EdbStatus {
         return std::unexpected(class_row.error());
     }
     if (!class_row->has_value()) {
-        return std::unexpected(EdbError::NotFound);
+        return std::unexpected(Error::NotFound);
     }
 
     auto decoded_class = decode_class(**class_row);
@@ -653,7 +653,7 @@ auto EdbCatalog::drop_table(u32 class_oid) -> EdbStatus {
         return std::unexpected(decoded_class.error());
     }
     if (decoded_class->relkind != std::string{RELKIND_TABLE}) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     auto attribute_rows = lookup_attribute_rows(class_oid);
@@ -677,9 +677,9 @@ auto EdbCatalog::drop_table(u32 class_oid) -> EdbStatus {
     return {};
 }
 
-auto EdbCatalog::ensure_user_table_open(u32 relation_oid, std::string_view relation_name,
+auto Catalog::ensure_user_table_open(u32 relation_oid, std::string_view relation_name,
                                         std::span<const CatalogAttribute> attributes)
-    -> EdbResult<EdbTable*> {
+    -> Result<Table*> {
     const auto opened_table = user_tables.find(relation_oid);
     if (opened_table != user_tables.end()) {
         return opened_table->second->table.get();
@@ -697,11 +697,11 @@ auto EdbCatalog::ensure_user_table_open(u32 relation_oid, std::string_view relat
     }
     std::ranges::sort(resolved_attributes, compare_attnum);
 
-    EdbTableSchema schema{
+    TableSchema schema{
         .relation_oid = relation_oid, .name = std::string{relation_name}, .columns = {}};
     schema.columns.reserve(resolved_attributes.size());
     for (const auto& attribute : resolved_attributes) {
-        schema.columns.push_back(EdbColumnSchema{.name = attribute.name,
+        schema.columns.push_back(ColumnSchema{.name = attribute.name,
                                                  .type_oid = attribute.type_oid,
                                                  .nullable = attribute.nullable});
     }
@@ -717,7 +717,7 @@ auto EdbCatalog::ensure_user_table_open(u32 relation_oid, std::string_view relat
     return table_ptr;
 }
 
-auto EdbCatalog::open_table(std::string_view name) -> EdbResult<EdbTable*> {
+auto Catalog::open_table(std::string_view name) -> Result<Table*> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }

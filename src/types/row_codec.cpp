@@ -23,9 +23,9 @@ auto append_u32_le(std::vector<std::byte>& out, std::uint32_t value) -> void {
     }
 }
 
-auto read_u32_le(std::span<const std::byte> bytes, usize offset) -> EdbResult<std::uint32_t> {
+auto read_u32_le(std::span<const std::byte> bytes, usize offset) -> Result<std::uint32_t> {
     if ((offset.value + COLUMN_COUNT_BYTES) > bytes.size()) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
 
     std::uint32_t value{0};
@@ -58,17 +58,17 @@ auto set_null_bit(std::span<std::byte> bitmap, usize index) -> void {
 
 }  // namespace
 
-EdbRowCodec::EdbRowCodec(const EdbTypeRegistry& registry_ref,
-                         std::vector<EdbColumnSchema> schema_def)
+RowCodec::RowCodec(const TypeRegistry& registry_ref,
+                         std::vector<ColumnSchema> schema_def)
     : registry{&registry_ref}, schema{std::move(schema_def)} {}
 
-auto EdbRowCodec::encode(std::span<const EdbValue> values) const
-    -> EdbResult<std::vector<std::byte>> {
+auto RowCodec::encode(std::span<const Value> values) const
+    -> Result<std::vector<std::byte>> {
     if (values.size() != schema.size()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     if (registry == nullptr) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     const auto column_count = usize{schema.size()};
@@ -93,12 +93,12 @@ auto EdbRowCodec::encode(std::span<const EdbValue> values) const
             return std::unexpected(type.error());
         }
         if (value.type_oid != column.type_oid) {
-            return std::unexpected(EdbError::InvalidArgument);
+            return std::unexpected(Error::InvalidArgument);
         }
 
         if (value.is_null.value) {
             if (!column.nullable.value) {
-                return std::unexpected(EdbError::InvalidArgument);
+                return std::unexpected(Error::InvalidArgument);
             }
             set_null_bit(
                 std::span<std::byte>{encoded}.subspan(COLUMN_COUNT_BYTES, bitmap_size.value),
@@ -109,7 +109,7 @@ auto EdbRowCodec::encode(std::span<const EdbValue> values) const
         }
 
         if ((*type)->fixed_size.has_value() && value.bytes.size() != (*type)->fixed_size->value) {
-            return std::unexpected(EdbError::InvalidArgument);
+            return std::unexpected(Error::InvalidArgument);
         }
 
         const auto offset = header_size + usize{payload.size()};
@@ -123,10 +123,10 @@ auto EdbRowCodec::encode(std::span<const EdbValue> values) const
     return encoded;
 }
 
-auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
-    -> EdbResult<std::vector<EdbValue>> {
+auto RowCodec::decode(std::span<const std::byte> tuple) const
+    -> Result<std::vector<Value>> {
     if (registry == nullptr) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     const auto stored_columns = read_u32_le(tuple, usize{0});
@@ -134,7 +134,7 @@ auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
         return std::unexpected(stored_columns.error());
     }
     if (*stored_columns != schema.size()) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
 
     const auto column_count = usize{schema.size()};
@@ -143,11 +143,11 @@ auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
     const auto payload_offset =
         usize{entries_offset.value + (column_count.value * (OFFSET_BYTES + LENGTH_BYTES))};
     if (tuple.size() < payload_offset.value) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
 
     const auto bitmap = tuple.subspan(COLUMN_COUNT_BYTES, bitmap_size.value);
-    std::vector<EdbValue> values{};
+    std::vector<Value> values{};
     values.reserve(column_count.value);
 
     for (usize index{0}; index < column_count; ++index) {
@@ -162,10 +162,10 @@ auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
         const auto offset = read_u32_le(tuple, entry_offset);
         const auto length = read_u32_le(tuple, usize{entry_offset.value + OFFSET_BYTES});
         if (!offset || !length) {
-            return std::unexpected(EdbError::Corruption);
+            return std::unexpected(Error::Corruption);
         }
 
-        EdbValue value{.type_oid = column.type_oid, .bytes = {}, .is_null = b8{false}};
+        Value value{.type_oid = column.type_oid, .bytes = {}, .is_null = b8{false}};
         if (is_null_bit_set(bitmap, index).value) {
             value.is_null = b8{true};
             values.push_back(std::move(value));
@@ -175,10 +175,10 @@ auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
         const auto start = static_cast<std::size_t>(*offset);
         const auto count = static_cast<std::size_t>(*length);
         if (start < payload_offset.value || (start + count) > tuple.size()) {
-            return std::unexpected(EdbError::Corruption);
+            return std::unexpected(Error::Corruption);
         }
         if ((*type)->fixed_size.has_value() && count != (*type)->fixed_size->value) {
-            return std::unexpected(EdbError::Corruption);
+            return std::unexpected(Error::Corruption);
         }
 
         auto bytes = tuple.subspan(start, count);
@@ -189,14 +189,14 @@ auto EdbRowCodec::decode(std::span<const std::byte> tuple) const
     return values;
 }
 
-auto EdbRowCodec::columns() const -> std::span<const EdbColumnSchema> {
+auto RowCodec::columns() const -> std::span<const ColumnSchema> {
     return schema;
 }
 
-auto EdbRowCodec::lookup_type(u32 oid) const -> EdbResult<const EdbType*> {
+auto RowCodec::lookup_type(u32 oid) const -> Result<const Type*> {
     auto found = registry->lookup(oid);
     if (!found) {
-        return std::unexpected(EdbError::TypeNotFound);
+        return std::unexpected(Error::TypeNotFound);
     }
     return *found;
 }

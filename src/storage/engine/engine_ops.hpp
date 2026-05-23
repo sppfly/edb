@@ -19,74 +19,74 @@
 
 namespace edb {
 
-struct EdbEngineConfig {
+struct EngineConfig {
     usize page_size{8192};
     usize buffer_pool_pages{1024};
-    EdbEvictionPolicyConfig buffer_eviction{};
+    EvictionPolicyConfig buffer_eviction{};
 };
 
-struct EdbTupleId {
+struct TupleId {
     u64 page_id;
     u16 slot_idx;
 };
 
-struct EdbTuple {
-    EdbTupleId id;
+struct Tuple {
+    TupleId id;
     std::vector<std::byte> data;
 };
 
-struct EdbScanHandle {
+struct ScanHandle {
     u64 value;
 };
 
-struct EdbStorageEngineOps {
-    EdbStorageEngineOps() = default;
+struct StorageEngineOps {
+    StorageEngineOps() = default;
 
-    EdbStorageEngineOps(const EdbStorageEngineOps&) = delete;
-    EdbStorageEngineOps& operator=(const EdbStorageEngineOps&) = delete;
-    EdbStorageEngineOps(EdbStorageEngineOps&&) = delete;
-    EdbStorageEngineOps& operator=(EdbStorageEngineOps&&) = delete;
+    StorageEngineOps(const StorageEngineOps&) = delete;
+    StorageEngineOps& operator=(const StorageEngineOps&) = delete;
+    StorageEngineOps(StorageEngineOps&&) = delete;
+    StorageEngineOps& operator=(StorageEngineOps&&) = delete;
 
-    virtual ~EdbStorageEngineOps() = default;
+    virtual ~StorageEngineOps() = default;
 
-    auto open(EdbPageStore& store, const EdbEngineConfig& cfg) -> EdbStatus
+    auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult
         EDB_PRE(cfg.page_size > usize{0}) {
         return open_impl(store, cfg);
     }
 
-    auto close() -> EdbStatus { return close_impl(); }
+    auto close() -> VoidResult { return close_impl(); }
 
-    auto insert(std::span<const std::byte> tuple) -> EdbResult<EdbTupleId> EDB_PRE(!tuple.empty()) {
+    auto insert(std::span<const std::byte> tuple) -> Result<TupleId> EDB_PRE(!tuple.empty()) {
         return insert_impl(tuple);
     }
 
-    auto delete_tuple(EdbTupleId id) -> EdbStatus { return delete_tuple_impl(id); }
+    auto delete_tuple(TupleId id) -> VoidResult { return delete_tuple_impl(id); }
 
-    auto update_tuple(EdbTupleId id, std::span<const std::byte> tuple)
-        -> EdbResult<EdbTupleId> EDB_PRE(!tuple.empty()) {
+    auto update_tuple(TupleId id, std::span<const std::byte> tuple)
+        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
         return update_tuple_impl(id, tuple);
     }
 
-    auto begin_scan() -> EdbResult<EdbScanHandle> { return begin_scan_impl(); }
+    auto begin_scan() -> Result<ScanHandle> { return begin_scan_impl(); }
 
-    auto scan_next(EdbScanHandle& handle) -> EdbResult<std::optional<EdbTuple>> {
+    auto scan_next(ScanHandle& handle) -> Result<std::optional<Tuple>> {
         return scan_next_impl(handle);
     }
 
-    auto end_scan(EdbScanHandle& handle) -> EdbStatus { return end_scan_impl(handle); }
+    auto end_scan(ScanHandle& handle) -> VoidResult { return end_scan_impl(handle); }
 
     [[nodiscard]] auto page_size() const -> usize { return page_size_impl(); }
 
    protected:
-    virtual auto open_impl(EdbPageStore& store, const EdbEngineConfig& cfg) -> EdbStatus = 0;
-    virtual auto close_impl() -> EdbStatus = 0;
-    virtual auto insert_impl(std::span<const std::byte> tuple) -> EdbResult<EdbTupleId> = 0;
-    virtual auto delete_tuple_impl(EdbTupleId id) -> EdbStatus = 0;
-    virtual auto update_tuple_impl(EdbTupleId id, std::span<const std::byte> tuple)
-        -> EdbResult<EdbTupleId> = 0;
-    virtual auto begin_scan_impl() -> EdbResult<EdbScanHandle> = 0;
-    virtual auto scan_next_impl(EdbScanHandle& handle) -> EdbResult<std::optional<EdbTuple>> = 0;
-    virtual auto end_scan_impl(EdbScanHandle& handle) -> EdbStatus = 0;
+    virtual auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult = 0;
+    virtual auto close_impl() -> VoidResult = 0;
+    virtual auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> = 0;
+    virtual auto delete_tuple_impl(TupleId id) -> VoidResult = 0;
+    virtual auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
+        -> Result<TupleId> = 0;
+    virtual auto begin_scan_impl() -> Result<ScanHandle> = 0;
+    virtual auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> = 0;
+    virtual auto end_scan_impl(ScanHandle& handle) -> VoidResult = 0;
     [[nodiscard]] virtual auto page_size_impl() const -> usize = 0;
 };
 

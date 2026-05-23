@@ -6,6 +6,6 @@
 
 namespace edb {
 
-auto register_builtin_types(EdbTypeRegistry& registry) -> EdbStatus;
+auto register_builtin_types(TypeRegistry& registry) -> VoidResult;
 
 }  // namespace edb

@@ -48,9 +48,9 @@ auto normalized_column_name(std::string_view name) -> std::string {
 
 }  // namespace
 
-Binder::Binder(EdbCatalog& catalog_in) noexcept : catalog{&catalog_in} {}
+Binder::Binder(Catalog& catalog_in) noexcept : catalog{&catalog_in} {}
 
-auto Binder::bind(const Stmt& stmt) -> EdbResult<BoundStmt> {
+auto Binder::bind(const Stmt& stmt) -> Result<BoundStmt> {
     if (const auto* create_stmt = std::get_if<CreateTableStmt>(&stmt); create_stmt != nullptr) {
         auto bound = bind_create_table(*create_stmt);
         if (!bound) {
@@ -60,15 +60,15 @@ auto Binder::bind(const Stmt& stmt) -> EdbResult<BoundStmt> {
     }
 
     bind_err("binding for this statement kind is not implemented yet");
-    return std::unexpected(EdbError::NotSupported);
+    return std::unexpected(Error::NotSupported);
 }
 
 auto Binder::error_message() const noexcept -> std::string_view { return last_error; }
 
-auto Binder::bind_create_table(const CreateTableStmt& stmt) -> EdbResult<BoundCreateTableStmt> {
+auto Binder::bind_create_table(const CreateTableStmt& stmt) -> Result<BoundCreateTableStmt> {
     if (catalog == nullptr) {
         bind_err("binder has no catalog");
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     std::unordered_set<std::string> seen_columns;
@@ -80,7 +80,7 @@ auto Binder::bind_create_table(const CreateTableStmt& stmt) -> EdbResult<BoundCr
         if (seen_columns.contains(dedup_name)) {
             bind_err(std::format("duplicate column '{}' in CREATE TABLE '{}'", column.name,
                                  stmt.table_name));
-            return std::unexpected(EdbError::AnalyzerError);
+            return std::unexpected(Error::AnalyzerError);
         }
         seen_columns.emplace(dedup_name);
 
@@ -89,7 +89,7 @@ auto Binder::bind_create_table(const CreateTableStmt& stmt) -> EdbResult<BoundCr
         if (!type) {
             bind_err(std::format("unknown type '{}' for column '{}'", column.type.name,
                                  column.name));
-            return std::unexpected(type.error() == EdbError::NotFound ? EdbError::TypeNotFound
+            return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound
                                                                       : type.error());
         }
 

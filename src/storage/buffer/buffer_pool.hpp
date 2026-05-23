@@ -18,61 +18,61 @@
 
 namespace edb {
 
-struct EdbBufferPoolConfig {
+struct BufferPoolConfig {
     usize capacity_pages{1024};
-    EdbEvictionPolicyConfig eviction{};
+    EvictionPolicyConfig eviction{};
 };
 
-class EdbBufferPool;
+class BufferPool;
 
-class EdbFrameHandle {
+class FrameHandle {
    public:
-    EdbFrameHandle() = default;
-    EdbFrameHandle(EdbBufferPool* owner, usize frame_index, u64 page_id,
+    FrameHandle() = default;
+    FrameHandle(BufferPool* owner, usize frame_index, u64 page_id,
                    std::span<std::byte> bytes);
 
-    EdbFrameHandle(const EdbFrameHandle&) = delete;
-    EdbFrameHandle& operator=(const EdbFrameHandle&) = delete;
-    EdbFrameHandle(EdbFrameHandle&& other) noexcept;
-    EdbFrameHandle& operator=(EdbFrameHandle&& other) noexcept;
-    ~EdbFrameHandle();
+    FrameHandle(const FrameHandle&) = delete;
+    FrameHandle& operator=(const FrameHandle&) = delete;
+    FrameHandle(FrameHandle&& other) noexcept;
+    FrameHandle& operator=(FrameHandle&& other) noexcept;
+    ~FrameHandle();
 
     [[nodiscard]] auto data() const -> std::span<std::byte>;
     [[nodiscard]] auto page_id() const -> u64;
     [[nodiscard]] auto is_valid() const -> b8;
 
    private:
-    friend class EdbBufferPool;
+    friend class BufferPool;
 
     auto release() -> void;
 
-    EdbBufferPool* pool{nullptr};
+    BufferPool* pool{nullptr};
     usize index{0};
     u64 id{0};
     std::span<std::byte> bytes;
 };
 
-class EdbBufferPool {
+class BufferPool {
    public:
-    EdbBufferPool() = default;
+    BufferPool() = default;
 
-    EdbBufferPool(const EdbBufferPool&) = delete;
-    EdbBufferPool& operator=(const EdbBufferPool&) = delete;
-    EdbBufferPool(EdbBufferPool&&) = delete;
-    EdbBufferPool& operator=(EdbBufferPool&&) = delete;
+    BufferPool(const BufferPool&) = delete;
+    BufferPool& operator=(const BufferPool&) = delete;
+    BufferPool(BufferPool&&) = delete;
+    BufferPool& operator=(BufferPool&&) = delete;
 
-    ~EdbBufferPool() = default;
+    ~BufferPool() = default;
 
-    auto open(EdbPageStore& page_store, const EdbBufferPoolConfig& cfg) -> EdbStatus
+    auto open(PageStore& page_store, const BufferPoolConfig& cfg) -> VoidResult
         EDB_PRE(cfg.capacity_pages > usize{0});
-    auto close() -> EdbStatus;
+    auto close() -> VoidResult;
 
-    auto fetch(u64 page_id) -> EdbResult<EdbFrameHandle>;
-    auto fetch_new(u64 page_id) -> EdbResult<EdbFrameHandle>;
+    auto fetch(u64 page_id) -> Result<FrameHandle>;
+    auto fetch_new(u64 page_id) -> Result<FrameHandle>;
 
-    auto unpin(EdbFrameHandle& handle, b8 dirty) -> EdbStatus;
-    auto flush(u64 page_id) -> EdbStatus;
-    auto flush_all() -> EdbStatus;
+    auto unpin(FrameHandle& handle, b8 dirty) -> VoidResult;
+    auto flush(u64 page_id) -> VoidResult;
+    auto flush_all() -> VoidResult;
 
     [[nodiscard]] auto capacity() const -> usize;
     [[nodiscard]] auto page_size() const -> usize;
@@ -86,19 +86,19 @@ class EdbBufferPool {
         usize pin_count{0};
     };
 
-    [[nodiscard]] auto check_open() const -> EdbStatus;
-    [[nodiscard]] auto find_frame(u64 page_id) -> EdbResult<usize>;
-    [[nodiscard]] auto choose_victim() -> EdbResult<usize>;
-    auto write_back_if_dirty(Frame& frame) -> EdbStatus;
-    auto load_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus;
-    auto load_blank_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus;
-    [[nodiscard]] auto make_handle(usize frame_index) -> EdbFrameHandle;
+    [[nodiscard]] auto check_open() const -> VoidResult;
+    [[nodiscard]] auto find_frame(u64 page_id) -> Result<usize>;
+    [[nodiscard]] auto choose_victim() -> Result<usize>;
+    auto write_back_if_dirty(Frame& frame) -> VoidResult;
+    auto load_page_into_frame(usize frame_index, u64 page_id) -> VoidResult;
+    auto load_blank_page_into_frame(usize frame_index, u64 page_id) -> VoidResult;
+    [[nodiscard]] auto make_handle(usize frame_index) -> FrameHandle;
 
-    EdbPageStore* store{nullptr};
-    EdbBufferPoolConfig config{};
+    PageStore* store{nullptr};
+    BufferPoolConfig config{};
     usize page_bytes{0};
     std::vector<Frame> frames;
-    std::unique_ptr<EdbEvictionPolicy> eviction_policy;
+    std::unique_ptr<EvictionPolicy> eviction_policy;
 };
 
 }  // namespace edb

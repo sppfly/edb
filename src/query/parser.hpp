@@ -39,7 +39,7 @@ class Parser {
 
     // Parse all statements separated by optional semicolons.
     // Returns a non-empty vector on success.
-    [[nodiscard]] auto parse() -> EdbResult<std::vector<Stmt>>;
+    [[nodiscard]] auto parse() -> Result<std::vector<Stmt>>;
 
     // Human-readable description of the last parse error.
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
@@ -53,31 +53,31 @@ class Parser {
     auto advance() -> void;
     [[nodiscard]] auto check(TokenKind k) const noexcept -> bool;
     auto match(TokenKind k) -> bool;
-    [[nodiscard]] auto expect(TokenKind k) -> EdbResult<Token>;
-    [[nodiscard]] auto expect_identifier() -> EdbResult<std::string>;
+    [[nodiscard]] auto expect(TokenKind k) -> Result<Token>;
+    [[nodiscard]] auto expect_identifier() -> Result<std::string>;
 
     // Error helpers
-    auto parse_err(std::string msg) -> EdbError;
+    auto parse_err(std::string msg) -> Error;
 
     // Statement parsers
-    [[nodiscard]] auto parse_stmt()         -> EdbResult<Stmt>;
-    [[nodiscard]] auto parse_create_table() -> EdbResult<CreateTableStmt>;
-    [[nodiscard]] auto parse_insert()       -> EdbResult<InsertStmt>;
-    [[nodiscard]] auto parse_select()       -> EdbResult<SelectStmt>;
+    [[nodiscard]] auto parse_stmt()         -> Result<Stmt>;
+    [[nodiscard]] auto parse_create_table() -> Result<CreateTableStmt>;
+    [[nodiscard]] auto parse_insert()       -> Result<InsertStmt>;
+    [[nodiscard]] auto parse_select()       -> Result<SelectStmt>;
 
     // Sub-parsers
-    [[nodiscard]] auto parse_col_def()          -> EdbResult<ColumnDef>;
-    [[nodiscard]] auto parse_type_name()        -> EdbResult<TypeName>;
-    [[nodiscard]] auto parse_select_items()     -> EdbResult<std::vector<SelectItem>>;
-    [[nodiscard]] auto parse_expr_list()        -> EdbResult<std::vector<Expr>>;
+    [[nodiscard]] auto parse_col_def()          -> Result<ColumnDef>;
+    [[nodiscard]] auto parse_type_name()        -> Result<TypeName>;
+    [[nodiscard]] auto parse_select_items()     -> Result<std::vector<SelectItem>>;
+    [[nodiscard]] auto parse_expr_list()        -> Result<std::vector<Expr>>;
 
     // Expression parsers (precedence climbing)
-    [[nodiscard]] auto parse_expr()    -> EdbResult<Expr>;
-    [[nodiscard]] auto parse_or()      -> EdbResult<Expr>;
-    [[nodiscard]] auto parse_and()     -> EdbResult<Expr>;
-    [[nodiscard]] auto parse_not()     -> EdbResult<Expr>;
-    [[nodiscard]] auto parse_cmp()     -> EdbResult<Expr>;
-    [[nodiscard]] auto parse_primary() -> EdbResult<Expr>;
+    [[nodiscard]] auto parse_expr()    -> Result<Expr>;
+    [[nodiscard]] auto parse_or()      -> Result<Expr>;
+    [[nodiscard]] auto parse_and()     -> Result<Expr>;
+    [[nodiscard]] auto parse_not()     -> Result<Expr>;
+    [[nodiscard]] auto parse_cmp()     -> Result<Expr>;
+    [[nodiscard]] auto parse_primary() -> Result<Expr>;
 };
 
 }  // namespace edb

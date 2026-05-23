@@ -30,35 +30,35 @@ auto Parser::match(TokenKind k) -> bool {
     return false;
 }
 
-auto Parser::expect(TokenKind k) -> EdbResult<Token> {
+auto Parser::expect(TokenKind k) -> Result<Token> {
     if (!check(k)) {
         parse_err(std::format("expected {} but got '{}' at line {}:{}",
                               token_kind_name(k), cur.text,
                               static_cast<uint32_t>(cur.line),   // raw-primitive: format arg
                               static_cast<uint32_t>(cur.col)));  // raw-primitive: format arg
-        return std::unexpected(EdbError::ParseError);
+        return std::unexpected(Error::ParseError);
     }
     Token t = cur;
     advance();
     return t;
 }
 
-auto Parser::expect_identifier() -> EdbResult<std::string> {
+auto Parser::expect_identifier() -> Result<std::string> {
     if (cur.kind != TokenKind::Identifier) {
         parse_err(std::format("expected identifier but got '{}' at line {}:{}",
                               cur.text,
                               static_cast<uint32_t>(cur.line),   // raw-primitive
                               static_cast<uint32_t>(cur.col)));  // raw-primitive
-        return std::unexpected(EdbError::ParseError);
+        return std::unexpected(Error::ParseError);
     }
     std::string name{cur.text};
     advance();
     return name;
 }
 
-auto Parser::parse_err(std::string msg) -> EdbError {
+auto Parser::parse_err(std::string msg) -> Error {
     last_error = std::move(msg);
-    return EdbError::ParseError;
+    return Error::ParseError;
 }
 
 auto Parser::error_message() const noexcept -> std::string_view { return last_error; }
@@ -67,7 +67,7 @@ auto Parser::error_message() const noexcept -> std::string_view { return last_er
 // Top-level
 // ---------------------------------------------------------------------------
 
-auto Parser::parse() -> EdbResult<std::vector<Stmt>> {
+auto Parser::parse() -> Result<std::vector<Stmt>> {
     std::vector<Stmt> stmts;
     while (!check(TokenKind::Eof)) {
         match(TokenKind::Semicolon);  // allow leading/separating semicolons
@@ -84,7 +84,7 @@ auto Parser::parse() -> EdbResult<std::vector<Stmt>> {
     return stmts;
 }
 
-auto Parser::parse_stmt() -> EdbResult<Stmt> {
+auto Parser::parse_stmt() -> Result<Stmt> {
     if (check(TokenKind::KwCreate)) {
         advance();
         auto s = parse_create_table();
@@ -114,14 +114,14 @@ auto Parser::parse_stmt() -> EdbResult<Stmt> {
         cur.text,
         static_cast<uint32_t>(cur.line),   // raw-primitive
         static_cast<uint32_t>(cur.col)));  // raw-primitive
-    return std::unexpected(EdbError::ParseError);
+    return std::unexpected(Error::ParseError);
 }
 
 // ---------------------------------------------------------------------------
 // CREATE TABLE [IF NOT EXISTS] name ( col_def {, col_def} )
 // ---------------------------------------------------------------------------
 
-auto Parser::parse_create_table() -> EdbResult<CreateTableStmt> {
+auto Parser::parse_create_table() -> Result<CreateTableStmt> {
     auto res = expect(TokenKind::KwTable);
     if (!res) {
         return std::unexpected(res.error());
@@ -174,7 +174,7 @@ auto Parser::parse_create_table() -> EdbResult<CreateTableStmt> {
     };
 }
 
-auto Parser::parse_col_def() -> EdbResult<ColumnDef> {
+auto Parser::parse_col_def() -> Result<ColumnDef> {
     auto col_name = expect_identifier();
     if (!col_name) {
         return std::unexpected(col_name.error());
@@ -216,7 +216,7 @@ auto Parser::parse_col_def() -> EdbResult<ColumnDef> {
     return col;
 }
 
-auto Parser::parse_type_name() -> EdbResult<TypeName> {
+auto Parser::parse_type_name() -> Result<TypeName> {
     auto name = expect_identifier();
     if (!name) {
         return std::unexpected(name.error());
@@ -235,7 +235,7 @@ auto Parser::parse_type_name() -> EdbResult<TypeName> {
     if (match(TokenKind::LParen)) {
         if (!check(TokenKind::LitInteger)) {
             parse_err("expected integer parameter in type name");
-            return std::unexpected(EdbError::ParseError);
+            return std::unexpected(Error::ParseError);
         }
         std::string_view num_text = cur.text;
         u32 val{};
@@ -244,7 +244,7 @@ auto Parser::parse_type_name() -> EdbResult<TypeName> {
                                          val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid type parameter '{}'", num_text));
-            return std::unexpected(EdbError::ParseError);
+            return std::unexpected(Error::ParseError);
         }
         param = val;
         advance();
@@ -261,7 +261,7 @@ auto Parser::parse_type_name() -> EdbResult<TypeName> {
 // INSERT INTO name [( col_names )] VALUES ( exprs ) [, ( exprs )]*
 // ---------------------------------------------------------------------------
 
-auto Parser::parse_insert() -> EdbResult<InsertStmt> {
+auto Parser::parse_insert() -> Result<InsertStmt> {
     auto r = expect(TokenKind::KwInto);
     if (!r) {
         return std::unexpected(r.error());
@@ -327,7 +327,7 @@ auto Parser::parse_insert() -> EdbResult<InsertStmt> {
 // SELECT items FROM name [WHERE expr]
 // ---------------------------------------------------------------------------
 
-auto Parser::parse_select() -> EdbResult<SelectStmt> {
+auto Parser::parse_select() -> Result<SelectStmt> {
     auto items = parse_select_items();
     if (!items) {
         return std::unexpected(items.error());
@@ -359,7 +359,7 @@ auto Parser::parse_select() -> EdbResult<SelectStmt> {
     };
 }
 
-auto Parser::parse_select_items() -> EdbResult<std::vector<SelectItem>> {
+auto Parser::parse_select_items() -> Result<std::vector<SelectItem>> {
     std::vector<SelectItem> items;
     while (true) {
         if (match(TokenKind::Star)) {
@@ -386,7 +386,7 @@ auto Parser::parse_select_items() -> EdbResult<std::vector<SelectItem>> {
     return items;
 }
 
-auto Parser::parse_expr_list() -> EdbResult<std::vector<Expr>> {
+auto Parser::parse_expr_list() -> Result<std::vector<Expr>> {
     std::vector<Expr> exprs;
     while (!check(TokenKind::RParen) && !check(TokenKind::Eof)) {
         auto e = parse_expr();
@@ -405,9 +405,9 @@ auto Parser::parse_expr_list() -> EdbResult<std::vector<Expr>> {
 // Expression grammar (precedence climbing)
 // ---------------------------------------------------------------------------
 
-auto Parser::parse_expr() -> EdbResult<Expr> { return parse_or(); }
+auto Parser::parse_expr() -> Result<Expr> { return parse_or(); }
 
-auto Parser::parse_or() -> EdbResult<Expr> {
+auto Parser::parse_or() -> Result<Expr> {
     auto left = parse_and();
     if (!left) {
         return left;
@@ -427,7 +427,7 @@ auto Parser::parse_or() -> EdbResult<Expr> {
     return left;
 }
 
-auto Parser::parse_and() -> EdbResult<Expr> {
+auto Parser::parse_and() -> Result<Expr> {
     auto left = parse_not();
     if (!left) {
         return left;
@@ -447,16 +447,16 @@ auto Parser::parse_and() -> EdbResult<Expr> {
     return left;
 }
 
-auto Parser::parse_not() -> EdbResult<Expr> {
+auto Parser::parse_not() -> Result<Expr> {
     if (match(TokenKind::KwNot)) {
         // NOT support deferred to Phase 5b (requires UnaryExpr AST node).
         parse_err("NOT is not yet supported in WHERE expressions");
-        return std::unexpected(EdbError::ParseError);
+        return std::unexpected(Error::ParseError);
     }
     return parse_cmp();
 }
 
-auto Parser::parse_cmp() -> EdbResult<Expr> {
+auto Parser::parse_cmp() -> Result<Expr> {
     auto left = parse_primary();
     if (!left) {
         return left;
@@ -495,7 +495,7 @@ auto Parser::parse_cmp() -> EdbResult<Expr> {
     return left;
 }
 
-auto Parser::parse_primary() -> EdbResult<Expr> {
+auto Parser::parse_primary() -> Result<Expr> {
     // Parenthesised expression
     if (match(TokenKind::LParen)) {
         auto inner = parse_expr();
@@ -528,7 +528,7 @@ auto Parser::parse_primary() -> EdbResult<Expr> {
         auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid integer literal '{}'", text));
-            return std::unexpected(EdbError::ParseError);
+            return std::unexpected(Error::ParseError);
         }
         advance();
         return Expr{Literal{IntLiteral{val}}};
@@ -542,7 +542,7 @@ auto Parser::parse_primary() -> EdbResult<Expr> {
         auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid float literal '{}'", text));
-            return std::unexpected(EdbError::ParseError);
+            return std::unexpected(Error::ParseError);
         }
         advance();
         return Expr{Literal{FloatLiteral{val}}};
@@ -579,7 +579,7 @@ auto Parser::parse_primary() -> EdbResult<Expr> {
                           cur.text,
                           static_cast<uint32_t>(cur.line),   // raw-primitive
                           static_cast<uint32_t>(cur.col)));  // raw-primitive
-    return std::unexpected(EdbError::ParseError);
+    return std::unexpected(Error::ParseError);
 }
 
 }  // namespace edb

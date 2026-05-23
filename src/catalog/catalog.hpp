@@ -41,89 +41,89 @@ struct CatalogAttribute {
 
 struct CreateTableSpec {
     std::string name;
-    std::vector<EdbColumnSchema> columns;
+    std::vector<ColumnSchema> columns;
 };
 
-class EdbRelationBackendFactory {
+class RelationBackendFactory {
    public:
-    EdbRelationBackendFactory() = default;
-    EdbRelationBackendFactory(const EdbRelationBackendFactory&) = delete;
-    EdbRelationBackendFactory& operator=(const EdbRelationBackendFactory&) = delete;
-    EdbRelationBackendFactory(EdbRelationBackendFactory&&) = delete;
-    EdbRelationBackendFactory& operator=(EdbRelationBackendFactory&&) = delete;
-    virtual ~EdbRelationBackendFactory() = default;
+    RelationBackendFactory() = default;
+    RelationBackendFactory(const RelationBackendFactory&) = delete;
+    RelationBackendFactory& operator=(const RelationBackendFactory&) = delete;
+    RelationBackendFactory(RelationBackendFactory&&) = delete;
+    RelationBackendFactory& operator=(RelationBackendFactory&&) = delete;
+    virtual ~RelationBackendFactory() = default;
 
     [[nodiscard]] virtual auto open_backend(u32 relation_oid, std::string_view relation_name)
-        -> EdbResult<std::unique_ptr<EdbStorageIOOps>> = 0;
+        -> Result<std::unique_ptr<StorageIOOps>> = 0;
 };
 
-class EdbCatalog {
+class Catalog {
    public:
-    EdbCatalog(const EdbTypeRegistry& registry, EdbRelationBackendFactory& backend_factory,
-               const EdbEngineConfig& engine_config);
+    Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
+               const EngineConfig& engine_config);
 
-    EdbCatalog(const EdbCatalog&) = delete;
-    EdbCatalog& operator=(const EdbCatalog&) = delete;
-    EdbCatalog(EdbCatalog&&) = delete;
-    EdbCatalog& operator=(EdbCatalog&&) = delete;
-    ~EdbCatalog() = default;
+    Catalog(const Catalog&) = delete;
+    Catalog& operator=(const Catalog&) = delete;
+    Catalog(Catalog&&) = delete;
+    Catalog& operator=(Catalog&&) = delete;
+    ~Catalog() = default;
 
-    auto open() -> EdbStatus;
-    auto close() -> EdbStatus;
+    auto open() -> VoidResult;
+    auto close() -> VoidResult;
 
-    [[nodiscard]] auto get_type(std::string_view name) -> EdbResult<CatalogType>;
-    [[nodiscard]] auto get_class(std::string_view name) -> EdbResult<CatalogClass>;
-    [[nodiscard]] auto get_attributes(u32 class_oid) -> EdbResult<std::vector<CatalogAttribute>>;
+    [[nodiscard]] auto get_type(std::string_view name) -> Result<CatalogType>;
+    [[nodiscard]] auto get_class(std::string_view name) -> Result<CatalogClass>;
+    [[nodiscard]] auto get_attributes(u32 class_oid) -> Result<std::vector<CatalogAttribute>>;
 
-    [[nodiscard]] auto create_table(const CreateTableSpec& spec) -> EdbResult<u32>;
-    auto drop_table(u32 class_oid) -> EdbStatus;
+    [[nodiscard]] auto create_table(const CreateTableSpec& spec) -> Result<u32>;
+    auto drop_table(u32 class_oid) -> VoidResult;
 
-    [[nodiscard]] auto open_table(std::string_view name) -> EdbResult<EdbTable*>;
+    [[nodiscard]] auto open_table(std::string_view name) -> Result<Table*>;
 
    private:
     struct OpenedTableBundle {
-        std::unique_ptr<EdbStorageIOOps> backend;
-        EdbPageStore page_store;
+        std::unique_ptr<StorageIOOps> backend;
+        PageStore page_store;
         EdbHeapEngine engine;
-        std::unique_ptr<EdbTable> table;
+        std::unique_ptr<Table> table;
 
-        auto open(const EdbTypeRegistry& registry, EdbRelationBackendFactory& factory,
-                  const EdbTableSchema& schema, const EdbEngineConfig& engine_config) -> EdbStatus;
-        auto close() -> EdbStatus;
+        auto open(const TypeRegistry& registry, RelationBackendFactory& factory,
+                  const TableSchema& schema, const EngineConfig& engine_config) -> VoidResult;
+        auto close() -> VoidResult;
     };
 
-    [[nodiscard]] auto check_open() const -> EdbStatus;
-    auto open_system_tables() -> EdbStatus;
-    auto bootstrap_if_needed() -> EdbStatus;
-    auto bootstrap_catalog() -> EdbStatus;
-    auto bootstrap_types() -> EdbStatus;
-    auto bootstrap_classes() -> EdbStatus;
-    auto bootstrap_attributes() -> EdbStatus;
+    [[nodiscard]] auto check_open() const -> VoidResult;
+    auto open_system_tables() -> VoidResult;
+    auto bootstrap_if_needed() -> VoidResult;
+    auto bootstrap_catalog() -> VoidResult;
+    auto bootstrap_types() -> VoidResult;
+    auto bootstrap_classes() -> VoidResult;
+    auto bootstrap_attributes() -> VoidResult;
     auto ensure_user_table_open(u32 relation_oid, std::string_view relation_name,
                                 std::span<const CatalogAttribute> attributes)
-        -> EdbResult<EdbTable*>;
-    auto lookup_class_row(u32 class_oid) -> EdbResult<std::optional<EdbTableRow>>;
-    auto lookup_attribute_rows(u32 class_oid) -> EdbResult<std::vector<EdbTableRow>>;
-    auto next_relation_oid() -> EdbResult<u32>;
+        -> Result<Table*>;
+    auto lookup_class_row(u32 class_oid) -> Result<std::optional<TableRow>>;
+    auto lookup_attribute_rows(u32 class_oid) -> Result<std::vector<TableRow>>;
+    auto next_relation_oid() -> Result<u32>;
 
-    [[nodiscard]] auto decode_type(const EdbTableRow& row) -> EdbResult<CatalogType>;
-    [[nodiscard]] auto decode_class(const EdbTableRow& row) -> EdbResult<CatalogClass>;
-    [[nodiscard]] auto decode_attribute(const EdbTableRow& row) -> EdbResult<CatalogAttribute>;
+    [[nodiscard]] auto decode_type(const TableRow& row) -> Result<CatalogType>;
+    [[nodiscard]] auto decode_class(const TableRow& row) -> Result<CatalogClass>;
+    [[nodiscard]] auto decode_attribute(const TableRow& row) -> Result<CatalogAttribute>;
 
-    [[nodiscard]] auto make_int32_value(i32 value) const -> EdbResult<EdbValue>;
-    [[nodiscard]] auto make_text_value(std::string_view text) const -> EdbResult<EdbValue>;
-    [[nodiscard]] auto make_bool_value(b8 value) const -> EdbResult<EdbValue>;
+    [[nodiscard]] auto make_int32_value(i32 value) const -> Result<Value>;
+    [[nodiscard]] auto make_text_value(std::string_view text) const -> Result<Value>;
+    [[nodiscard]] auto make_bool_value(b8 value) const -> Result<Value>;
 
-    [[nodiscard]] auto parse_i32(const EdbValue& value) const -> EdbResult<i32>;
-    [[nodiscard]] auto parse_text(const EdbValue& value) const -> EdbResult<std::string>;
-    [[nodiscard]] auto parse_bool(const EdbValue& value) const -> EdbResult<b8>;
+    [[nodiscard]] auto parse_i32(const Value& value) const -> Result<i32>;
+    [[nodiscard]] auto parse_text(const Value& value) const -> Result<std::string>;
+    [[nodiscard]] auto parse_bool(const Value& value) const -> Result<b8>;
 
     auto invalidate_type_cache() -> void;
     auto invalidate_class_cache(u32 class_oid, std::string_view class_name) -> void;
 
-    const EdbTypeRegistry* types{nullptr};
-    EdbRelationBackendFactory* backends{nullptr};
-    EdbEngineConfig config{};
+    const TypeRegistry* types{nullptr};
+    RelationBackendFactory* backends{nullptr};
+    EngineConfig config{};
     b8 opened{false};
 
     OpenedTableBundle type_table{};

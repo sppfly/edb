@@ -15,7 +15,7 @@ using namespace edb;
 namespace {
 
 struct MockTextType {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         std::vector<std::byte> bytes{};
         bytes.reserve(text.size());
         std::ranges::transform(text, std::back_inserter(bytes), [](char ch) {
@@ -44,9 +44,9 @@ struct MockTextType {
 };
 
 struct MockFixedType {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         if (text.size() != 4U) {
-            return std::unexpected(EdbError::InvalidArgument);
+            return std::unexpected(Error::InvalidArgument);
         }
         return MockTextType::from_text(text);
     }
@@ -70,7 +70,7 @@ struct MockFixedType {
 }  // namespace
 
 TEST(EdbTypeRegistry, RegisterAssignsStableOidsAndSupportsLookup) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
 
     ASSERT_TRUE(registry.register_type<MockTextType>("text").has_value());
     ASSERT_TRUE(registry.register_type<MockFixedType>("code4").has_value());
@@ -89,29 +89,29 @@ TEST(EdbTypeRegistry, RegisterAssignsStableOidsAndSupportsLookup) {
 }
 
 TEST(EdbTypeRegistry, DuplicateNamesAreRejected) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
 
     ASSERT_TRUE(registry.register_type<MockTextType>("text").has_value());
     auto duplicate = registry.register_type<MockFixedType>("text");
 
     ASSERT_FALSE(duplicate.has_value());
-    EXPECT_EQ(duplicate.error(), EdbError::AlreadyExists);
+    EXPECT_EQ(duplicate.error(), Error::AlreadyExists);
 }
 
 TEST(EdbTypeRegistry, LookupOfUnknownTypeReturnsNotFound) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
 
     auto by_name = registry.lookup("missing");
     auto by_oid = registry.lookup(u32{42});
 
     ASSERT_FALSE(by_name.has_value());
     ASSERT_FALSE(by_oid.has_value());
-    EXPECT_EQ(by_name.error(), EdbError::NotFound);
-    EXPECT_EQ(by_oid.error(), EdbError::NotFound);
+    EXPECT_EQ(by_name.error(), Error::NotFound);
+    EXPECT_EQ(by_oid.error(), Error::NotFound);
 }
 
 TEST(EdbTypeRegistry, RegisteredOpsAreCallableThroughStoredMetadata) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(registry.register_type<MockTextType>("text").has_value());
 
     auto text = registry.lookup("text");
@@ -126,7 +126,7 @@ TEST(EdbTypeRegistry, RegisteredOpsAreCallableThroughStoredMetadata) {
 }
 
 TEST(EdbTypeRegistry, FixedSizeMetadataPropagatesFromImplementation) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(registry.register_type<MockFixedType>("code4").has_value());
 
     auto type = registry.lookup("code4");
@@ -136,5 +136,5 @@ TEST(EdbTypeRegistry, FixedSizeMetadataPropagatesFromImplementation) {
 
     auto invalid = (*type)->from_text("abc");
     ASSERT_FALSE(invalid.has_value());
-    EXPECT_EQ(invalid.error(), EdbError::InvalidArgument);
+    EXPECT_EQ(invalid.error(), Error::InvalidArgument);
 }

@@ -12,18 +12,18 @@
 
 using namespace edb;
 
-class MockIOOps : public EdbStorageIOOps {
+class MockIOOps : public StorageIOOps {
    public:
     std::vector<std::byte> storage;
     usize sync_calls{0};
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -35,7 +35,7 @@ class MockIOOps : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage.size()) {
             storage.resize(off + buf.size());
@@ -45,22 +45,22 @@ class MockIOOps : public EdbStorageIOOps {
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override {
+    auto sync_impl() -> VoidResult override {
         ++sync_calls;
         return {};
     }
-    auto datasync_impl() -> EdbStatus override { return {}; }
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto datasync_impl() -> VoidResult override { return {}; }
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage.size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
 };
 
 class BufferPoolTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        ASSERT_TRUE(page_store.open(io, EdbPageStoreConfig{.page_size = usize{64}}).has_value());
+        ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{64}}).has_value());
     }
 
     auto allocate_pages(usize count) -> void {
@@ -70,19 +70,19 @@ class BufferPoolTest : public ::testing::Test {
     }
 
     MockIOOps io;
-    EdbPageStore page_store;
+    PageStore page_store;
 };
 
 TEST(EdbBufferPoolConfig, DefaultCapacity) {
-    constexpr EdbBufferPoolConfig cfg{};
+    constexpr BufferPoolConfig cfg{};
     EXPECT_EQ(cfg.capacity_pages.value, usize{1024}.value);
-    EXPECT_EQ(cfg.eviction.kind, EdbEvictionPolicyKind::ClockSweep);
+    EXPECT_EQ(cfg.eviction.kind, EvictionPolicyKind::ClockSweep);
 }
 
 TEST_F(BufferPoolTest, OpenSetsCapacityAndPageSize) {
-    EdbBufferPool pool;
+    BufferPool pool;
 
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{2}}).has_value());
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{2}}).has_value());
 
     EXPECT_EQ(pool.capacity().value, usize{2}.value);
     EXPECT_EQ(pool.page_size().value, usize{64}.value);
@@ -94,8 +94,8 @@ TEST_F(BufferPoolTest, FetchReadsExistingPage) {
     page[0] = std::byte{0xAB};
     ASSERT_TRUE(page_store.write_page(u64{0}, page).has_value());
 
-    EdbBufferPool pool;
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1}}).has_value());
+    BufferPool pool;
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1}}).has_value());
 
     auto handle = pool.fetch(u64{0});
     ASSERT_TRUE(handle.has_value());
@@ -105,8 +105,8 @@ TEST_F(BufferPoolTest, FetchReadsExistingPage) {
 
 TEST_F(BufferPoolTest, DirtyPageFlushesToStore) {
     allocate_pages(usize{1});
-    EdbBufferPool pool;
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1}}).has_value());
+    BufferPool pool;
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1}}).has_value());
 
     auto handle = pool.fetch(u64{0});
     ASSERT_TRUE(handle.has_value());
@@ -121,8 +121,8 @@ TEST_F(BufferPoolTest, DirtyPageFlushesToStore) {
 
 TEST_F(BufferPoolTest, EvictionWritesDirtyVictim) {
     allocate_pages(usize{2});
-    EdbBufferPool pool;
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1}}).has_value());
+    BufferPool pool;
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1}}).has_value());
 
     auto first = pool.fetch(u64{0});
     ASSERT_TRUE(first.has_value());
@@ -140,15 +140,15 @@ TEST_F(BufferPoolTest, EvictionWritesDirtyVictim) {
 
 TEST_F(BufferPoolTest, AllPinnedFramesReturnBufferPoolFull) {
     allocate_pages(usize{2});
-    EdbBufferPool pool;
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1}}).has_value());
+    BufferPool pool;
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1}}).has_value());
 
     auto pinned = pool.fetch(u64{0});
     ASSERT_TRUE(pinned.has_value());
 
     auto second = pool.fetch(u64{1});
     ASSERT_FALSE(second.has_value());
-    EXPECT_EQ(second.error(), EdbError::BufferPoolFull);
+    EXPECT_EQ(second.error(), Error::BufferPoolFull);
 
     ASSERT_TRUE(pool.unpin(*pinned, b8{false}).has_value());
 }
@@ -159,8 +159,8 @@ TEST_F(BufferPoolTest, FetchNewReturnsZeroedDirtyPage) {
     old_page[0] = std::byte{0xEE};
     ASSERT_TRUE(page_store.write_page(u64{0}, old_page).has_value());
 
-    EdbBufferPool pool;
-    ASSERT_TRUE(pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1}}).has_value());
+    BufferPool pool;
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1}}).has_value());
 
     auto handle = pool.fetch_new(u64{0});
     ASSERT_TRUE(handle.has_value());
@@ -171,12 +171,12 @@ TEST_F(BufferPoolTest, FetchNewReturnsZeroedDirtyPage) {
 
 TEST_F(BufferPoolTest, FetchWorksWithConfiguredLruKPolicy) {
     allocate_pages(usize{2});
-    EdbBufferPool pool;
+    BufferPool pool;
     ASSERT_TRUE(
-        pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1},
+        pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
                                                   .eviction =
-                                                      EdbEvictionPolicyConfig{
-                                                          .kind = EdbEvictionPolicyKind::LruK,
+                                                      EvictionPolicyConfig{
+                                                          .kind = EvictionPolicyKind::LruK,
                                                           .lru_k_history = usize{2},
                                                       }})
             .has_value());
@@ -192,12 +192,12 @@ TEST_F(BufferPoolTest, FetchWorksWithConfiguredLruKPolicy) {
 
 TEST_F(BufferPoolTest, FetchWorksWithConfiguredArcPolicy) {
     allocate_pages(usize{2});
-    EdbBufferPool pool;
+    BufferPool pool;
     ASSERT_TRUE(
-        pool.open(page_store, EdbBufferPoolConfig{.capacity_pages = usize{1},
+        pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
                                                   .eviction =
-                                                      EdbEvictionPolicyConfig{
-                                                          .kind = EdbEvictionPolicyKind::Arc,
+                                                      EvictionPolicyConfig{
+                                                          .kind = EvictionPolicyKind::Arc,
                                                       }})
             .has_value());
 

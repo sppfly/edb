@@ -6,15 +6,15 @@
 
 namespace edb {
 
-EdbTable::EdbTable(const EdbTypeRegistry& registry, EdbStorageEngineOps& engine,
-                   EdbTableSchema schema)
+Table::Table(const TypeRegistry& registry, StorageEngineOps& engine,
+                   TableSchema schema)
     : storage{&engine},
       table_schema{std::move(schema)},
       row_codec{registry, table_schema.columns} {}
 
-auto EdbTable::insert(std::span<const EdbValue> values) -> EdbResult<EdbTupleId> {
+auto Table::insert(std::span<const Value> values) -> Result<TupleId> {
     if (storage == nullptr) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     auto encoded = row_codec.encode(values);
@@ -24,9 +24,9 @@ auto EdbTable::insert(std::span<const EdbValue> values) -> EdbResult<EdbTupleId>
     return storage->insert(*encoded);
 }
 
-auto EdbTable::scan_rows() -> EdbResult<std::vector<EdbTableRow>> {
+auto Table::scan_rows() -> Result<std::vector<TableRow>> {
     if (storage == nullptr) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     auto handle = storage->begin_scan();
@@ -34,7 +34,7 @@ auto EdbTable::scan_rows() -> EdbResult<std::vector<EdbTableRow>> {
         return std::unexpected(handle.error());
     }
 
-    std::vector<EdbTableRow> rows;
+    std::vector<TableRow> rows;
     while (true) {
         auto next = storage->scan_next(*handle);
         if (!next) {
@@ -48,7 +48,7 @@ auto EdbTable::scan_rows() -> EdbResult<std::vector<EdbTableRow>> {
         if (!decoded) {
             return std::unexpected(decoded.error());
         }
-        rows.push_back(EdbTableRow{.id = (*next)->id, .values = std::move(*decoded)});
+        rows.push_back(TableRow{.id = (*next)->id, .values = std::move(*decoded)});
     }
 
     auto status = storage->end_scan(*handle);
@@ -58,13 +58,13 @@ auto EdbTable::scan_rows() -> EdbResult<std::vector<EdbTableRow>> {
     return rows;
 }
 
-auto EdbTable::scan() -> EdbResult<std::vector<std::vector<EdbValue>>> {
+auto Table::scan() -> Result<std::vector<std::vector<Value>>> {
     auto rows = scan_rows();
     if (!rows) {
         return std::unexpected(rows.error());
     }
 
-    std::vector<std::vector<EdbValue>> values;
+    std::vector<std::vector<Value>> values;
     values.reserve(rows->size());
     for (auto& row : *rows) {
         values.push_back(std::move(row.values));
@@ -72,7 +72,7 @@ auto EdbTable::scan() -> EdbResult<std::vector<std::vector<EdbValue>>> {
     return values;
 }
 
-auto EdbTable::schema() const -> const EdbTableSchema& {
+auto Table::schema() const -> const TableSchema& {
     return table_schema;
 }
 

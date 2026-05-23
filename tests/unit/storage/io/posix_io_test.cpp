@@ -57,18 +57,18 @@ class PosixIOTest : public ::testing::Test {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, OpenValidPath) {
-    auto res = backend().open(temp_path().c_str(), EdbIOConfig{});
+    auto res = backend().open(temp_path().c_str(), IOConfig{});
     EXPECT_TRUE(res.has_value());
 }
 
 TEST_F(PosixIOTest, OpenUnwritablePath) {
-    auto res = backend().open("/proc/no_such_file_edb", EdbIOConfig{});
+    auto res = backend().open("/proc/no_such_file_edb", IOConfig{});
     EXPECT_FALSE(res.has_value());
-    EXPECT_EQ(res.error(), EdbError::IoError);
+    EXPECT_EQ(res.error(), Error::IoError);
 }
 
 TEST_F(PosixIOTest, CloseAfterOpen) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
     auto res = backend().close();
     EXPECT_TRUE(res.has_value());
 }
@@ -86,14 +86,14 @@ TEST_F(PosixIOTest, ReadBeforeOpen) {
     std::array<std::byte, 4> buf{};
     auto res = backend().read(u64{0}, buf);
     ASSERT_FALSE(res.has_value());
-    EXPECT_EQ(res.error(), EdbError::IoError);
+    EXPECT_EQ(res.error(), Error::IoError);
 }
 
 TEST_F(PosixIOTest, WriteBeforeOpen) {
     const std::array<std::byte, 4> buf{};
     auto res = backend().write(u64{0}, buf);
     ASSERT_FALSE(res.has_value());
-    EXPECT_EQ(res.error(), EdbError::IoError);
+    EXPECT_EQ(res.error(), Error::IoError);
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ TEST_F(PosixIOTest, WriteBeforeOpen) {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, WriteReadRoundtrip4096) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     // Fill a 4096-byte page with a pattern.
     std::array<std::byte, 4096> src{};
@@ -124,7 +124,7 @@ TEST_F(PosixIOTest, WriteReadRoundtrip4096) {
 }
 
 TEST_F(PosixIOTest, WriteReadOneByte) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     std::array<std::byte, 1> src{std::byte{0xAB}};
     ASSERT_TRUE(backend().write(u64{0}, src).has_value());
@@ -136,7 +136,7 @@ TEST_F(PosixIOTest, WriteReadOneByte) {
 }
 
 TEST_F(PosixIOTest, WriteReadAtNonZeroOffset) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     // Write at offset 8192.
     std::array<std::byte, 16> src{};
@@ -154,7 +154,7 @@ TEST_F(PosixIOTest, WriteReadAtNonZeroOffset) {
 }
 
 TEST_F(PosixIOTest, ReadPastEOFReturnsZeroBytes) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
     // File is empty (0 bytes). Reading from offset 0 should return 0.
     std::array<std::byte, 8> buf{};
     auto res = backend().read(u64{0}, buf);
@@ -167,7 +167,7 @@ TEST_F(PosixIOTest, ReadPastEOFReturnsZeroBytes) {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, FileSizeAfterWrite) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     std::array<std::byte, 512> buf{};
     ASSERT_TRUE(backend().write(u64{0}, buf).has_value());
@@ -180,7 +180,7 @@ TEST_F(PosixIOTest, FileSizeAfterWrite) {
 TEST_F(PosixIOTest, FileSizeBeforeOpen) {
     auto res = backend().file_size();
     ASSERT_FALSE(res.has_value());
-    EXPECT_EQ(res.error(), EdbError::IoError);
+    EXPECT_EQ(res.error(), Error::IoError);
 }
 
 // ---------------------------------------------------------------------------
@@ -188,7 +188,7 @@ TEST_F(PosixIOTest, FileSizeBeforeOpen) {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, TruncateShrinksFile) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     std::array<std::byte, 1024> buf{};
     ASSERT_TRUE(backend().write(u64{0}, buf).has_value());
@@ -201,7 +201,7 @@ TEST_F(PosixIOTest, TruncateShrinksFile) {
 }
 
 TEST_F(PosixIOTest, TruncateExtendsFile) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
     ASSERT_TRUE(backend().truncate(u64{8192}).has_value());
 
     auto sz = backend().file_size();
@@ -214,12 +214,12 @@ TEST_F(PosixIOTest, TruncateExtendsFile) {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, SyncSucceeds) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
     EXPECT_TRUE(backend().sync().has_value());
 }
 
 TEST_F(PosixIOTest, DatasyncSucceeds) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
     EXPECT_TRUE(backend().datasync().has_value());
 }
 
@@ -236,7 +236,7 @@ TEST_F(PosixIOTest, DatasyncBeforeOpenReturnsError) {
 // ---------------------------------------------------------------------------
 
 TEST_F(PosixIOTest, SyncRangeOnWrittenRegion) {
-    ASSERT_TRUE(backend().open(temp_path().c_str(), EdbIOConfig{}).has_value());
+    ASSERT_TRUE(backend().open(temp_path().c_str(), IOConfig{}).has_value());
 
     std::array<std::byte, 4096> buf{};
     ASSERT_TRUE(backend().write(u64{0}, buf).has_value());

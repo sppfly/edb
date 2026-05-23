@@ -14,7 +14,7 @@
 
 namespace edb {
 
-class EdbHeapEngine final : public EdbStorageEngineOps {
+class EdbHeapEngine final : public StorageEngineOps {
    public:
     EdbHeapEngine() = default;
 
@@ -26,29 +26,29 @@ class EdbHeapEngine final : public EdbStorageEngineOps {
     ~EdbHeapEngine() override = default;
 
    private:
-    auto open_impl(EdbPageStore& store, const EdbEngineConfig& cfg) -> EdbStatus override;
-    auto close_impl() -> EdbStatus override;
-    auto insert_impl(std::span<const std::byte> tuple) -> EdbResult<EdbTupleId> override;
-    auto delete_tuple_impl(EdbTupleId id) -> EdbStatus override;
-    auto update_tuple_impl(EdbTupleId id, std::span<const std::byte> tuple)
-        -> EdbResult<EdbTupleId> override;
-    auto begin_scan_impl() -> EdbResult<EdbScanHandle> override;
-    auto scan_next_impl(EdbScanHandle& handle) -> EdbResult<std::optional<EdbTuple>> override;
-    auto end_scan_impl(EdbScanHandle& handle) -> EdbStatus override;
+    auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
+    auto close_impl() -> VoidResult override;
+    auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> override;
+    auto delete_tuple_impl(TupleId id) -> VoidResult override;
+    auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
+        -> Result<TupleId> override;
+    auto begin_scan_impl() -> Result<ScanHandle> override;
+    auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> override;
+    auto end_scan_impl(ScanHandle& handle) -> VoidResult override;
     [[nodiscard]] auto page_size_impl() const -> usize override;
 
-    [[nodiscard]] auto check_open() const -> EdbStatus;
+    [[nodiscard]] auto check_open() const -> VoidResult;
     auto insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
-        -> EdbResult<std::optional<EdbTupleId>>;
-    auto insert_into_new_page(std::span<const std::byte> tuple) -> EdbResult<EdbTupleId>;
+        -> Result<std::optional<TupleId>>;
+    auto insert_into_new_page(std::span<const std::byte> tuple) -> Result<TupleId>;
 
     [[nodiscard]] static auto encode_cursor(u64 page_id, u16 slot_idx) -> u64;
-    [[nodiscard]] static auto cursor_page_id(EdbScanHandle handle) -> u64;
-    [[nodiscard]] static auto cursor_slot_idx(EdbScanHandle handle) -> u16;
+    [[nodiscard]] static auto cursor_page_id(ScanHandle handle) -> u64;
+    [[nodiscard]] static auto cursor_slot_idx(ScanHandle handle) -> u16;
 
-    EdbPageStore* page_store{nullptr};
-    EdbEngineConfig config{};
-    EdbBufferPool buffer_pool;
+    PageStore* page_store{nullptr};
+    EngineConfig config{};
+    BufferPool buffer_pool;
     b8 opened{false};
 };
 

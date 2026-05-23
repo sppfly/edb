@@ -15,13 +15,13 @@ using namespace edb;
 
 namespace {
 
-auto make_value(EdbTypeRegistry& registry, const EdbType& type, std::string_view text) -> EdbValue {
+auto make_value(TypeRegistry& registry, const Type& type, std::string_view text) -> Value {
     auto bytes = type.from_text(text);
     EXPECT_TRUE(bytes.has_value());
-    return EdbValue{.type_oid = type.oid, .bytes = *bytes, .is_null = b8{false}};
+    return Value{.type_oid = type.oid, .bytes = *bytes, .is_null = b8{false}};
 }
 
-auto decode_to_text(EdbTypeRegistry& registry, const EdbValue& value) -> std::string {
+auto decode_to_text(TypeRegistry& registry, const Value& value) -> std::string {
     auto type = registry.lookup(value.type_oid);
     EXPECT_TRUE(type.has_value());
     return (*type)->to_text(value.bytes);
@@ -30,7 +30,7 @@ auto decode_to_text(EdbTypeRegistry& registry, const EdbValue& value) -> std::st
 }  // namespace
 
 TEST(EdbRowCodec, EncodesAndDecodesMixedSchemaRoundTrip) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto int32_type = registry.lookup("int32");
@@ -40,12 +40,12 @@ TEST(EdbRowCodec, EncodesAndDecodesMixedSchemaRoundTrip) {
     ASSERT_TRUE(text_type.has_value());
     ASSERT_TRUE(bool_type.has_value());
 
-    EdbRowCodec codec{registry,
+    RowCodec codec{registry,
                       {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                        {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
                        {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}}}};
 
-    const auto encoded = codec.encode(std::vector<EdbValue>{
+    const auto encoded = codec.encode(std::vector<Value>{
         make_value(registry, **int32_type, "7"), make_value(registry, **text_type, "alice"),
         make_value(registry, **bool_type, "true")});
     ASSERT_TRUE(encoded.has_value());
@@ -59,7 +59,7 @@ TEST(EdbRowCodec, EncodesAndDecodesMixedSchemaRoundTrip) {
 }
 
 TEST(EdbRowCodec, SupportsNullableColumns) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto int32_type = registry.lookup("int32");
@@ -67,13 +67,13 @@ TEST(EdbRowCodec, SupportsNullableColumns) {
     ASSERT_TRUE(int32_type.has_value());
     ASSERT_TRUE(text_type.has_value());
 
-    EdbRowCodec codec{registry,
+    RowCodec codec{registry,
                       {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                        {.name = "nickname", .type_oid = (*text_type)->oid, .nullable = b8{true}}}};
 
-    const auto encoded = codec.encode(std::vector<EdbValue>{
+    const auto encoded = codec.encode(std::vector<Value>{
         make_value(registry, **int32_type, "9"),
-        EdbValue{.type_oid = (*text_type)->oid, .bytes = {}, .is_null = b8{true}}});
+        Value{.type_oid = (*text_type)->oid, .bytes = {}, .is_null = b8{true}}});
     ASSERT_TRUE(encoded.has_value());
 
     const auto decoded = codec.decode(*encoded);
@@ -85,53 +85,53 @@ TEST(EdbRowCodec, SupportsNullableColumns) {
 }
 
 TEST(EdbRowCodec, RejectsSchemaValueCountMismatch) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto int32_type = registry.lookup("int32");
     ASSERT_TRUE(int32_type.has_value());
-    EdbRowCodec codec{registry,
+    RowCodec codec{registry,
                       {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
 
     const auto encoded = codec.encode({});
 
     ASSERT_FALSE(encoded.has_value());
-    EXPECT_EQ(encoded.error(), EdbError::InvalidArgument);
+    EXPECT_EQ(encoded.error(), Error::InvalidArgument);
 }
 
 TEST(EdbRowCodec, RejectsFixedWidthLengthMismatch) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto int32_type = registry.lookup("int32");
     ASSERT_TRUE(int32_type.has_value());
-    EdbRowCodec codec{registry,
+    RowCodec codec{registry,
                       {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
 
     const auto encoded =
-        codec.encode(std::vector<EdbValue>{EdbValue{.type_oid = (*int32_type)->oid,
+        codec.encode(std::vector<Value>{Value{.type_oid = (*int32_type)->oid,
                                                     .bytes = {std::byte{1}, std::byte{2}},
                                                     .is_null = b8{false}}});
 
     ASSERT_FALSE(encoded.has_value());
-    EXPECT_EQ(encoded.error(), EdbError::InvalidArgument);
+    EXPECT_EQ(encoded.error(), Error::InvalidArgument);
 }
 
 TEST(EdbRowCodec, RejectsCorruptTuplePayload) {
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     ASSERT_TRUE(register_builtin_types(registry).has_value());
 
     const auto text_type = registry.lookup("text");
     ASSERT_TRUE(text_type.has_value());
-    EdbRowCodec codec{registry,
+    RowCodec codec{registry,
                       {{.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
 
-    auto encoded = codec.encode(std::vector<EdbValue>{make_value(registry, **text_type, "hello")});
+    auto encoded = codec.encode(std::vector<Value>{make_value(registry, **text_type, "hello")});
     ASSERT_TRUE(encoded.has_value());
     encoded->pop_back();
 
     const auto decoded = codec.decode(*encoded);
 
     ASSERT_FALSE(decoded.has_value());
-    EXPECT_EQ(decoded.error(), EdbError::Corruption);
+    EXPECT_EQ(decoded.error(), Error::Corruption);
 }

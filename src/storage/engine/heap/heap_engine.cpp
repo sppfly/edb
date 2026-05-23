@@ -17,11 +17,11 @@ constexpr auto CURSOR_SLOT_BASE = std::uint64_t{65536};
 
 }  // namespace
 
-auto EdbHeapEngine::open_impl(EdbPageStore& store, const EdbEngineConfig& cfg) -> EdbStatus {
+auto EdbHeapEngine::open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult {
     page_store = &store;
     config = cfg;
     auto status =
-        buffer_pool.open(store, EdbBufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages,
+        buffer_pool.open(store, BufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages,
                                                     .eviction = cfg.buffer_eviction});
     if (!status) {
         page_store = nullptr;
@@ -31,7 +31,7 @@ auto EdbHeapEngine::open_impl(EdbPageStore& store, const EdbEngineConfig& cfg) -
     return {};
 }
 
-auto EdbHeapEngine::close_impl() -> EdbStatus {
+auto EdbHeapEngine::close_impl() -> VoidResult {
     if (!opened.value) {
         return {};
     }
@@ -41,7 +41,7 @@ auto EdbHeapEngine::close_impl() -> EdbStatus {
     return status;
 }
 
-auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> EdbResult<EdbTupleId> {
+auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -63,7 +63,7 @@ auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> EdbResult<E
     return insert_into_new_page(tuple);
 }
 
-auto EdbHeapEngine::delete_tuple_impl(EdbTupleId id) -> EdbStatus {
+auto EdbHeapEngine::delete_tuple_impl(TupleId id) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -80,8 +80,8 @@ auto EdbHeapEngine::delete_tuple_impl(EdbTupleId id) -> EdbStatus {
     return buffer_pool.unpin(*handle, b8{true});
 }
 
-auto EdbHeapEngine::update_tuple_impl(EdbTupleId id, std::span<const std::byte> tuple)
-    -> EdbResult<EdbTupleId> {
+auto EdbHeapEngine::update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
+    -> Result<TupleId> {
     auto delete_status = delete_tuple_impl(id);
     if (!delete_status) {
         return std::unexpected(delete_status.error());
@@ -89,14 +89,14 @@ auto EdbHeapEngine::update_tuple_impl(EdbTupleId id, std::span<const std::byte> 
     return insert_impl(tuple);
 }
 
-auto EdbHeapEngine::begin_scan_impl() -> EdbResult<EdbScanHandle> {
+auto EdbHeapEngine::begin_scan_impl() -> Result<ScanHandle> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
-    return EdbScanHandle{.value = encode_cursor(u64{0}, u16{0})};
+    return ScanHandle{.value = encode_cursor(u64{0}, u16{0})};
 }
 
-auto EdbHeapEngine::scan_next_impl(EdbScanHandle& handle) -> EdbResult<std::optional<EdbTuple>> {
+auto EdbHeapEngine::scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -136,13 +136,13 @@ auto EdbHeapEngine::scan_next_impl(EdbScanHandle& handle) -> EdbResult<std::opti
             }
             handle.value =
                 encode_cursor(page_id, u16{static_cast<std::uint16_t>(slot_idx.value + 1U)});
-            const auto tuple_id = EdbTupleId{.page_id = page_id, .slot_idx = slot_idx};
+            const auto tuple_id = TupleId{.page_id = page_id, .slot_idx = slot_idx};
             auto data = std::move(*tuple);
             auto status = buffer_pool.unpin(*frame, b8{false});
             if (!status) {
                 return std::unexpected(status.error());
             }
-            return EdbTuple{.id = tuple_id, .data = std::move(data)};
+            return Tuple{.id = tuple_id, .data = std::move(data)};
         }
 
         auto status = buffer_pool.unpin(*frame, b8{false});
@@ -151,10 +151,10 @@ auto EdbHeapEngine::scan_next_impl(EdbScanHandle& handle) -> EdbResult<std::opti
         }
         handle.value = encode_cursor(page_id + u64{1}, u16{0});
     }
-    return std::optional<EdbTuple>{};
+    return std::optional<Tuple>{};
 }
 
-auto EdbHeapEngine::end_scan_impl(EdbScanHandle& handle) -> EdbStatus {
+auto EdbHeapEngine::end_scan_impl(ScanHandle& handle) -> VoidResult {
     handle.value = encode_cursor(u64{0}, u16{0});
     return {};
 }
@@ -163,15 +163,15 @@ auto EdbHeapEngine::page_size_impl() const -> usize {
     return config.page_size;
 }
 
-auto EdbHeapEngine::check_open() const -> EdbStatus {
+auto EdbHeapEngine::check_open() const -> VoidResult {
     if (!opened.value || page_store == nullptr) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
 auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
-    -> EdbResult<std::optional<EdbTupleId>> {
+    -> Result<std::optional<TupleId>> {
     auto frame = buffer_pool.fetch(page_id);
     if (!frame) {
         return std::unexpected(frame.error());
@@ -187,7 +187,7 @@ auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::
         if (!status) {
             return std::unexpected(status.error());
         }
-        return std::optional<EdbTupleId>{};
+        return std::optional<TupleId>{};
     }
 
     auto slot = heap::insert_tuple(frame->data(), tuple);
@@ -199,11 +199,11 @@ auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::
     if (!status) {
         return std::unexpected(status.error());
     }
-    return EdbTupleId{.page_id = page_id, .slot_idx = *slot};
+    return TupleId{.page_id = page_id, .slot_idx = *slot};
 }
 
 auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple)
-    -> EdbResult<EdbTupleId> {
+    -> Result<TupleId> {
     auto allocated = page_store->allocate_page();
     if (!allocated) {
         return std::unexpected(allocated.error());
@@ -226,18 +226,18 @@ auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple)
     if (!status) {
         return std::unexpected(status.error());
     }
-    return EdbTupleId{.page_id = *allocated, .slot_idx = *slot};
+    return TupleId{.page_id = *allocated, .slot_idx = *slot};
 }
 
 auto EdbHeapEngine::encode_cursor(u64 page_id, u16 slot_idx) -> u64 {
     return u64{(page_id.value * CURSOR_SLOT_BASE) + slot_idx.value};
 }
 
-auto EdbHeapEngine::cursor_page_id(EdbScanHandle handle) -> u64 {
+auto EdbHeapEngine::cursor_page_id(ScanHandle handle) -> u64 {
     return u64{handle.value.value / CURSOR_SLOT_BASE};
 }
 
-auto EdbHeapEngine::cursor_slot_idx(EdbScanHandle handle) -> u16 {
+auto EdbHeapEngine::cursor_slot_idx(ScanHandle handle) -> u16 {
     return u16{static_cast<std::uint16_t>(handle.value.value % CURSOR_SLOT_BASE)};
 }
 

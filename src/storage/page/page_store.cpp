@@ -8,18 +8,18 @@
 
 namespace edb {
 
-auto EdbPageStore::open(EdbStorageIOOps& backend, const EdbPageStoreConfig& cfg) -> EdbStatus {
+auto PageStore::open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult {
     io = &backend;
     config = cfg;
     return {};
 }
 
-auto EdbPageStore::close() -> EdbStatus {
+auto PageStore::close() -> VoidResult {
     io = nullptr;
     return {};
 }
 
-auto EdbPageStore::read_page(u64 page_id, std::span<std::byte> buf) -> EdbStatus {
+auto PageStore::read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult {
     if (auto status = validate_existing_page(page_id); !status) {
         return status;
     }
@@ -35,12 +35,12 @@ auto EdbPageStore::read_page(u64 page_id, std::span<std::byte> buf) -> EdbStatus
         return std::unexpected(read_result.error());
     }
     if (*read_result != config.page_size) {
-        return std::unexpected(EdbError::PageNotFound);
+        return std::unexpected(Error::PageNotFound);
     }
     return {};
 }
 
-auto EdbPageStore::write_page(u64 page_id, std::span<const std::byte> buf) -> EdbStatus {
+auto PageStore::write_page(u64 page_id, std::span<const std::byte> buf) -> VoidResult {
     if (auto status = validate_existing_page(page_id); !status) {
         return status;
     }
@@ -56,12 +56,12 @@ auto EdbPageStore::write_page(u64 page_id, std::span<const std::byte> buf) -> Ed
         return std::unexpected(write_result.error());
     }
     if (*write_result != config.page_size) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto EdbPageStore::allocate_page() -> EdbResult<u64> {
+auto PageStore::allocate_page() -> Result<u64> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -84,7 +84,7 @@ auto EdbPageStore::allocate_page() -> EdbResult<u64> {
     return *current_count;
 }
 
-auto EdbPageStore::page_count() -> EdbResult<u64> {
+auto PageStore::page_count() -> Result<u64> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -96,42 +96,42 @@ auto EdbPageStore::page_count() -> EdbResult<u64> {
 
     const auto page_size_bytes = static_cast<std::uint64_t>(config.page_size.value);
     if ((size_result->value % page_size_bytes) != 0U) {
-        return std::unexpected(EdbError::Corruption);
+        return std::unexpected(Error::Corruption);
     }
     return u64{size_result->value / page_size_bytes};
 }
 
-auto EdbPageStore::page_size() const -> usize {
+auto PageStore::page_size() const -> usize {
     return config.page_size;
 }
 
-auto EdbPageStore::sync() -> EdbStatus {
+auto PageStore::sync() -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
     return io->sync();
 }
 
-auto EdbPageStore::check_open() const -> EdbStatus {
+auto PageStore::check_open() const -> VoidResult {
     if (io == nullptr) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto EdbPageStore::byte_size_for_page_count(u64 count) const -> EdbResult<u64> {
+auto PageStore::byte_size_for_page_count(u64 count) const -> Result<u64> {
     const auto page_size_bytes = static_cast<std::uint64_t>(config.page_size.value);
     if (count.value > (std::numeric_limits<std::uint64_t>::max() / page_size_bytes)) {
-        return std::unexpected(EdbError::Overflow);
+        return std::unexpected(Error::Overflow);
     }
     return u64{count.value * page_size_bytes};
 }
 
-auto EdbPageStore::byte_offset_for_page(u64 page_id) const -> EdbResult<u64> {
+auto PageStore::byte_offset_for_page(u64 page_id) const -> Result<u64> {
     return byte_size_for_page_count(page_id);
 }
 
-auto EdbPageStore::validate_existing_page(u64 page_id) -> EdbStatus {
+auto PageStore::validate_existing_page(u64 page_id) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -141,7 +141,7 @@ auto EdbPageStore::validate_existing_page(u64 page_id) -> EdbStatus {
         return std::unexpected(count.error());
     }
     if (page_id >= *count) {
-        return std::unexpected(EdbError::PageNotFound);
+        return std::unexpected(Error::PageNotFound);
     }
     return {};
 }

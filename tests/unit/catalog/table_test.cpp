@@ -17,17 +17,17 @@ using namespace edb;
 
 namespace {
 
-class MockCatalogIOOps : public EdbStorageIOOps {
+class MockCatalogIOOps : public StorageIOOps {
    public:
     std::vector<std::byte> storage;
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -39,7 +39,7 @@ class MockCatalogIOOps : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage.size()) {
             storage.resize(off + buf.size());
@@ -49,31 +49,31 @@ class MockCatalogIOOps : public EdbStorageIOOps {
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override { return {}; }
-    auto datasync_impl() -> EdbStatus override { return {}; }
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto sync_impl() -> VoidResult override { return {}; }
+    auto datasync_impl() -> VoidResult override { return {}; }
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage.size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
 };
 
-auto make_row(EdbTypeRegistry& registry, const EdbType& first_type, std::string_view first_text,
-              const EdbType& second_type, std::string_view second_text, const EdbType& third_type,
-              std::string_view third_text) -> std::vector<EdbValue> {
+auto make_row(TypeRegistry& registry, const Type& first_type, std::string_view first_text,
+              const Type& second_type, std::string_view second_text, const Type& third_type,
+              std::string_view third_text) -> std::vector<Value> {
     auto first = first_type.from_text(first_text);
     auto second = second_type.from_text(second_text);
     auto third = third_type.from_text(third_text);
     EXPECT_TRUE(first.has_value());
     EXPECT_TRUE(second.has_value());
     EXPECT_TRUE(third.has_value());
-    return std::vector<EdbValue>{
+    return std::vector<Value>{
         {.type_oid = first_type.oid, .bytes = *first, .is_null = b8{false}},
         {.type_oid = second_type.oid, .bytes = *second, .is_null = b8{false}},
         {.type_oid = third_type.oid, .bytes = *third, .is_null = b8{false}}};
 }
 
-auto to_text(EdbTypeRegistry& registry, const EdbValue& value) -> std::string {
+auto to_text(TypeRegistry& registry, const Value& value) -> std::string {
     auto type = registry.lookup(value.type_oid);
     EXPECT_TRUE(type.has_value());
     return (*type)->to_text(value.bytes);
@@ -85,9 +85,9 @@ class EdbTableTest : public ::testing::Test {
    protected:
     void SetUp() override {
         ASSERT_TRUE(register_builtin_types(registry).has_value());
-        ASSERT_TRUE(page_store.open(io, EdbPageStoreConfig{.page_size = usize{512}}).has_value());
+        ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{512}}).has_value());
         ASSERT_TRUE(engine
-                        .open(page_store, EdbEngineConfig{.page_size = usize{512},
+                        .open(page_store, EngineConfig{.page_size = usize{512},
                                                           .buffer_pool_pages = usize{4}})
                         .has_value());
 
@@ -98,9 +98,9 @@ class EdbTableTest : public ::testing::Test {
         ASSERT_TRUE(text_type.has_value());
         ASSERT_TRUE(bool_type.has_value());
 
-        table = std::make_unique<EdbTable>(
+        table = std::make_unique<Table>(
             registry, engine,
-            EdbTableSchema{
+            TableSchema{
                 .relation_oid = u32{42},
                 .name = "users",
                 .columns = {
@@ -111,11 +111,11 @@ class EdbTableTest : public ::testing::Test {
 
     void TearDown() override { ASSERT_TRUE(engine.close().has_value()); }
 
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     MockCatalogIOOps io;
-    EdbPageStore page_store;
+    PageStore page_store;
     EdbHeapEngine engine;
-    std::unique_ptr<EdbTable> table;
+    std::unique_ptr<Table> table;
 };
 
 TEST_F(EdbTableTest, InsertAndScanTypedRows) {

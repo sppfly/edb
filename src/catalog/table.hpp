@@ -13,37 +13,37 @@
 
 namespace edb {
 
-struct EdbTableSchema {
+struct TableSchema {
     u32 relation_oid{0};
     std::string name;
-    std::vector<EdbColumnSchema> columns;
+    std::vector<ColumnSchema> columns;
 };
 
-struct EdbTableRow {
-    EdbTupleId id;
-    std::vector<EdbValue> values;
+struct TableRow {
+    TupleId id;
+    std::vector<Value> values;
 };
 
-class EdbTable {
+class Table {
    public:
-    EdbTable(const EdbTypeRegistry& registry, EdbStorageEngineOps& engine, EdbTableSchema schema);
+    Table(const TypeRegistry& registry, StorageEngineOps& engine, TableSchema schema);
 
-    EdbTable(const EdbTable&) = delete;
-    EdbTable& operator=(const EdbTable&) = delete;
-    EdbTable(EdbTable&&) = delete;
-    EdbTable& operator=(EdbTable&&) = delete;
-    ~EdbTable() = default;
+    Table(const Table&) = delete;
+    Table& operator=(const Table&) = delete;
+    Table(Table&&) = delete;
+    Table& operator=(Table&&) = delete;
+    ~Table() = default;
 
-    [[nodiscard]] auto insert(std::span<const EdbValue> values) -> EdbResult<EdbTupleId>;
-    [[nodiscard]] auto scan_rows() -> EdbResult<std::vector<EdbTableRow>>;
-    [[nodiscard]] auto scan() -> EdbResult<std::vector<std::vector<EdbValue>>>;
+    [[nodiscard]] auto insert(std::span<const Value> values) -> Result<TupleId>;
+    [[nodiscard]] auto scan_rows() -> Result<std::vector<TableRow>>;
+    [[nodiscard]] auto scan() -> Result<std::vector<std::vector<Value>>>;
 
-    [[nodiscard]] auto schema() const -> const EdbTableSchema&;
+    [[nodiscard]] auto schema() const -> const TableSchema&;
 
    private:
-    EdbStorageEngineOps* storage{nullptr};
-    EdbTableSchema table_schema;
-    EdbRowCodec row_codec;
+    StorageEngineOps* storage{nullptr};
+    TableSchema table_schema;
+    RowCodec row_codec;
 };
 
 }  // namespace edb

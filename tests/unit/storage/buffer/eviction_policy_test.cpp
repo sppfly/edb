@@ -10,14 +10,14 @@
 using namespace edb;
 
 TEST(EdbEvictionPolicy, ClockSweepGivesReferencedPagesSecondChance) {
-    EdbClockSweepPolicy policy;
+    ClockSweepPolicy policy;
     ASSERT_TRUE(policy.reset(usize{2}).has_value());
     ASSERT_TRUE(policy.record_load(u64{10}, usize{0}).has_value());
     ASSERT_TRUE(policy.record_load(u64{11}, usize{1}).has_value());
 
     const std::array frames{
-        EdbEvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}}};
+        EvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}}};
 
     auto victim = policy.choose_victim(frames);
 
@@ -26,7 +26,7 @@ TEST(EdbEvictionPolicy, ClockSweepGivesReferencedPagesSecondChance) {
 }
 
 TEST(EdbEvictionPolicy, LruKEvictsPagesWithShortestHistoryBeforeStablePages) {
-    EdbLruKPolicy policy{usize{2}};
+    LruKPolicy policy{usize{2}};
     ASSERT_TRUE(policy.reset(usize{3}).has_value());
     ASSERT_TRUE(policy.record_load(u64{10}, usize{0}).has_value());
     ASSERT_TRUE(policy.record_load(u64{11}, usize{1}).has_value());
@@ -36,9 +36,9 @@ TEST(EdbEvictionPolicy, LruKEvictsPagesWithShortestHistoryBeforeStablePages) {
     ASSERT_TRUE(policy.record_access(u64{10}, usize{0}).has_value());
 
     const std::array frames{
-        EdbEvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
+        EvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
 
     auto victim = policy.choose_victim(frames);
 
@@ -47,7 +47,7 @@ TEST(EdbEvictionPolicy, LruKEvictsPagesWithShortestHistoryBeforeStablePages) {
 }
 
 TEST(EdbEvictionPolicy, LruKUsesKthMostRecentAccessForStablePages) {
-    EdbLruKPolicy policy{usize{2}};
+    LruKPolicy policy{usize{2}};
     ASSERT_TRUE(policy.reset(usize{3}).has_value());
     ASSERT_TRUE(policy.record_load(u64{10}, usize{0}).has_value());
     ASSERT_TRUE(policy.record_load(u64{11}, usize{1}).has_value());
@@ -58,9 +58,9 @@ TEST(EdbEvictionPolicy, LruKUsesKthMostRecentAccessForStablePages) {
     ASSERT_TRUE(policy.record_access(u64{12}, usize{2}).has_value());
 
     const std::array frames{
-        EdbEvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
+        EvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
 
     auto victim = policy.choose_victim(frames);
 
@@ -69,15 +69,15 @@ TEST(EdbEvictionPolicy, LruKUsesKthMostRecentAccessForStablePages) {
 }
 
 TEST(EdbEvictionPolicy, ArcPromotesReusedPagesAndAdaptsOnRecentGhostHit) {
-    EdbArcPolicy policy;
+    ArcPolicy policy;
     ASSERT_TRUE(policy.reset(usize{2}).has_value());
     ASSERT_TRUE(policy.record_load(u64{10}, usize{0}).has_value());
     ASSERT_TRUE(policy.record_load(u64{11}, usize{1}).has_value());
     ASSERT_TRUE(policy.record_access(u64{10}, usize{0}).has_value());
 
     const std::array first_frames{
-        EdbEvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}}};
+        EvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{11}, .valid = b8{true}, .pinned = b8{false}}};
 
     auto first_victim = policy.choose_victim(first_frames);
     ASSERT_TRUE(first_victim.has_value());
@@ -89,8 +89,8 @@ TEST(EdbEvictionPolicy, ArcPromotesReusedPagesAndAdaptsOnRecentGhostHit) {
     ASSERT_TRUE(policy.record_miss(u64{11}).has_value());
 
     const std::array second_frames{
-        EdbEvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
-        EdbEvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
+        EvictionFrameState{.page_id = u64{10}, .valid = b8{true}, .pinned = b8{false}},
+        EvictionFrameState{.page_id = u64{12}, .valid = b8{true}, .pinned = b8{false}}};
 
     auto second_victim = policy.choose_victim(second_frames);
     ASSERT_TRUE(second_victim.has_value());
@@ -99,7 +99,7 @@ TEST(EdbEvictionPolicy, ArcPromotesReusedPagesAndAdaptsOnRecentGhostHit) {
 
 TEST(EdbEvictionPolicy, FactoryCreatesConfiguredPolicy) {
     auto policy = make_eviction_policy(
-        EdbEvictionPolicyConfig{.kind = EdbEvictionPolicyKind::LruK, .lru_k_history = usize{2}});
+        EvictionPolicyConfig{.kind = EvictionPolicyKind::LruK, .lru_k_history = usize{2}});
 
     ASSERT_NE(policy, nullptr);
     EXPECT_TRUE(policy->reset(usize{1}).has_value());

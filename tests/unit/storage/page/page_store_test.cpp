@@ -14,7 +14,7 @@
 
 using namespace edb;
 
-class MockIOOps : public EdbStorageIOOps {
+class MockIOOps : public StorageIOOps {
    public:
     std::vector<std::byte> storage;
     usize sync_calls{0};
@@ -22,13 +22,13 @@ class MockIOOps : public EdbStorageIOOps {
     auto resize_to(usize size) -> void { storage.resize(size.value); }
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
 
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -40,29 +40,29 @@ class MockIOOps : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage.size()) {
-            return std::unexpected(EdbError::IoError);
+            return std::unexpected(Error::IoError);
         }
         auto dst = std::span<std::byte>{storage}.subspan(off, buf.size());
         std::ranges::copy(buf, dst.begin());
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override {
+    auto sync_impl() -> VoidResult override {
         ++sync_calls;
         return {};
     }
 
-    auto datasync_impl() -> EdbStatus override { return {}; }
+    auto datasync_impl() -> VoidResult override { return {}; }
 
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
 
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage.size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
 };
 
 namespace {
@@ -84,23 +84,23 @@ auto is_zero_page(const std::array<std::byte, 4096>& page) -> bool {
 }  // namespace
 
 TEST(EdbPageStoreConfig, DefaultPageSize) {
-    constexpr EdbPageStoreConfig cfg{};
+    constexpr PageStoreConfig cfg{};
     EXPECT_EQ(cfg.page_size.value, usize{8192}.value);
 }
 
 TEST(EdbPageStore, OpenSetsPageSize) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
     EXPECT_EQ(store.page_size().value, usize{4096}.value);
 }
 
 TEST(EdbPageStore, PageCountStartsAtZero) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
 
     auto count = store.page_count();
     ASSERT_TRUE(count.has_value());
@@ -109,9 +109,9 @@ TEST(EdbPageStore, PageCountStartsAtZero) {
 
 TEST(EdbPageStore, AllocatePageExtendsFile) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
 
     auto first = store.allocate_page();
     ASSERT_TRUE(first.has_value());
@@ -126,9 +126,9 @@ TEST(EdbPageStore, AllocatePageExtendsFile) {
 
 TEST(EdbPageStore, WriteReadPageRoundTrip) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
     ASSERT_TRUE(store.allocate_page().has_value());
     ASSERT_TRUE(store.allocate_page().has_value());
 
@@ -142,9 +142,9 @@ TEST(EdbPageStore, WriteReadPageRoundTrip) {
 
 TEST(EdbPageStore, AllocatedPageReadsAsZeroFilled) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
     ASSERT_TRUE(store.allocate_page().has_value());
 
     std::array<std::byte, 4096> page_zero{};
@@ -154,56 +154,56 @@ TEST(EdbPageStore, AllocatedPageReadsAsZeroFilled) {
 
 TEST(EdbPageStore, WriteUnallocatedPageFails) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
 
     const std::array<std::byte, 4096> src{};
     auto result = store.write_page(u64{0}, src);
     ASSERT_FALSE(result.has_value());
-    EXPECT_EQ(result.error(), EdbError::PageNotFound);
+    EXPECT_EQ(result.error(), Error::PageNotFound);
 }
 
 TEST(EdbPageStore, ReadUnallocatedPageFails) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
 
     std::array<std::byte, 4096> dst{};
     auto result = store.read_page(u64{0}, dst);
     ASSERT_FALSE(result.has_value());
-    EXPECT_EQ(result.error(), EdbError::PageNotFound);
+    EXPECT_EQ(result.error(), Error::PageNotFound);
 }
 
 TEST(EdbPageStore, MisalignedFileSizeIsCorruption) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
     io.resize_to(usize{4097});
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
 
     auto count = store.page_count();
     ASSERT_FALSE(count.has_value());
-    EXPECT_EQ(count.error(), EdbError::Corruption);
+    EXPECT_EQ(count.error(), Error::Corruption);
 }
 
 TEST(EdbPageStore, SyncDelegatesToBackend) {
     MockIOOps io;
-    EdbPageStore store;
+    PageStore store;
 
-    ASSERT_TRUE(store.open(io, EdbPageStoreConfig{.page_size = usize{4096}}).has_value());
+    ASSERT_TRUE(store.open(io, PageStoreConfig{.page_size = usize{4096}}).has_value());
     ASSERT_TRUE(store.sync().has_value());
     EXPECT_EQ(io.sync_calls.value, usize{1}.value);
 }
 
 TEST(EdbPageStore, OperationsBeforeOpenFail) {
-    EdbPageStore store;
+    PageStore store;
     std::array<std::byte, 8192> page{};
 
-    EXPECT_EQ(store.page_count().error(), EdbError::IoError);
-    EXPECT_EQ(store.allocate_page().error(), EdbError::IoError);
-    EXPECT_EQ(store.read_page(u64{0}, page).error(), EdbError::IoError);
-    EXPECT_EQ(store.write_page(u64{0}, page).error(), EdbError::IoError);
-    EXPECT_EQ(store.sync().error(), EdbError::IoError);
+    EXPECT_EQ(store.page_count().error(), Error::IoError);
+    EXPECT_EQ(store.allocate_page().error(), Error::IoError);
+    EXPECT_EQ(store.read_page(u64{0}, page).error(), Error::IoError);
+    EXPECT_EQ(store.write_page(u64{0}, page).error(), Error::IoError);
+    EXPECT_EQ(store.sync().error(), Error::IoError);
 }

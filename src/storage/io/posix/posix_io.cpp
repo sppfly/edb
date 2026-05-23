@@ -32,9 +32,9 @@ PosixIO::~PosixIO() {
 // Private helper
 // ---------------------------------------------------------------------------
 
-auto PosixIO::check_open() const -> EdbStatus {
+auto PosixIO::check_open() const -> VoidResult {
     if (fd < 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
@@ -43,7 +43,7 @@ auto PosixIO::check_open() const -> EdbStatus {
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-auto PosixIO::open_impl(const char* path, const EdbIOConfig& cfg) -> EdbStatus {
+auto PosixIO::open_impl(const char* path, const IOConfig& cfg) -> VoidResult {
     if (fd >= 0) {
         // Already open — close first.
         if (auto res = close_impl(); !res) {
@@ -63,7 +63,7 @@ auto PosixIO::open_impl(const char* path, const EdbIOConfig& cfg) -> EdbStatus {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): POSIX open(2) is a C vararg API.
     const int new_fd = ::open(path, flags, 0600);
     if (new_fd < 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
 
     fd = new_fd;
@@ -71,13 +71,13 @@ auto PosixIO::open_impl(const char* path, const EdbIOConfig& cfg) -> EdbStatus {
     return {};
 }
 
-auto PosixIO::close_impl() -> EdbStatus {
+auto PosixIO::close_impl() -> VoidResult {
     if (fd < 0) {
         return {};  // Already closed — no-op.
     }
     // raw-primitive: close(2) takes int fd
     if (::close(fd) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     fd = -1;
     path_name.clear();
@@ -88,7 +88,7 @@ auto PosixIO::close_impl() -> EdbStatus {
 // Synchronous I/O
 // ---------------------------------------------------------------------------
 
-auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> {
+auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -104,7 +104,7 @@ auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize
             if (errno == EINTR) {
                 continue;
             }
-            return std::unexpected(EdbError::IoError);
+            return std::unexpected(Error::IoError);
         }
         if (n == 0) {
             // EOF — return however many bytes we read so far.
@@ -117,7 +117,7 @@ auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize
     return usize{bytes_read};
 }
 
-auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> {
+auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -133,7 +133,7 @@ auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResul
             if (errno == EINTR) {
                 continue;
             }
-            return std::unexpected(EdbError::IoError);
+            return std::unexpected(Error::IoError);
         }
         bytes_written += static_cast<std::size_t>(n);
         off += n;
@@ -146,7 +146,7 @@ auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResul
 // Memory mapping
 // ---------------------------------------------------------------------------
 
-auto PosixIO::mmap_impl(u64 offset, usize len, i32 prot) -> EdbResult<std::byte*> {
+auto PosixIO::mmap_impl(u64 offset, usize len, i32 prot) -> Result<std::byte*> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -156,15 +156,15 @@ auto PosixIO::mmap_impl(u64 offset, usize len, i32 prot) -> EdbResult<std::byte*
                         MAP_SHARED, fd, static_cast<off_t>(offset.value));
 
     if (addr == MAP_FAILED) {  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return static_cast<std::byte*>(addr);
 }
 
-auto PosixIO::munmap_impl(std::byte* addr, usize len) -> EdbStatus {
+auto PosixIO::munmap_impl(std::byte* addr, usize len) -> VoidResult {
     // raw-primitive: munmap takes void*, size_t
     if (::munmap(addr, static_cast<std::size_t>(len.value)) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
@@ -173,29 +173,29 @@ auto PosixIO::munmap_impl(std::byte* addr, usize len) -> EdbStatus {
 // Durability
 // ---------------------------------------------------------------------------
 
-auto PosixIO::sync_impl() -> EdbStatus {
+auto PosixIO::sync_impl() -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
     // raw-primitive: fsync takes int fd
     if (::fsync(fd) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto PosixIO::datasync_impl() -> EdbStatus {
+auto PosixIO::datasync_impl() -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
     // raw-primitive: fdatasync takes int fd
     if (::fdatasync(fd) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto PosixIO::sync_range_impl(u64 offset, usize len) -> EdbStatus {
+auto PosixIO::sync_range_impl(u64 offset, usize len) -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
@@ -203,7 +203,7 @@ auto PosixIO::sync_range_impl(u64 offset, usize len) -> EdbStatus {
     // raw-primitive: sync_file_range takes int, off64_t, off64_t, unsigned int
     if (::sync_file_range(fd, static_cast<off64_t>(offset.value), static_cast<off64_t>(len.value),
                           SYNC_FILE_RANGE_WRITE) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 #else
@@ -217,25 +217,25 @@ auto PosixIO::sync_range_impl(u64 offset, usize len) -> EdbStatus {
 // File management
 // ---------------------------------------------------------------------------
 
-auto PosixIO::truncate_impl(u64 size) -> EdbStatus {
+auto PosixIO::truncate_impl(u64 size) -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
     // raw-primitive: ftruncate64 takes int fd, off64_t
     if (::ftruncate64(fd, static_cast<off64_t>(size.value)) != 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto PosixIO::file_size_impl() -> EdbResult<u64> {
+auto PosixIO::file_size_impl() -> Result<u64> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
     // raw-primitive: lseek64 takes int, off64_t, int; returns off64_t
     const off64_t sz = ::lseek64(fd, 0, SEEK_END);
     if (sz < 0) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return u64{static_cast<std::uint64_t>(sz)};
 }

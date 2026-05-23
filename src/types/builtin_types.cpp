@@ -45,16 +45,16 @@ auto decode_unsigned_le(std::span<const std::byte> bytes) -> Unsigned {
 }
 
 template <typename Signed, typename Unsigned, std::size_t N>
-auto parse_signed_fixed(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+auto parse_signed_fixed(std::string_view text) -> Result<std::vector<std::byte>> {
     Signed parsed{0};  // raw-primitive: iostream extraction parses primitive scalars
     std::istringstream input{std::string{text}};
     input >> parsed;
     if (input.fail()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     input >> std::ws;
     if (!input.eof()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     const auto encoded = encode_unsigned_le<Unsigned, N>(std::bit_cast<Unsigned>(parsed));
@@ -62,9 +62,9 @@ auto parse_signed_fixed(std::string_view text) -> EdbResult<std::vector<std::byt
 }
 
 template <typename Signed, typename Unsigned, std::size_t N>
-auto decode_signed_fixed(std::span<const std::byte> bytes) -> EdbResult<Signed> {
+auto decode_signed_fixed(std::span<const std::byte> bytes) -> Result<Signed> {
     if (bytes.size() != N) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     return std::bit_cast<Signed>(decode_unsigned_le<Unsigned>(bytes));
 }
@@ -100,7 +100,7 @@ auto signed_hash(std::span<const std::byte> bytes) -> usize {
 }
 
 struct Int32Type {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         return parse_signed_fixed<std::int32_t, std::uint32_t, 4U>(text);
     }
 
@@ -121,7 +121,7 @@ struct Int32Type {
 };
 
 struct Int64Type {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         return parse_signed_fixed<std::int64_t, std::uint64_t, 8U>(text);
     }
 
@@ -142,12 +142,12 @@ struct Int64Type {
 };
 
 struct Float64Type {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         std::string owned{text};
         char* parse_end = nullptr;  // raw-primitive: strtod uses C pointer API
         const double parsed = std::strtod(owned.c_str(), &parse_end);  // raw-primitive: C API
         if (parse_end == nullptr || *parse_end != '\0' || !std::isfinite(parsed)) {
-            return std::unexpected(EdbError::InvalidArgument);
+            return std::unexpected(Error::InvalidArgument);
         }
 
         const auto bits = std::bit_cast<std::uint64_t>(parsed);
@@ -191,14 +191,14 @@ struct Float64Type {
 };
 
 struct BoolType {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         if (text == "true") {
             return std::vector<std::byte>{std::byte{1}};
         }
         if (text == "false") {
             return std::vector<std::byte>{std::byte{0}};
         }
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     static auto to_text(std::span<const std::byte> bytes) -> std::string {
@@ -227,7 +227,7 @@ struct BoolType {
 };
 
 struct TextType {
-    static auto from_text(std::string_view text) -> EdbResult<std::vector<std::byte>> {
+    static auto from_text(std::string_view text) -> Result<std::vector<std::byte>> {
         std::vector<std::byte> bytes{};
         bytes.reserve(text.size());
         std::ranges::transform(text, std::back_inserter(bytes), [](char ch) {
@@ -259,7 +259,7 @@ struct TextType {
 
 }  // namespace
 
-auto register_builtin_types(EdbTypeRegistry& registry) -> EdbStatus {
+auto register_builtin_types(TypeRegistry& registry) -> VoidResult {
     if (auto status = registry.register_type<Int32Type>("int32"); !status) {
         return status;
     }

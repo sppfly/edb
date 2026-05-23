@@ -44,17 +44,17 @@ using BoundStmt = std::variant<BoundCreateTableStmt>;
 
 class Binder {
    public:
-    explicit Binder(EdbCatalog& catalog) noexcept;
+    explicit Binder(Catalog& catalog) noexcept;
 
-    [[nodiscard]] auto bind(const Stmt& stmt) -> EdbResult<BoundStmt>;
+    [[nodiscard]] auto bind(const Stmt& stmt) -> Result<BoundStmt>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
    private:
     [[nodiscard]] auto bind_create_table(const CreateTableStmt& stmt)
-        -> EdbResult<BoundCreateTableStmt>;
+        -> Result<BoundCreateTableStmt>;
     auto bind_err(std::string msg) -> void;
 
-    EdbCatalog*  catalog{nullptr};
+    Catalog*  catalog{nullptr};
     std::string  last_error;
 };
 

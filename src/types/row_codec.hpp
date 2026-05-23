@@ -12,40 +12,40 @@
 
 namespace edb {
 
-struct EdbValue {
+struct Value {
     u32 type_oid{0};
     std::vector<std::byte> bytes;
     b8 is_null{false};
 };
 
-struct EdbColumnSchema {
+struct ColumnSchema {
     std::string name;
     u32 type_oid{0};
     b8 nullable{false};
 };
 
-class EdbRowCodec {
+class RowCodec {
    public:
-    EdbRowCodec(const EdbTypeRegistry& registry, std::vector<EdbColumnSchema> schema);
+    RowCodec(const TypeRegistry& registry, std::vector<ColumnSchema> schema);
 
-    EdbRowCodec(const EdbRowCodec&) = delete;
-    EdbRowCodec& operator=(const EdbRowCodec&) = delete;
-    EdbRowCodec(EdbRowCodec&&) = delete;
-    EdbRowCodec& operator=(EdbRowCodec&&) = delete;
-    ~EdbRowCodec() = default;
+    RowCodec(const RowCodec&) = delete;
+    RowCodec& operator=(const RowCodec&) = delete;
+    RowCodec(RowCodec&&) = delete;
+    RowCodec& operator=(RowCodec&&) = delete;
+    ~RowCodec() = default;
 
-    [[nodiscard]] auto encode(std::span<const EdbValue> values) const
-        -> EdbResult<std::vector<std::byte>>;
+    [[nodiscard]] auto encode(std::span<const Value> values) const
+        -> Result<std::vector<std::byte>>;
     [[nodiscard]] auto decode(std::span<const std::byte> tuple) const
-        -> EdbResult<std::vector<EdbValue>>;
+        -> Result<std::vector<Value>>;
 
-    [[nodiscard]] auto columns() const -> std::span<const EdbColumnSchema>;
+    [[nodiscard]] auto columns() const -> std::span<const ColumnSchema>;
 
    private:
-    [[nodiscard]] auto lookup_type(u32 oid) const -> EdbResult<const EdbType*>;
+    [[nodiscard]] auto lookup_type(u32 oid) const -> Result<const Type*>;
 
-    const EdbTypeRegistry* registry{nullptr};
-    std::vector<EdbColumnSchema> schema;
+    const TypeRegistry* registry{nullptr};
+    std::vector<ColumnSchema> schema;
 };
 
 }  // namespace edb

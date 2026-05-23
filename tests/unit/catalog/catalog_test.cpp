@@ -17,18 +17,18 @@ using namespace edb;
 
 namespace {
 
-class SharedMemoryIO final : public EdbStorageIOOps {
+class SharedMemoryIO final : public StorageIOOps {
    public:
     explicit SharedMemoryIO(std::shared_ptr<std::vector<std::byte>> bytes)
         : storage{std::move(bytes)} {}
 
    private:
-    auto open_impl(const char* /*path*/, const EdbIOConfig& /*cfg*/) -> EdbStatus override {
+    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
-    auto close_impl() -> EdbStatus override { return {}; }
+    auto close_impl() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> EdbResult<usize> override {
+    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage->size()) {
             return usize{0};
@@ -40,7 +40,7 @@ class SharedMemoryIO final : public EdbStorageIOOps {
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> EdbResult<usize> override {
+    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage->size()) {
             storage->resize(off + buf.size());
@@ -50,21 +50,21 @@ class SharedMemoryIO final : public EdbStorageIOOps {
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> EdbStatus override { return {}; }
-    auto datasync_impl() -> EdbStatus override { return {}; }
-    auto truncate_impl(u64 size) -> EdbStatus override {
+    auto sync_impl() -> VoidResult override { return {}; }
+    auto datasync_impl() -> VoidResult override { return {}; }
+    auto truncate_impl(u64 size) -> VoidResult override {
         storage->resize(size.value);
         return {};
     }
-    auto file_size_impl() -> EdbResult<u64> override { return u64{storage->size()}; }
+    auto file_size_impl() -> Result<u64> override { return u64{storage->size()}; }
 
     std::shared_ptr<std::vector<std::byte>> storage;
 };
 
-class MemoryRelationBackendFactory final : public EdbRelationBackendFactory {
+class MemoryRelationBackendFactory final : public RelationBackendFactory {
    public:
     auto open_backend(u32 relation_oid, std::string_view /*relation_name*/)
-        -> EdbResult<std::unique_ptr<EdbStorageIOOps>> override {
+        -> Result<std::unique_ptr<StorageIOOps>> override {
         auto& bytes = relations[relation_oid];
         if (bytes == nullptr) {
             bytes = std::make_shared<std::vector<std::byte>>();
@@ -76,22 +76,22 @@ class MemoryRelationBackendFactory final : public EdbRelationBackendFactory {
     std::unordered_map<u32, std::shared_ptr<std::vector<std::byte>>> relations;
 };
 
-auto make_row(EdbTypeRegistry& registry, const EdbType& int_type, std::string_view int_text,
-              const EdbType& text_type, std::string_view text_text, const EdbType& bool_type,
-              std::string_view bool_text) -> std::vector<EdbValue> {
+auto make_row(TypeRegistry& registry, const Type& int_type, std::string_view int_text,
+              const Type& text_type, std::string_view text_text, const Type& bool_type,
+              std::string_view bool_text) -> std::vector<Value> {
     auto first = int_type.from_text(int_text);
     auto second = text_type.from_text(text_text);
     auto third = bool_type.from_text(bool_text);
     EXPECT_TRUE(first.has_value());
     EXPECT_TRUE(second.has_value());
     EXPECT_TRUE(third.has_value());
-    return std::vector<EdbValue>{
+    return std::vector<Value>{
         {.type_oid = int_type.oid, .bytes = *first, .is_null = b8{false}},
         {.type_oid = text_type.oid, .bytes = *second, .is_null = b8{false}},
         {.type_oid = bool_type.oid, .bytes = *third, .is_null = b8{false}}};
 }
 
-auto row_value_text(EdbTypeRegistry& registry, const EdbValue& value) -> std::string {
+auto row_value_text(TypeRegistry& registry, const Value& value) -> std::string {
     auto type = registry.lookup(value.type_oid);
     EXPECT_TRUE(type.has_value());
     return (*type)->to_text(value.bytes);
@@ -103,17 +103,17 @@ class EdbCatalogTest : public ::testing::Test {
    protected:
     void SetUp() override { ASSERT_TRUE(register_builtin_types(registry).has_value()); }
 
-    [[nodiscard]] static auto default_engine_config() -> EdbEngineConfig {
-        return EdbEngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}};
+    [[nodiscard]] static auto default_engine_config() -> EngineConfig {
+        return EngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}};
     }
 
-    EdbTypeRegistry registry;
+    TypeRegistry registry;
     MemoryRelationBackendFactory factory;
 };
 
 TEST_F(EdbCatalogTest, BootstrapPersistsSystemCatalogMetadataAcrossReopen) {
     {
-        EdbCatalog catalog{registry, factory, default_engine_config()};
+        Catalog catalog{registry, factory, default_engine_config()};
         ASSERT_TRUE(catalog.open().has_value());
 
         auto type = catalog.get_type("text");
@@ -128,7 +128,7 @@ TEST_F(EdbCatalogTest, BootstrapPersistsSystemCatalogMetadataAcrossReopen) {
         ASSERT_TRUE(catalog.close().has_value());
     }
 
-    EdbCatalog reopened{registry, factory, default_engine_config()};
+    Catalog reopened{registry, factory, default_engine_config()};
     ASSERT_TRUE(reopened.open().has_value());
     auto type = reopened.get_type("int32");
     auto klass = reopened.get_class("edb_class");
@@ -142,7 +142,7 @@ TEST_F(EdbCatalogTest, BootstrapPersistsSystemCatalogMetadataAcrossReopen) {
 TEST_F(EdbCatalogTest, CreateTablePersistsMetadataAndUserRowsAcrossReopen) {
     u32 users_oid{0};
     {
-        EdbCatalog catalog{registry, factory, default_engine_config()};
+        Catalog catalog{registry, factory, default_engine_config()};
         ASSERT_TRUE(catalog.open().has_value());
 
         const auto int_type = registry.lookup("int32");
@@ -177,7 +177,7 @@ TEST_F(EdbCatalogTest, CreateTablePersistsMetadataAndUserRowsAcrossReopen) {
         ASSERT_TRUE(catalog.close().has_value());
     }
 
-    EdbCatalog reopened{registry, factory, default_engine_config()};
+    Catalog reopened{registry, factory, default_engine_config()};
     ASSERT_TRUE(reopened.open().has_value());
     auto klass = reopened.get_class("users");
     ASSERT_TRUE(klass.has_value());
@@ -194,7 +194,7 @@ TEST_F(EdbCatalogTest, CreateTablePersistsMetadataAndUserRowsAcrossReopen) {
 }
 
 TEST_F(EdbCatalogTest, DropTableRemovesMetadataAndHandleLookup) {
-    EdbCatalog catalog{registry, factory, default_engine_config()};
+    Catalog catalog{registry, factory, default_engine_config()};
     ASSERT_TRUE(catalog.open().has_value());
 
     const auto int_type = registry.lookup("int32");
@@ -209,6 +209,6 @@ TEST_F(EdbCatalogTest, DropTableRemovesMetadataAndHandleLookup) {
     auto table = catalog.open_table("to_drop");
     ASSERT_FALSE(klass.has_value());
     ASSERT_FALSE(table.has_value());
-    EXPECT_EQ(klass.error(), EdbError::NotFound);
-    EXPECT_EQ(table.error(), EdbError::NotFound);
+    EXPECT_EQ(klass.error(), Error::NotFound);
+    EXPECT_EQ(table.error(), Error::NotFound);
 }

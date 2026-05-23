@@ -13,7 +13,7 @@ namespace edb {
 
 namespace {
 
-auto is_evictable(std::span<const EdbEvictionFrameState> frames, usize frame_index) -> b8 {
+auto is_evictable(std::span<const EvictionFrameState> frames, usize frame_index) -> b8 {
     if (frame_index >= usize{frames.size()}) {
         return b8{false};
     }
@@ -34,7 +34,7 @@ auto push_front_unique(std::list<u64>& pages, u64 page_id) -> void {
 }
 
 auto remove_lru_ghost(std::list<u64>& ghosts,
-                      std::unordered_map<u64, EdbArcPolicy::Location>& locations) -> void {
+                      std::unordered_map<u64, ArcPolicy::Location>& locations) -> void {
     if (ghosts.empty()) {
         return;
     }
@@ -45,40 +45,40 @@ auto remove_lru_ghost(std::list<u64>& ghosts,
 
 }  // namespace
 
-auto EdbClockSweepPolicy::reset_impl(usize capacity) -> EdbStatus {
+auto ClockSweepPolicy::reset_impl(usize capacity) -> VoidResult {
     referenced.assign(capacity.value, b8{false});
     clock_hand = usize{0};
     return {};
 }
 
-auto EdbClockSweepPolicy::record_access_impl(u64 /*page_id*/, usize frame_index) -> EdbStatus {
+auto ClockSweepPolicy::record_access_impl(u64 /*page_id*/, usize frame_index) -> VoidResult {
     if (frame_index >= usize{referenced.size()}) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     referenced[frame_index.value] = b8{true};
     return {};
 }
 
-auto EdbClockSweepPolicy::record_miss_impl(u64 /*page_id*/) -> EdbStatus {
+auto ClockSweepPolicy::record_miss_impl(u64 /*page_id*/) -> VoidResult {
     return {};
 }
 
-auto EdbClockSweepPolicy::record_load_impl(u64 page_id, usize frame_index) -> EdbStatus {
+auto ClockSweepPolicy::record_load_impl(u64 page_id, usize frame_index) -> VoidResult {
     return record_access_impl(page_id, frame_index);
 }
 
-auto EdbClockSweepPolicy::record_evict_impl(u64 /*page_id*/, usize frame_index) -> EdbStatus {
+auto ClockSweepPolicy::record_evict_impl(u64 /*page_id*/, usize frame_index) -> VoidResult {
     if (frame_index >= usize{referenced.size()}) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     referenced[frame_index.value] = b8{false};
     return {};
 }
 
-auto EdbClockSweepPolicy::choose_victim_impl(std::span<const EdbEvictionFrameState> frames)
-    -> EdbResult<usize> {
+auto ClockSweepPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
+    -> Result<usize> {
     if (frames.empty() || referenced.size() != frames.size()) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     const auto scan_limit = usize{frames.size() * 2U};
@@ -94,18 +94,18 @@ auto EdbClockSweepPolicy::choose_victim_impl(std::span<const EdbEvictionFrameSta
         }
         clock_hand = usize{(clock_hand.value + 1U) % frames.size()};
     }
-    return std::unexpected(EdbError::BufferPoolFull);
+    return std::unexpected(Error::BufferPoolFull);
 }
 
-EdbLruKPolicy::EdbLruKPolicy(usize history_count) : k_history{history_count} {}
+LruKPolicy::LruKPolicy(usize history_count) : k_history{history_count} {}
 
-auto EdbLruKPolicy::reset_impl(usize /*capacity*/) -> EdbStatus {
+auto LruKPolicy::reset_impl(usize /*capacity*/) -> VoidResult {
     tick = u64{0};
     histories.clear();
     return {};
 }
 
-auto EdbLruKPolicy::record_access_impl(u64 page_id, usize /*frame_index*/) -> EdbStatus {
+auto LruKPolicy::record_access_impl(u64 page_id, usize /*frame_index*/) -> VoidResult {
     ++tick;
     auto& history = histories[page_id];
     history.push_back(tick);
@@ -115,20 +115,20 @@ auto EdbLruKPolicy::record_access_impl(u64 page_id, usize /*frame_index*/) -> Ed
     return {};
 }
 
-auto EdbLruKPolicy::record_miss_impl(u64 /*page_id*/) -> EdbStatus {
+auto LruKPolicy::record_miss_impl(u64 /*page_id*/) -> VoidResult {
     return {};
 }
 
-auto EdbLruKPolicy::record_load_impl(u64 page_id, usize frame_index) -> EdbStatus {
+auto LruKPolicy::record_load_impl(u64 page_id, usize frame_index) -> VoidResult {
     return record_access_impl(page_id, frame_index);
 }
 
-auto EdbLruKPolicy::record_evict_impl(u64 /*page_id*/, usize /*frame_index*/) -> EdbStatus {
+auto LruKPolicy::record_evict_impl(u64 /*page_id*/, usize /*frame_index*/) -> VoidResult {
     return {};
 }
 
-auto EdbLruKPolicy::choose_victim_impl(std::span<const EdbEvictionFrameState> frames)
-    -> EdbResult<usize> {
+auto LruKPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
+    -> Result<usize> {
     auto found = b8{false};
     auto victim = usize{0};
     auto victim_has_full_history = b8{true};
@@ -168,12 +168,12 @@ auto EdbLruKPolicy::choose_victim_impl(std::span<const EdbEvictionFrameState> fr
     }
 
     if (!found.value) {
-        return std::unexpected(EdbError::BufferPoolFull);
+        return std::unexpected(Error::BufferPoolFull);
     }
     return victim;
 }
 
-auto EdbArcPolicy::reset_impl(usize new_capacity) -> EdbStatus {
+auto ArcPolicy::reset_impl(usize new_capacity) -> VoidResult {
     capacity = new_capacity;
     target_recent = usize{0};
     pending_b2_hit = b8{false};
@@ -186,7 +186,7 @@ auto EdbArcPolicy::reset_impl(usize new_capacity) -> EdbStatus {
     return {};
 }
 
-auto EdbArcPolicy::record_access_impl(u64 page_id, usize frame_index) -> EdbStatus {
+auto ArcPolicy::record_access_impl(u64 page_id, usize frame_index) -> VoidResult {
     resident_frames[page_id] = frame_index;
     const auto iter = locations.find(page_id);
     if (iter == locations.end()) {
@@ -208,7 +208,7 @@ auto EdbArcPolicy::record_access_impl(u64 page_id, usize frame_index) -> EdbStat
     return {};
 }
 
-auto EdbArcPolicy::record_miss_impl(u64 page_id) -> EdbStatus {
+auto ArcPolicy::record_miss_impl(u64 page_id) -> VoidResult {
     pending_b2_hit = b8{false};
     const auto iter = locations.find(page_id);
     if (iter == locations.end()) {
@@ -230,7 +230,7 @@ auto EdbArcPolicy::record_miss_impl(u64 page_id) -> EdbStatus {
     return {};
 }
 
-auto EdbArcPolicy::record_load_impl(u64 page_id, usize frame_index) -> EdbStatus {
+auto ArcPolicy::record_load_impl(u64 page_id, usize frame_index) -> VoidResult {
     resident_frames[page_id] = frame_index;
     const auto iter = locations.find(page_id);
     if (iter != locations.end() && iter->second == Location::B1) {
@@ -254,7 +254,7 @@ auto EdbArcPolicy::record_load_impl(u64 page_id, usize frame_index) -> EdbStatus
     return {};
 }
 
-auto EdbArcPolicy::record_evict_impl(u64 page_id, usize /*frame_index*/) -> EdbStatus {
+auto ArcPolicy::record_evict_impl(u64 page_id, usize /*frame_index*/) -> VoidResult {
     resident_frames.erase(page_id);
     const auto iter = locations.find(page_id);
     if (iter == locations.end()) {
@@ -274,8 +274,8 @@ auto EdbArcPolicy::record_evict_impl(u64 page_id, usize /*frame_index*/) -> EdbS
     return {};
 }
 
-auto EdbArcPolicy::choose_victim_impl(std::span<const EdbEvictionFrameState> frames)
-    -> EdbResult<usize> {
+auto ArcPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
+    -> Result<usize> {
     if (t1.size() > target_recent.value ||
         (pending_b2_hit.value && t1.size() == target_recent.value)) {
         auto recent = choose_from_lru(t1, frames);
@@ -292,22 +292,22 @@ auto EdbArcPolicy::choose_victim_impl(std::span<const EdbEvictionFrameState> fra
     if (recent) {
         return recent;
     }
-    return std::unexpected(EdbError::BufferPoolFull);
+    return std::unexpected(Error::BufferPoolFull);
 }
 
-auto EdbArcPolicy::choose_from_lru(std::list<u64>& pages,
-                                   std::span<const EdbEvictionFrameState> frames)
-    -> EdbResult<usize> {
+auto ArcPolicy::choose_from_lru(std::list<u64>& pages,
+                                   std::span<const EvictionFrameState> frames)
+    -> Result<usize> {
     for (auto iter = pages.rbegin(); iter != pages.rend(); ++iter) {
         const auto frame = resident_frames.find(*iter);
         if (frame != resident_frames.end() && is_evictable(frames, frame->second).value) {
             return frame->second;
         }
     }
-    return std::unexpected(EdbError::NotFound);
+    return std::unexpected(Error::NotFound);
 }
 
-auto EdbArcPolicy::prune_ghosts() -> void {
+auto ArcPolicy::prune_ghosts() -> void {
     while (b1.size() > capacity.value) {
         remove_lru_ghost(b1, locations);
     }
@@ -323,17 +323,17 @@ auto EdbArcPolicy::prune_ghosts() -> void {
     }
 }
 
-auto make_eviction_policy(const EdbEvictionPolicyConfig& config)
-    -> std::unique_ptr<EdbEvictionPolicy> {
+auto make_eviction_policy(const EvictionPolicyConfig& config)
+    -> std::unique_ptr<EvictionPolicy> {
     switch (config.kind) {
-        case EdbEvictionPolicyKind::ClockSweep:
-            return std::make_unique<EdbClockSweepPolicy>();
-        case EdbEvictionPolicyKind::LruK:
-            return std::make_unique<EdbLruKPolicy>(config.lru_k_history);
-        case EdbEvictionPolicyKind::Arc:
-            return std::make_unique<EdbArcPolicy>();
+        case EvictionPolicyKind::ClockSweep:
+            return std::make_unique<ClockSweepPolicy>();
+        case EvictionPolicyKind::LruK:
+            return std::make_unique<LruKPolicy>(config.lru_k_history);
+        case EvictionPolicyKind::Arc:
+            return std::make_unique<ArcPolicy>();
     }
-    return std::make_unique<EdbClockSweepPolicy>();
+    return std::make_unique<ClockSweepPolicy>();
 }
 
 }  // namespace edb

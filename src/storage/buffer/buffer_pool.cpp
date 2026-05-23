@@ -8,17 +8,17 @@
 
 namespace edb {
 
-EdbFrameHandle::EdbFrameHandle(EdbBufferPool* owner, usize frame_index, u64 page_id,
+FrameHandle::FrameHandle(BufferPool* owner, usize frame_index, u64 page_id,
                                std::span<std::byte> bytes_view)
     : pool{owner}, index{frame_index}, id{page_id}, bytes{bytes_view} {}
 
-EdbFrameHandle::EdbFrameHandle(EdbFrameHandle&& other) noexcept
+FrameHandle::FrameHandle(FrameHandle&& other) noexcept
     : pool{std::exchange(other.pool, nullptr)},
       index{std::exchange(other.index, usize{0})},
       id{std::exchange(other.id, u64{0})},
       bytes{std::exchange(other.bytes, std::span<std::byte>{})} {}
 
-EdbFrameHandle& EdbFrameHandle::operator=(EdbFrameHandle&& other) noexcept {
+FrameHandle& FrameHandle::operator=(FrameHandle&& other) noexcept {
     if (this != &other) {
         release();
         pool = std::exchange(other.pool, nullptr);
@@ -29,30 +29,30 @@ EdbFrameHandle& EdbFrameHandle::operator=(EdbFrameHandle&& other) noexcept {
     return *this;
 }
 
-EdbFrameHandle::~EdbFrameHandle() {
+FrameHandle::~FrameHandle() {
     release();
 }
 
-auto EdbFrameHandle::data() const -> std::span<std::byte> {
+auto FrameHandle::data() const -> std::span<std::byte> {
     return bytes;
 }
 
-auto EdbFrameHandle::page_id() const -> u64 {
+auto FrameHandle::page_id() const -> u64 {
     return id;
 }
 
-auto EdbFrameHandle::is_valid() const -> b8 {
+auto FrameHandle::is_valid() const -> b8 {
     return b8{pool != nullptr};
 }
 
-auto EdbFrameHandle::release() -> void {
+auto FrameHandle::release() -> void {
     pool = nullptr;
     index = usize{0};
     id = u64{0};
     bytes = {};
 }
 
-auto EdbBufferPool::open(EdbPageStore& page_store, const EdbBufferPoolConfig& cfg) -> EdbStatus {
+auto BufferPool::open(PageStore& page_store, const BufferPoolConfig& cfg) -> VoidResult {
     store = &page_store;
     config = cfg;
     page_bytes = page_store.page_size();
@@ -69,7 +69,7 @@ auto EdbBufferPool::open(EdbPageStore& page_store, const EdbBufferPoolConfig& cf
     return {};
 }
 
-auto EdbBufferPool::close() -> EdbStatus {
+auto BufferPool::close() -> VoidResult {
     if (store != nullptr) {
         if (auto status = flush_all(); !status) {
             return status;
@@ -83,7 +83,7 @@ auto EdbBufferPool::close() -> EdbStatus {
     return {};
 }
 
-auto EdbBufferPool::fetch(u64 page_id) -> EdbResult<EdbFrameHandle> {
+auto BufferPool::fetch(u64 page_id) -> Result<FrameHandle> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -112,7 +112,7 @@ auto EdbBufferPool::fetch(u64 page_id) -> EdbResult<EdbFrameHandle> {
     return make_handle(*victim);
 }
 
-auto EdbBufferPool::fetch_new(u64 page_id) -> EdbResult<EdbFrameHandle> {
+auto BufferPool::fetch_new(u64 page_id) -> Result<FrameHandle> {
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -143,17 +143,17 @@ auto EdbBufferPool::fetch_new(u64 page_id) -> EdbResult<EdbFrameHandle> {
     return make_handle(*victim);
 }
 
-auto EdbBufferPool::unpin(EdbFrameHandle& handle, b8 dirty) -> EdbStatus {
+auto BufferPool::unpin(FrameHandle& handle, b8 dirty) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
     if (handle.pool != this || handle.index >= usize{frames.size()}) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
 
     auto& frame = frames[handle.index.value];
     if (!frame.valid.value || frame.pin_count == usize{0}) {
-        return std::unexpected(EdbError::InvalidArgument);
+        return std::unexpected(Error::InvalidArgument);
     }
     if (dirty.value) {
         frame.dirty = b8{true};
@@ -163,7 +163,7 @@ auto EdbBufferPool::unpin(EdbFrameHandle& handle, b8 dirty) -> EdbStatus {
     return {};
 }
 
-auto EdbBufferPool::flush(u64 page_id) -> EdbStatus {
+auto BufferPool::flush(u64 page_id) -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -175,7 +175,7 @@ auto EdbBufferPool::flush(u64 page_id) -> EdbStatus {
     return write_back_if_dirty(frames[cached->value]);
 }
 
-auto EdbBufferPool::flush_all() -> EdbStatus {
+auto BufferPool::flush_all() -> VoidResult {
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -188,32 +188,32 @@ auto EdbBufferPool::flush_all() -> EdbStatus {
     return store->sync();
 }
 
-auto EdbBufferPool::capacity() const -> usize {
+auto BufferPool::capacity() const -> usize {
     return config.capacity_pages;
 }
 
-auto EdbBufferPool::page_size() const -> usize {
+auto BufferPool::page_size() const -> usize {
     return page_bytes;
 }
 
-auto EdbBufferPool::check_open() const -> EdbStatus {
+auto BufferPool::check_open() const -> VoidResult {
     if (store == nullptr) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
     return {};
 }
 
-auto EdbBufferPool::find_frame(u64 page_id) -> EdbResult<usize> {
+auto BufferPool::find_frame(u64 page_id) -> Result<usize> {
     for (usize frame_index{0}; frame_index < usize{frames.size()}; ++frame_index) {
         const auto& frame = frames[frame_index.value];
         if (frame.valid.value && frame.page_id == page_id) {
             return frame_index;
         }
     }
-    return std::unexpected(EdbError::NotFound);
+    return std::unexpected(Error::NotFound);
 }
 
-auto EdbBufferPool::choose_victim() -> EdbResult<usize> {
+auto BufferPool::choose_victim() -> Result<usize> {
     for (usize frame_index{0}; frame_index < usize{frames.size()}; ++frame_index) {
         if (!frames[frame_index.value].valid.value) {
             return frame_index;
@@ -221,20 +221,20 @@ auto EdbBufferPool::choose_victim() -> EdbResult<usize> {
     }
 
     if (eviction_policy == nullptr) {
-        return std::unexpected(EdbError::IoError);
+        return std::unexpected(Error::IoError);
     }
 
-    std::vector<EdbEvictionFrameState> states;
+    std::vector<EvictionFrameState> states;
     states.reserve(frames.size());
     for (const auto& frame : frames) {
-        states.push_back(EdbEvictionFrameState{.page_id = frame.page_id,
+        states.push_back(EvictionFrameState{.page_id = frame.page_id,
                                                .valid = frame.valid,
                                                .pinned = b8{frame.pin_count > usize{0}}});
     }
     return eviction_policy->choose_victim(states);
 }
 
-auto EdbBufferPool::write_back_if_dirty(Frame& frame) -> EdbStatus {
+auto BufferPool::write_back_if_dirty(Frame& frame) -> VoidResult {
     if (!frame.valid.value || !frame.dirty.value) {
         return {};
     }
@@ -246,7 +246,7 @@ auto EdbBufferPool::write_back_if_dirty(Frame& frame) -> EdbStatus {
     return {};
 }
 
-auto EdbBufferPool::load_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus {
+auto BufferPool::load_page_into_frame(usize frame_index, u64 page_id) -> VoidResult {
     auto& frame = frames[frame_index.value];
     const auto evicted_page_id = frame.page_id;
     const auto had_valid_page = frame.valid;
@@ -270,7 +270,7 @@ auto EdbBufferPool::load_page_into_frame(usize frame_index, u64 page_id) -> EdbS
     return eviction_policy->record_load(page_id, frame_index);
 }
 
-auto EdbBufferPool::load_blank_page_into_frame(usize frame_index, u64 page_id) -> EdbStatus {
+auto BufferPool::load_blank_page_into_frame(usize frame_index, u64 page_id) -> VoidResult {
     auto& frame = frames[frame_index.value];
     const auto evicted_page_id = frame.page_id;
     const auto had_valid_page = frame.valid;
@@ -291,9 +291,9 @@ auto EdbBufferPool::load_blank_page_into_frame(usize frame_index, u64 page_id) -
     return eviction_policy->record_load(page_id, frame_index);
 }
 
-auto EdbBufferPool::make_handle(usize frame_index) -> EdbFrameHandle {
+auto BufferPool::make_handle(usize frame_index) -> FrameHandle {
     auto& frame = frames[frame_index.value];
-    return EdbFrameHandle{this, frame_index, frame.page_id, frame.data};
+    return FrameHandle{this, frame_index, frame.page_id, frame.data};
 }
 
 }  // namespace edb
