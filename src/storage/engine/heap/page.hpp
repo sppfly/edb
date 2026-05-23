@@ -23,6 +23,8 @@ struct Slot {
 };
 
 [[nodiscard]] auto initialize_page(std::span<std::byte> page, u64 page_id) -> VoidResult;
+[[nodiscard]] auto page_lsn(std::span<const std::byte> page) -> Result<u64>;
+[[nodiscard]] auto set_page_lsn(std::span<std::byte> page, u64 lsn) -> VoidResult;
 [[nodiscard]] auto slot_count(std::span<const std::byte> page) -> Result<u16>;
 [[nodiscard]] auto free_space(std::span<const std::byte> page) -> Result<usize>;
 [[nodiscard]] auto can_insert(std::span<const std::byte> page, usize tuple_size) -> Result<b8>;
