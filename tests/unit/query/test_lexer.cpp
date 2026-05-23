@@ -16,7 +16,9 @@ static auto collect(std::string_view src) -> std::vector<TokenKind> {
     while (true) {
         Token t = lex.next();
         kinds.push_back(t.kind);
-        if (t.kind == TokenKind::Eof) break;
+        if (t.kind == TokenKind::Eof) {
+            break;
+        }
     }
     return kinds;
 }
@@ -27,16 +29,16 @@ static auto collect(std::string_view src) -> std::vector<TokenKind> {
 TEST(Lexer, Punctuation) {
     auto kinds = collect("( ) , ; * . = <> < <= > >=");
     ASSERT_EQ(kinds.size(), 13U);
-    EXPECT_EQ(kinds[0],  TokenKind::LParen);
-    EXPECT_EQ(kinds[1],  TokenKind::RParen);
-    EXPECT_EQ(kinds[2],  TokenKind::Comma);
-    EXPECT_EQ(kinds[3],  TokenKind::Semicolon);
-    EXPECT_EQ(kinds[4],  TokenKind::Star);
-    EXPECT_EQ(kinds[5],  TokenKind::Dot);
-    EXPECT_EQ(kinds[6],  TokenKind::Eq);
-    EXPECT_EQ(kinds[7],  TokenKind::Neq);
-    EXPECT_EQ(kinds[8],  TokenKind::Lt);
-    EXPECT_EQ(kinds[9],  TokenKind::Le);
+    EXPECT_EQ(kinds[0], TokenKind::LParen);
+    EXPECT_EQ(kinds[1], TokenKind::RParen);
+    EXPECT_EQ(kinds[2], TokenKind::Comma);
+    EXPECT_EQ(kinds[3], TokenKind::Semicolon);
+    EXPECT_EQ(kinds[4], TokenKind::Star);
+    EXPECT_EQ(kinds[5], TokenKind::Dot);
+    EXPECT_EQ(kinds[6], TokenKind::Eq);
+    EXPECT_EQ(kinds[7], TokenKind::Neq);
+    EXPECT_EQ(kinds[8], TokenKind::Lt);
+    EXPECT_EQ(kinds[9], TokenKind::Le);
     EXPECT_EQ(kinds[10], TokenKind::Gt);
     EXPECT_EQ(kinds[11], TokenKind::Ge);
     EXPECT_EQ(kinds[12], TokenKind::Eof);
@@ -65,16 +67,16 @@ TEST(Lexer, KeywordsCaseUpper) {
 
 TEST(Lexer, KeywordsMixed) {
     auto kinds = collect("And Or Not Null True False Primary Key Unique If Exists Default As");
-    EXPECT_EQ(kinds[0],  TokenKind::KwAnd);
-    EXPECT_EQ(kinds[1],  TokenKind::KwOr);
-    EXPECT_EQ(kinds[2],  TokenKind::KwNot);
-    EXPECT_EQ(kinds[3],  TokenKind::KwNull);
-    EXPECT_EQ(kinds[4],  TokenKind::KwTrue);
-    EXPECT_EQ(kinds[5],  TokenKind::KwFalse);
-    EXPECT_EQ(kinds[6],  TokenKind::KwPrimary);
-    EXPECT_EQ(kinds[7],  TokenKind::KwKey);
-    EXPECT_EQ(kinds[8],  TokenKind::KwUnique);
-    EXPECT_EQ(kinds[9],  TokenKind::KwIf);
+    EXPECT_EQ(kinds[0], TokenKind::KwAnd);
+    EXPECT_EQ(kinds[1], TokenKind::KwOr);
+    EXPECT_EQ(kinds[2], TokenKind::KwNot);
+    EXPECT_EQ(kinds[3], TokenKind::KwNull);
+    EXPECT_EQ(kinds[4], TokenKind::KwTrue);
+    EXPECT_EQ(kinds[5], TokenKind::KwFalse);
+    EXPECT_EQ(kinds[6], TokenKind::KwPrimary);
+    EXPECT_EQ(kinds[7], TokenKind::KwKey);
+    EXPECT_EQ(kinds[8], TokenKind::KwUnique);
+    EXPECT_EQ(kinds[9], TokenKind::KwIf);
     EXPECT_EQ(kinds[10], TokenKind::KwExists);
     EXPECT_EQ(kinds[11], TokenKind::KwDefault);
     EXPECT_EQ(kinds[12], TokenKind::KwAs);

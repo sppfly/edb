@@ -14,12 +14,10 @@
 //
 // Thread-safety: wrappers are trivially copyable value types; no shared state.
 
-#include <compare>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <type_traits>
 
 namespace edb {
 

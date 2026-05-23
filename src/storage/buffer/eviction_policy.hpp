@@ -5,7 +5,6 @@
 // Pluggable buffer replacement policies. The buffer pool owns pin counts,
 // dirty flags, and I/O; eviction policies only rank currently resident frames.
 
-#include <cstddef>
 #include <deque>
 #include <list>
 #include <memory>
@@ -19,7 +18,7 @@
 
 namespace edb {
 
-enum class EvictionPolicyKind {
+enum class EvictionPolicyKind: std::uint8_t {
     ClockSweep,
     LruK,
     Arc,
@@ -106,7 +105,7 @@ class LruKPolicy final : public EvictionPolicy {
 
 class ArcPolicy final : public EvictionPolicy {
    public:
-    enum class Location {
+    enum class Location: std::uint8_t {
         T1,
         T2,
         B1,

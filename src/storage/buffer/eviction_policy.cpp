@@ -6,6 +6,7 @@
 #include <deque>
 #include <expected>
 #include <list>
+#include <ranges>
 #include <unordered_map>
 #include <vector>
 
@@ -298,8 +299,8 @@ auto ArcPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
 auto ArcPolicy::choose_from_lru(std::list<u64>& pages,
                                    std::span<const EvictionFrameState> frames)
     -> Result<usize> {
-    for (auto iter = pages.rbegin(); iter != pages.rend(); ++iter) {
-        const auto frame = resident_frames.find(*iter);
+    for (auto & page : std::views::reverse(pages)) {
+        const auto frame = resident_frames.find(page);
         if (frame != resident_frames.end() && is_evictable(frames, frame->second).value) {
             return frame->second;
         }
