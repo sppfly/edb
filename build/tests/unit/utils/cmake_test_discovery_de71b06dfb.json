@@ -1,5 +1,5 @@
 {
-  "tests": 32,
+  "tests": 40,
   "name": "AllTests",
   "testsuites": [
     {
@@ -171,6 +171,52 @@
           "name": "OrElseRecoversFromError",
           "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
           "line": 105
+        }
+      ]
+    },
+    {
+      "name": "Log",
+      "tests": 8,
+      "testsuite": [
+        {
+          "name": "LevelNameDebug",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 14
+        },
+        {
+          "name": "LevelNameInfo",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 15
+        },
+        {
+          "name": "LevelNameWarn",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 16
+        },
+        {
+          "name": "LevelNameError",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 17
+        },
+        {
+          "name": "LevelNameNone",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 18
+        },
+        {
+          "name": "LevelOrdering",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 24
+        },
+        {
+          "name": "SmokeDoesNotCrash",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 35
+        },
+        {
+          "name": "MacrosSmokeTest",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/log_test.cpp",
+          "line": 54
         }
       ]
     }

@@ -209,6 +209,30 @@ error_test.cpp.s:
 	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.s
 .PHONY : error_test.cpp.s
 
+log_test.o: log_test.cpp.o
+.PHONY : log_test.o
+
+# target to build an object file
+log_test.cpp.o:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/log_test.cpp.o
+.PHONY : log_test.cpp.o
+
+log_test.i: log_test.cpp.i
+.PHONY : log_test.i
+
+# target to preprocess a source file
+log_test.cpp.i:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/log_test.cpp.i
+.PHONY : log_test.cpp.i
+
+log_test.s: log_test.cpp.s
+.PHONY : log_test.s
+
+# target to generate assembly for a file
+log_test.cpp.s:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/log_test.cpp.s
+.PHONY : log_test.cpp.s
+
 primitives_test.o: primitives_test.cpp.o
 .PHONY : primitives_test.o
 
@@ -250,6 +274,9 @@ help:
 	@echo "... error_test.o"
 	@echo "... error_test.i"
 	@echo "... error_test.s"
+	@echo "... log_test.o"
+	@echo "... log_test.i"
+	@echo "... log_test.s"
 	@echo "... primitives_test.o"
 	@echo "... primitives_test.i"
 	@echo "... primitives_test.s"

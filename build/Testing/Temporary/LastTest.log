@@ -1,10 +1,10 @@
-Start testing: May 23 15:37 CST
+Start testing: May 23 15:38 CST
 ----------------------------------------------------------
-1/32 Testing: Primitives.ExplicitConstruction
-1/32 Test: Primitives.ExplicitConstruction
+1/40 Testing: Primitives.ExplicitConstruction
+1/40 Test: Primitives.ExplicitConstruction
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.ExplicitConstruction" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.ExplicitConstruction" start time: May 23 15:37 CST
+"Primitives.ExplicitConstruction" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -23,15 +23,15 @@ Note: Google Test filter = Primitives.ExplicitConstruction
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.ExplicitConstruction" end time: May 23 15:37 CST
+"Primitives.ExplicitConstruction" end time: May 23 15:38 CST
 "Primitives.ExplicitConstruction" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-2/32 Testing: Primitives.DefaultConstructionIsZero
-2/32 Test: Primitives.DefaultConstructionIsZero
+2/40 Testing: Primitives.DefaultConstructionIsZero
+2/40 Test: Primitives.DefaultConstructionIsZero
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.DefaultConstructionIsZero" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.DefaultConstructionIsZero" start time: May 23 15:37 CST
+"Primitives.DefaultConstructionIsZero" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -50,15 +50,15 @@ Note: Google Test filter = Primitives.DefaultConstructionIsZero
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.DefaultConstructionIsZero" end time: May 23 15:37 CST
+"Primitives.DefaultConstructionIsZero" end time: May 23 15:38 CST
 "Primitives.DefaultConstructionIsZero" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-3/32 Testing: Primitives.UserDefinedLiterals
-3/32 Test: Primitives.UserDefinedLiterals
+3/40 Testing: Primitives.UserDefinedLiterals
+3/40 Test: Primitives.UserDefinedLiterals
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.UserDefinedLiterals" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.UserDefinedLiterals" start time: May 23 15:37 CST
+"Primitives.UserDefinedLiterals" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -77,15 +77,15 @@ Note: Google Test filter = Primitives.UserDefinedLiterals
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.UserDefinedLiterals" end time: May 23 15:37 CST
+"Primitives.UserDefinedLiterals" end time: May 23 15:38 CST
 "Primitives.UserDefinedLiterals" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-4/32 Testing: Primitives.AdditionSameType
-4/32 Test: Primitives.AdditionSameType
+4/40 Testing: Primitives.AdditionSameType
+4/40 Test: Primitives.AdditionSameType
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.AdditionSameType" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.AdditionSameType" start time: May 23 15:37 CST
+"Primitives.AdditionSameType" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -104,15 +104,15 @@ Note: Google Test filter = Primitives.AdditionSameType
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.AdditionSameType" end time: May 23 15:37 CST
+"Primitives.AdditionSameType" end time: May 23 15:38 CST
 "Primitives.AdditionSameType" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-5/32 Testing: Primitives.SubtractionSameType
-5/32 Test: Primitives.SubtractionSameType
+5/40 Testing: Primitives.SubtractionSameType
+5/40 Test: Primitives.SubtractionSameType
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.SubtractionSameType" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.SubtractionSameType" start time: May 23 15:37 CST
+"Primitives.SubtractionSameType" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -131,15 +131,15 @@ Note: Google Test filter = Primitives.SubtractionSameType
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.SubtractionSameType" end time: May 23 15:37 CST
+"Primitives.SubtractionSameType" end time: May 23 15:38 CST
 "Primitives.SubtractionSameType" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-6/32 Testing: Primitives.MultiplicationSameType
-6/32 Test: Primitives.MultiplicationSameType
+6/40 Testing: Primitives.MultiplicationSameType
+6/40 Test: Primitives.MultiplicationSameType
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.MultiplicationSameType" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.MultiplicationSameType" start time: May 23 15:37 CST
+"Primitives.MultiplicationSameType" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -158,15 +158,15 @@ Note: Google Test filter = Primitives.MultiplicationSameType
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.MultiplicationSameType" end time: May 23 15:37 CST
+"Primitives.MultiplicationSameType" end time: May 23 15:38 CST
 "Primitives.MultiplicationSameType" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-7/32 Testing: Primitives.DivisionSameType
-7/32 Test: Primitives.DivisionSameType
+7/40 Testing: Primitives.DivisionSameType
+7/40 Test: Primitives.DivisionSameType
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.DivisionSameType" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.DivisionSameType" start time: May 23 15:37 CST
+"Primitives.DivisionSameType" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -185,15 +185,15 @@ Note: Google Test filter = Primitives.DivisionSameType
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.DivisionSameType" end time: May 23 15:37 CST
+"Primitives.DivisionSameType" end time: May 23 15:38 CST
 "Primitives.DivisionSameType" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-8/32 Testing: Primitives.ModuloIntegralOnly
-8/32 Test: Primitives.ModuloIntegralOnly
+8/40 Testing: Primitives.ModuloIntegralOnly
+8/40 Test: Primitives.ModuloIntegralOnly
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.ModuloIntegralOnly" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.ModuloIntegralOnly" start time: May 23 15:37 CST
+"Primitives.ModuloIntegralOnly" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -212,15 +212,15 @@ Note: Google Test filter = Primitives.ModuloIntegralOnly
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.ModuloIntegralOnly" end time: May 23 15:37 CST
+"Primitives.ModuloIntegralOnly" end time: May 23 15:38 CST
 "Primitives.ModuloIntegralOnly" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-9/32 Testing: Primitives.UnaryMinus
-9/32 Test: Primitives.UnaryMinus
+9/40 Testing: Primitives.UnaryMinus
+9/40 Test: Primitives.UnaryMinus
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.UnaryMinus" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.UnaryMinus" start time: May 23 15:37 CST
+"Primitives.UnaryMinus" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -239,15 +239,15 @@ Note: Google Test filter = Primitives.UnaryMinus
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.UnaryMinus" end time: May 23 15:37 CST
+"Primitives.UnaryMinus" end time: May 23 15:38 CST
 "Primitives.UnaryMinus" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-10/32 Testing: Primitives.PreIncrement
-10/32 Test: Primitives.PreIncrement
+10/40 Testing: Primitives.PreIncrement
+10/40 Test: Primitives.PreIncrement
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.PreIncrement" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.PreIncrement" start time: May 23 15:37 CST
+"Primitives.PreIncrement" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -266,15 +266,15 @@ Note: Google Test filter = Primitives.PreIncrement
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.PreIncrement" end time: May 23 15:37 CST
+"Primitives.PreIncrement" end time: May 23 15:38 CST
 "Primitives.PreIncrement" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-11/32 Testing: Primitives.PostIncrement
-11/32 Test: Primitives.PostIncrement
+11/40 Testing: Primitives.PostIncrement
+11/40 Test: Primitives.PostIncrement
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.PostIncrement" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.PostIncrement" start time: May 23 15:37 CST
+"Primitives.PostIncrement" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -293,15 +293,15 @@ Note: Google Test filter = Primitives.PostIncrement
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.PostIncrement" end time: May 23 15:37 CST
+"Primitives.PostIncrement" end time: May 23 15:38 CST
 "Primitives.PostIncrement" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-12/32 Testing: Primitives.CompoundAssignment
-12/32 Test: Primitives.CompoundAssignment
+12/40 Testing: Primitives.CompoundAssignment
+12/40 Test: Primitives.CompoundAssignment
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.CompoundAssignment" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.CompoundAssignment" start time: May 23 15:37 CST
+"Primitives.CompoundAssignment" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -320,15 +320,15 @@ Note: Google Test filter = Primitives.CompoundAssignment
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.CompoundAssignment" end time: May 23 15:37 CST
+"Primitives.CompoundAssignment" end time: May 23 15:38 CST
 "Primitives.CompoundAssignment" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-13/32 Testing: Primitives.BitwiseAnd
-13/32 Test: Primitives.BitwiseAnd
+13/40 Testing: Primitives.BitwiseAnd
+13/40 Test: Primitives.BitwiseAnd
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseAnd" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.BitwiseAnd" start time: May 23 15:37 CST
+"Primitives.BitwiseAnd" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -347,15 +347,15 @@ Note: Google Test filter = Primitives.BitwiseAnd
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.BitwiseAnd" end time: May 23 15:37 CST
+"Primitives.BitwiseAnd" end time: May 23 15:38 CST
 "Primitives.BitwiseAnd" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-14/32 Testing: Primitives.BitwiseOr
-14/32 Test: Primitives.BitwiseOr
+14/40 Testing: Primitives.BitwiseOr
+14/40 Test: Primitives.BitwiseOr
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseOr" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.BitwiseOr" start time: May 23 15:37 CST
+"Primitives.BitwiseOr" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -374,15 +374,15 @@ Note: Google Test filter = Primitives.BitwiseOr
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.BitwiseOr" end time: May 23 15:37 CST
+"Primitives.BitwiseOr" end time: May 23 15:38 CST
 "Primitives.BitwiseOr" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-15/32 Testing: Primitives.BitwiseXor
-15/32 Test: Primitives.BitwiseXor
+15/40 Testing: Primitives.BitwiseXor
+15/40 Test: Primitives.BitwiseXor
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseXor" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.BitwiseXor" start time: May 23 15:37 CST
+"Primitives.BitwiseXor" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -401,15 +401,15 @@ Note: Google Test filter = Primitives.BitwiseXor
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.BitwiseXor" end time: May 23 15:37 CST
+"Primitives.BitwiseXor" end time: May 23 15:38 CST
 "Primitives.BitwiseXor" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-16/32 Testing: Primitives.BitwiseNot
-16/32 Test: Primitives.BitwiseNot
+16/40 Testing: Primitives.BitwiseNot
+16/40 Test: Primitives.BitwiseNot
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BitwiseNot" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.BitwiseNot" start time: May 23 15:37 CST
+"Primitives.BitwiseNot" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -428,15 +428,15 @@ Note: Google Test filter = Primitives.BitwiseNot
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.BitwiseNot" end time: May 23 15:37 CST
+"Primitives.BitwiseNot" end time: May 23 15:38 CST
 "Primitives.BitwiseNot" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-17/32 Testing: Primitives.LeftShift
-17/32 Test: Primitives.LeftShift
+17/40 Testing: Primitives.LeftShift
+17/40 Test: Primitives.LeftShift
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.LeftShift" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.LeftShift" start time: May 23 15:37 CST
+"Primitives.LeftShift" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -455,15 +455,15 @@ Note: Google Test filter = Primitives.LeftShift
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.LeftShift" end time: May 23 15:37 CST
+"Primitives.LeftShift" end time: May 23 15:38 CST
 "Primitives.LeftShift" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-18/32 Testing: Primitives.RightShift
-18/32 Test: Primitives.RightShift
+18/40 Testing: Primitives.RightShift
+18/40 Test: Primitives.RightShift
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.RightShift" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.RightShift" start time: May 23 15:37 CST
+"Primitives.RightShift" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -482,15 +482,15 @@ Note: Google Test filter = Primitives.RightShift
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.RightShift" end time: May 23 15:37 CST
+"Primitives.RightShift" end time: May 23 15:38 CST
 "Primitives.RightShift" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-19/32 Testing: Primitives.LessThan
-19/32 Test: Primitives.LessThan
+19/40 Testing: Primitives.LessThan
+19/40 Test: Primitives.LessThan
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.LessThan" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.LessThan" start time: May 23 15:37 CST
+"Primitives.LessThan" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -509,15 +509,15 @@ Note: Google Test filter = Primitives.LessThan
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.LessThan" end time: May 23 15:37 CST
+"Primitives.LessThan" end time: May 23 15:38 CST
 "Primitives.LessThan" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-20/32 Testing: Primitives.Spaceship
-20/32 Test: Primitives.Spaceship
+20/40 Testing: Primitives.Spaceship
+20/40 Test: Primitives.Spaceship
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.Spaceship" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.Spaceship" start time: May 23 15:37 CST
+"Primitives.Spaceship" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -536,15 +536,15 @@ Note: Google Test filter = Primitives.Spaceship
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.Spaceship" end time: May 23 15:37 CST
+"Primitives.Spaceship" end time: May 23 15:38 CST
 "Primitives.Spaceship" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-21/32 Testing: Primitives.BooleanEquality
-21/32 Test: Primitives.BooleanEquality
+21/40 Testing: Primitives.BooleanEquality
+21/40 Test: Primitives.BooleanEquality
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.BooleanEquality" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.BooleanEquality" start time: May 23 15:37 CST
+"Primitives.BooleanEquality" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -563,15 +563,15 @@ Note: Google Test filter = Primitives.BooleanEquality
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.BooleanEquality" end time: May 23 15:37 CST
+"Primitives.BooleanEquality" end time: May 23 15:38 CST
 "Primitives.BooleanEquality" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-22/32 Testing: Primitives.HashUsableInUnorderedSet
-22/32 Test: Primitives.HashUsableInUnorderedSet
+22/40 Testing: Primitives.HashUsableInUnorderedSet
+22/40 Test: Primitives.HashUsableInUnorderedSet
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Primitives.HashUsableInUnorderedSet" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"Primitives.HashUsableInUnorderedSet" start time: May 23 15:37 CST
+"Primitives.HashUsableInUnorderedSet" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -590,15 +590,15 @@ Note: Google Test filter = Primitives.HashUsableInUnorderedSet
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"Primitives.HashUsableInUnorderedSet" end time: May 23 15:37 CST
+"Primitives.HashUsableInUnorderedSet" end time: May 23 15:38 CST
 "Primitives.HashUsableInUnorderedSet" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-23/32 Testing: EdbError.ResultSuccessHasValue
-23/32 Test: EdbError.ResultSuccessHasValue
+23/40 Testing: EdbError.ResultSuccessHasValue
+23/40 Test: EdbError.ResultSuccessHasValue
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.ResultSuccessHasValue" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.ResultSuccessHasValue" start time: May 23 15:37 CST
+"EdbError.ResultSuccessHasValue" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -617,15 +617,15 @@ Note: Google Test filter = EdbError.ResultSuccessHasValue
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.ResultSuccessHasValue" end time: May 23 15:37 CST
+"EdbError.ResultSuccessHasValue" end time: May 23 15:38 CST
 "EdbError.ResultSuccessHasValue" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-24/32 Testing: EdbError.StatusSuccessHasValue
-24/32 Test: EdbError.StatusSuccessHasValue
+24/40 Testing: EdbError.StatusSuccessHasValue
+24/40 Test: EdbError.StatusSuccessHasValue
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.StatusSuccessHasValue" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.StatusSuccessHasValue" start time: May 23 15:37 CST
+"EdbError.StatusSuccessHasValue" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -644,15 +644,15 @@ Note: Google Test filter = EdbError.StatusSuccessHasValue
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.StatusSuccessHasValue" end time: May 23 15:37 CST
+"EdbError.StatusSuccessHasValue" end time: May 23 15:38 CST
 "EdbError.StatusSuccessHasValue" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-25/32 Testing: EdbError.ResultErrorCarriesCode
-25/32 Test: EdbError.ResultErrorCarriesCode
+25/40 Testing: EdbError.ResultErrorCarriesCode
+25/40 Test: EdbError.ResultErrorCarriesCode
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.ResultErrorCarriesCode" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.ResultErrorCarriesCode" start time: May 23 15:37 CST
+"EdbError.ResultErrorCarriesCode" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -671,15 +671,15 @@ Note: Google Test filter = EdbError.ResultErrorCarriesCode
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.ResultErrorCarriesCode" end time: May 23 15:37 CST
+"EdbError.ResultErrorCarriesCode" end time: May 23 15:38 CST
 "EdbError.ResultErrorCarriesCode" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-26/32 Testing: EdbError.StatusErrorCarriesCode
-26/32 Test: EdbError.StatusErrorCarriesCode
+26/40 Testing: EdbError.StatusErrorCarriesCode
+26/40 Test: EdbError.StatusErrorCarriesCode
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.StatusErrorCarriesCode" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.StatusErrorCarriesCode" start time: May 23 15:37 CST
+"EdbError.StatusErrorCarriesCode" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -698,15 +698,15 @@ Note: Google Test filter = EdbError.StatusErrorCarriesCode
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.StatusErrorCarriesCode" end time: May 23 15:37 CST
+"EdbError.StatusErrorCarriesCode" end time: May 23 15:38 CST
 "EdbError.StatusErrorCarriesCode" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-27/32 Testing: EdbError.ErrorNameNonEmpty
-27/32 Test: EdbError.ErrorNameNonEmpty
+27/40 Testing: EdbError.ErrorNameNonEmpty
+27/40 Test: EdbError.ErrorNameNonEmpty
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.ErrorNameNonEmpty" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.ErrorNameNonEmpty" start time: May 23 15:37 CST
+"EdbError.ErrorNameNonEmpty" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -725,15 +725,15 @@ Note: Google Test filter = EdbError.ErrorNameNonEmpty
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.ErrorNameNonEmpty" end time: May 23 15:37 CST
+"EdbError.ErrorNameNonEmpty" end time: May 23 15:38 CST
 "EdbError.ErrorNameNonEmpty" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-28/32 Testing: EdbError.ErrorNameOkIsOk
-28/32 Test: EdbError.ErrorNameOkIsOk
+28/40 Testing: EdbError.ErrorNameOkIsOk
+28/40 Test: EdbError.ErrorNameOkIsOk
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.ErrorNameOkIsOk" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.ErrorNameOkIsOk" start time: May 23 15:37 CST
+"EdbError.ErrorNameOkIsOk" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -752,15 +752,15 @@ Note: Google Test filter = EdbError.ErrorNameOkIsOk
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.ErrorNameOkIsOk" end time: May 23 15:37 CST
+"EdbError.ErrorNameOkIsOk" end time: May 23 15:38 CST
 "EdbError.ErrorNameOkIsOk" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-29/32 Testing: EdbError.ValueOr
-29/32 Test: EdbError.ValueOr
+29/40 Testing: EdbError.ValueOr
+29/40 Test: EdbError.ValueOr
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.ValueOr" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.ValueOr" start time: May 23 15:37 CST
+"EdbError.ValueOr" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -779,15 +779,15 @@ Note: Google Test filter = EdbError.ValueOr
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.ValueOr" end time: May 23 15:37 CST
+"EdbError.ValueOr" end time: May 23 15:38 CST
 "EdbError.ValueOr" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-30/32 Testing: EdbError.AndThenChaining
-30/32 Test: EdbError.AndThenChaining
+30/40 Testing: EdbError.AndThenChaining
+30/40 Test: EdbError.AndThenChaining
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.AndThenChaining" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.AndThenChaining" start time: May 23 15:37 CST
+"EdbError.AndThenChaining" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -806,15 +806,15 @@ Note: Google Test filter = EdbError.AndThenChaining
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.AndThenChaining" end time: May 23 15:37 CST
+"EdbError.AndThenChaining" end time: May 23 15:38 CST
 "EdbError.AndThenChaining" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-31/32 Testing: EdbError.AndThenShortCircuitsOnError
-31/32 Test: EdbError.AndThenShortCircuitsOnError
+31/40 Testing: EdbError.AndThenShortCircuitsOnError
+31/40 Test: EdbError.AndThenShortCircuitsOnError
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.AndThenShortCircuitsOnError" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.AndThenShortCircuitsOnError" start time: May 23 15:37 CST
+"EdbError.AndThenShortCircuitsOnError" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -833,15 +833,15 @@ Note: Google Test filter = EdbError.AndThenShortCircuitsOnError
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.AndThenShortCircuitsOnError" end time: May 23 15:37 CST
+"EdbError.AndThenShortCircuitsOnError" end time: May 23 15:38 CST
 "EdbError.AndThenShortCircuitsOnError" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-32/32 Testing: EdbError.OrElseRecoversFromError
-32/32 Test: EdbError.OrElseRecoversFromError
+32/40 Testing: EdbError.OrElseRecoversFromError
+32/40 Test: EdbError.OrElseRecoversFromError
 Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=EdbError.OrElseRecoversFromError" "--gtest_also_run_disabled_tests"
 Directory: /home/yliu/projects/edb/build/tests/unit/utils
-"EdbError.OrElseRecoversFromError" start time: May 23 15:37 CST
+"EdbError.OrElseRecoversFromError" start time: May 23 15:38 CST
 Output:
 ----------------------------------------------------------
 Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -860,8 +860,229 @@ Note: Google Test filter = EdbError.OrElseRecoversFromError
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"EdbError.OrElseRecoversFromError" end time: May 23 15:37 CST
+"EdbError.OrElseRecoversFromError" end time: May 23 15:38 CST
 "EdbError.OrElseRecoversFromError" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: May 23 15:37 CST
+33/40 Testing: Log.LevelNameDebug
+33/40 Test: Log.LevelNameDebug
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelNameDebug" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelNameDebug" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelNameDebug
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelNameDebug
+[       OK ] Log.LevelNameDebug (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelNameDebug" end time: May 23 15:38 CST
+"Log.LevelNameDebug" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/40 Testing: Log.LevelNameInfo
+34/40 Test: Log.LevelNameInfo
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelNameInfo" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelNameInfo" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelNameInfo
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelNameInfo
+[       OK ] Log.LevelNameInfo (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelNameInfo" end time: May 23 15:38 CST
+"Log.LevelNameInfo" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/40 Testing: Log.LevelNameWarn
+35/40 Test: Log.LevelNameWarn
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelNameWarn" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelNameWarn" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelNameWarn
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelNameWarn
+[       OK ] Log.LevelNameWarn (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelNameWarn" end time: May 23 15:38 CST
+"Log.LevelNameWarn" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/40 Testing: Log.LevelNameError
+36/40 Test: Log.LevelNameError
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelNameError" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelNameError" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelNameError
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelNameError
+[       OK ] Log.LevelNameError (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelNameError" end time: May 23 15:38 CST
+"Log.LevelNameError" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/40 Testing: Log.LevelNameNone
+37/40 Test: Log.LevelNameNone
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelNameNone" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelNameNone" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelNameNone
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelNameNone
+[       OK ] Log.LevelNameNone (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelNameNone" end time: May 23 15:38 CST
+"Log.LevelNameNone" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/40 Testing: Log.LevelOrdering
+38/40 Test: Log.LevelOrdering
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.LevelOrdering" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.LevelOrdering" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.LevelOrdering
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.LevelOrdering
+[       OK ] Log.LevelOrdering (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.LevelOrdering" end time: May 23 15:38 CST
+"Log.LevelOrdering" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/40 Testing: Log.SmokeDoesNotCrash
+39/40 Test: Log.SmokeDoesNotCrash
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.SmokeDoesNotCrash" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.SmokeDoesNotCrash" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.SmokeDoesNotCrash
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.SmokeDoesNotCrash
+[INFO ] [test] info message
+[ERROR] [test] error detail
+[       OK ] Log.SmokeDoesNotCrash (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.SmokeDoesNotCrash" end time: May 23 15:38 CST
+"Log.SmokeDoesNotCrash" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/40 Testing: Log.MacrosSmokeTest
+40/40 Test: Log.MacrosSmokeTest
+Command: "/home/yliu/projects/edb/build/tests/unit/utils/test_utils" "--gtest_filter=Log.MacrosSmokeTest" "--gtest_also_run_disabled_tests"
+Directory: /home/yliu/projects/edb/build/tests/unit/utils
+"Log.MacrosSmokeTest" start time: May 23 15:38 CST
+Output:
+----------------------------------------------------------
+Running main() from /home/yliu/projects/edb/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = Log.MacrosSmokeTest
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Log
+[ RUN      ] Log.MacrosSmokeTest
+[INFO ] [test] info macro
+[WARN ] [test] warn macro
+[ERROR] [test] error macro
+[       OK ] Log.MacrosSmokeTest (0 ms)
+[----------] 1 test from Log (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"Log.MacrosSmokeTest" end time: May 23 15:38 CST
+"Log.MacrosSmokeTest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 23 15:38 CST

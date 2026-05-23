@@ -34,5 +34,11 @@
   "command": "/usr/bin/g++-16 -DEDB_DEBUG -I/home/yliu/projects/edb/src -isystem /home/yliu/projects/edb/build/_deps/googletest-src/googletest/include -isystem /home/yliu/projects/edb/build/_deps/googletest-src/googletest -g -std=c++26 -Wall -Wextra -Werror -Wpedantic -Wconversion -Wsign-conversion -Wno-unused-parameter -g -fcontracts -o CMakeFiles/test_utils.dir/error_test.cpp.o -c /home/yliu/projects/edb/tests/unit/utils/error_test.cpp",
   "file": "/home/yliu/projects/edb/tests/unit/utils/error_test.cpp",
   "output": "tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o"
+},
+{
+  "directory": "/home/yliu/projects/edb/build/tests/unit/utils",
+  "command": "/usr/bin/g++-16 -DEDB_DEBUG -I/home/yliu/projects/edb/src -isystem /home/yliu/projects/edb/build/_deps/googletest-src/googletest/include -isystem /home/yliu/projects/edb/build/_deps/googletest-src/googletest -g -std=c++26 -Wall -Wextra -Werror -Wpedantic -Wconversion -Wsign-conversion -Wno-unused-parameter -g -fcontracts -o CMakeFiles/test_utils.dir/log_test.cpp.o -c /home/yliu/projects/edb/tests/unit/utils/log_test.cpp",
+  "file": "/home/yliu/projects/edb/tests/unit/utils/log_test.cpp",
+  "output": "tests/unit/utils/CMakeFiles/test_utils.dir/log_test.cpp.o"
 }
 ]

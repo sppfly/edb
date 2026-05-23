@@ -68,7 +68,7 @@ include CMakeFiles/format.dir/progress.make
 
 CMakeFiles/format:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Formatting all sources with clang-format"
-	/usr/bin/clang-format -i /home/yliu/projects/edb/src/utils/error.hpp /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/error_test.cpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
+	/usr/bin/clang-format -i /home/yliu/projects/edb/src/utils/error.hpp /home/yliu/projects/edb/src/utils/log.hpp /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/error_test.cpp /home/yliu/projects/edb/tests/unit/utils/log_test.cpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
 
 CMakeFiles/format.dir/codegen:
 .PHONY : CMakeFiles/format.dir/codegen

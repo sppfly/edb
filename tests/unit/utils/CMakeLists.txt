@@ -1,6 +1,7 @@
 add_executable(test_utils
   primitives_test.cpp
   error_test.cpp
+  log_test.cpp
 )
 
 target_link_libraries(test_utils

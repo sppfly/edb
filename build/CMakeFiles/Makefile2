@@ -302,7 +302,7 @@ CMakeFiles/format-check.dir/clean:
 CMakeFiles/tidy.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tidy.dir/build.make CMakeFiles/tidy.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tidy.dir/build.make CMakeFiles/tidy.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=14 "Built target tidy"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=15 "Built target tidy"
 .PHONY : CMakeFiles/tidy.dir/all
 
 # Build rule for subdir invocation for target.
@@ -319,7 +319,7 @@ tidy: CMakeFiles/tidy.dir/rule
 # codegen rule for target.
 CMakeFiles/tidy.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tidy.dir/build.make CMakeFiles/tidy.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=14 "Finished codegen for target tidy"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=15 "Finished codegen for target tidy"
 .PHONY : CMakeFiles/tidy.dir/codegen
 
 # clean rule for target.
@@ -464,12 +464,12 @@ tests/unit/utils/CMakeFiles/test_utils.dir/all: _deps/googletest-build/googletes
 tests/unit/utils/CMakeFiles/test_utils.dir/all: _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=11,12,13 "Built target test_utils"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=11,12,13,14 "Built target test_utils"
 .PHONY : tests/unit/utils/CMakeFiles/test_utils.dir/all
 
 # Build rule for subdir invocation for target.
 tests/unit/utils/CMakeFiles/test_utils.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/yliu/projects/edb/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yliu/projects/edb/build/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/unit/utils/CMakeFiles/test_utils.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/yliu/projects/edb/build/CMakeFiles 0
 .PHONY : tests/unit/utils/CMakeFiles/test_utils.dir/rule
@@ -481,7 +481,7 @@ test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/rule
 # codegen rule for target.
 tests/unit/utils/CMakeFiles/test_utils.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=11,12,13 "Finished codegen for target test_utils"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=11,12,13,14 "Finished codegen for target test_utils"
 .PHONY : tests/unit/utils/CMakeFiles/test_utils.dir/codegen
 
 # clean rule for target.

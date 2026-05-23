@@ -4,6 +4,7 @@ test_utils: \
   /usr/lib/gcc/x86_64-linux-gnu/16/crtbeginS.o \
   CMakeFiles/test_utils.dir/primitives_test.cpp.o \
   CMakeFiles/test_utils.dir/error_test.cpp.o \
+  CMakeFiles/test_utils.dir/log_test.cpp.o \
   ../../../lib/libgtest_main.a \
   ../../../lib/libgtest.a \
   /usr/lib/gcc/x86_64-linux-gnu/16/libstdc++.so \
@@ -47,6 +48,8 @@ test_utils: \
 CMakeFiles/test_utils.dir/primitives_test.cpp.o:
 
 CMakeFiles/test_utils.dir/error_test.cpp.o:
+
+CMakeFiles/test_utils.dir/log_test.cpp.o:
 
 ../../../lib/libgtest_main.a:
 
