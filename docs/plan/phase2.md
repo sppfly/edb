@@ -8,7 +8,7 @@ Build the storage stack above the I/O backend. The goal is end-to-end write-page
 Query Executor
       │  scan_next() / insert_tuple()
       ▼
-EdbStorageEngineOps        ← pluggable engine interface (the multi-engine seam)
+EdbStorageEngineOps        ← pluggable engine interface (the multi-engine seam) ✅
   ├── HeapEngine           (row-store, slot array)     Phase 2d
   ├── ColumnarEngine       (column stripes)            future
   ├── PAXEngine            (columns within pages)      future
@@ -69,7 +69,7 @@ public:
 
 ---
 
-## Phase 2b — `EdbStorageEngineOps` Interface 🔲
+## Phase 2b — `EdbStorageEngineOps` Interface ✅
 
 Define the tuple-level interface that **all** storage engines implement. This must be stable before any concrete engine is written.
 
@@ -108,9 +108,9 @@ struct TupleId {
 
 ### Deliverables
 
-- [ ] `EdbStorageEngineOps` abstract class with `EDB_PRE` contracts
-- [ ] `TupleId`, `Tuple`, `ScanHandle` supporting types
-- [ ] Mock engine + interface contract tests (no concrete engine yet)
+- [x] `EdbStorageEngineOps` abstract class with `EDB_PRE` contracts
+- [x] `EdbTupleId`, `EdbTuple`, `EdbScanHandle` supporting types
+- [x] Mock engine + interface contract tests (no concrete engine yet)
 
 ---
 
