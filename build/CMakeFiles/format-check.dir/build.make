@@ -68,7 +68,7 @@ include CMakeFiles/format-check.dir/progress.make
 
 CMakeFiles/format-check:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Checking format (no files modified)"
-	/usr/bin/clang-format --dry-run --Werror /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
+	/usr/bin/clang-format --dry-run --Werror /home/yliu/projects/edb/src/utils/error.hpp /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/error_test.cpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
 
 CMakeFiles/format-check.dir/codegen:
 .PHONY : CMakeFiles/format-check.dir/codegen

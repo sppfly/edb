@@ -1,5 +1,5 @@
 {
-  "tests": 22,
+  "tests": 32,
   "name": "AllTests",
   "testsuites": [
     {
@@ -115,6 +115,62 @@
           "name": "HashUsableInUnorderedSet",
           "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/primitives_test.cpp",
           "line": 138
+        }
+      ]
+    },
+    {
+      "name": "EdbError",
+      "tests": 10,
+      "testsuite": [
+        {
+          "name": "ResultSuccessHasValue",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 11
+        },
+        {
+          "name": "StatusSuccessHasValue",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 17
+        },
+        {
+          "name": "ResultErrorCarriesCode",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 26
+        },
+        {
+          "name": "StatusErrorCarriesCode",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 32
+        },
+        {
+          "name": "ErrorNameNonEmpty",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 42
+        },
+        {
+          "name": "ErrorNameOkIsOk",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 73
+        },
+        {
+          "name": "ValueOr",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 81
+        },
+        {
+          "name": "AndThenChaining",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 86
+        },
+        {
+          "name": "AndThenShortCircuitsOnError",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 94
+        },
+        {
+          "name": "OrElseRecoversFromError",
+          "file": "\/home\/yliu\/projects\/edb\/tests\/unit\/utils\/error_test.cpp",
+          "line": 105
         }
       ]
     }

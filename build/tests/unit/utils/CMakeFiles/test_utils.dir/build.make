@@ -86,20 +86,36 @@ tests/unit/utils/CMakeFiles/test_utils.dir/primitives_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_utils.dir/primitives_test.cpp.s"
 	cd /home/yliu/projects/edb/build/tests/unit/utils && /usr/bin/g++-16 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp -o CMakeFiles/test_utils.dir/primitives_test.cpp.s
 
+tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o: tests/unit/utils/CMakeFiles/test_utils.dir/flags.make
+tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o: /home/yliu/projects/edb/tests/unit/utils/error_test.cpp
+tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o: tests/unit/utils/CMakeFiles/test_utils.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o"
+	cd /home/yliu/projects/edb/build/tests/unit/utils && /usr/bin/g++-16 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o -MF CMakeFiles/test_utils.dir/error_test.cpp.o.d -o CMakeFiles/test_utils.dir/error_test.cpp.o -c /home/yliu/projects/edb/tests/unit/utils/error_test.cpp
+
+tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test_utils.dir/error_test.cpp.i"
+	cd /home/yliu/projects/edb/build/tests/unit/utils && /usr/bin/g++-16 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/yliu/projects/edb/tests/unit/utils/error_test.cpp > CMakeFiles/test_utils.dir/error_test.cpp.i
+
+tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_utils.dir/error_test.cpp.s"
+	cd /home/yliu/projects/edb/build/tests/unit/utils && /usr/bin/g++-16 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yliu/projects/edb/tests/unit/utils/error_test.cpp -o CMakeFiles/test_utils.dir/error_test.cpp.s
+
 # Object files for target test_utils
 test_utils_OBJECTS = \
-"CMakeFiles/test_utils.dir/primitives_test.cpp.o"
+"CMakeFiles/test_utils.dir/primitives_test.cpp.o" \
+"CMakeFiles/test_utils.dir/error_test.cpp.o"
 
 # External object files for target test_utils
 test_utils_EXTERNAL_OBJECTS =
 
 tests/unit/utils/test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/primitives_test.cpp.o
+tests/unit/utils/test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o
 tests/unit/utils/test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/build.make
 tests/unit/utils/test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/compiler_depend.ts
 tests/unit/utils/test_utils: lib/libgtest_main.a
 tests/unit/utils/test_utils: lib/libgtest.a
 tests/unit/utils/test_utils: tests/unit/utils/CMakeFiles/test_utils.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test_utils"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable test_utils"
 	cd /home/yliu/projects/edb/build/tests/unit/utils && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_utils.dir/link.txt --verbose=$(VERBOSE)
 	cd /home/yliu/projects/edb/build/tests/unit/utils && /usr/bin/cmake -D TEST_TARGET=test_utils -D TEST_EXECUTABLE=/home/yliu/projects/edb/build/tests/unit/utils/test_utils -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/home/yliu/projects/edb/build/tests/unit/utils -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=test_utils_TESTS -D CTEST_FILE=/home/yliu/projects/edb/build/tests/unit/utils/test_utils[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_DISCOVERY_EXTRA_ARGS= -D TEST_XML_OUTPUT_DIR= -P /usr/share/cmake-4.2/Modules/GoogleTestAddTests.cmake
 

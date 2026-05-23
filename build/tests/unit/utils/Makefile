@@ -185,6 +185,30 @@ test_utils/fast:
 	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/build
 .PHONY : test_utils/fast
 
+error_test.o: error_test.cpp.o
+.PHONY : error_test.o
+
+# target to build an object file
+error_test.cpp.o:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.o
+.PHONY : error_test.cpp.o
+
+error_test.i: error_test.cpp.i
+.PHONY : error_test.i
+
+# target to preprocess a source file
+error_test.cpp.i:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.i
+.PHONY : error_test.cpp.i
+
+error_test.s: error_test.cpp.s
+.PHONY : error_test.s
+
+# target to generate assembly for a file
+error_test.cpp.s:
+	cd /home/yliu/projects/edb/build && $(MAKE) $(MAKESILENT) -f tests/unit/utils/CMakeFiles/test_utils.dir/build.make tests/unit/utils/CMakeFiles/test_utils.dir/error_test.cpp.s
+.PHONY : error_test.cpp.s
+
 primitives_test.o: primitives_test.cpp.o
 .PHONY : primitives_test.o
 
@@ -223,6 +247,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... test_utils"
+	@echo "... error_test.o"
+	@echo "... error_test.i"
+	@echo "... error_test.s"
 	@echo "... primitives_test.o"
 	@echo "... primitives_test.i"
 	@echo "... primitives_test.s"

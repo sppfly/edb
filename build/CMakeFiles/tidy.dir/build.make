@@ -68,7 +68,7 @@ include CMakeFiles/tidy.dir/progress.make
 
 CMakeFiles/tidy:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/yliu/projects/edb/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running clang-tidy"
-	/usr/bin/clang-tidy -p /home/yliu/projects/edb/build /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
+	/usr/bin/clang-tidy -p /home/yliu/projects/edb/build /home/yliu/projects/edb/src/utils/error.hpp /home/yliu/projects/edb/src/utils/primitives.hpp /home/yliu/projects/edb/tests/unit/utils/error_test.cpp /home/yliu/projects/edb/tests/unit/utils/primitives_test.cpp
 
 CMakeFiles/tidy.dir/codegen:
 .PHONY : CMakeFiles/tidy.dir/codegen
