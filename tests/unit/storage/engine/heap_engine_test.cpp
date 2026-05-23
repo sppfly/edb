@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <map>
 #include <span>
 #include <vector>
 
 #include "storage/engine/heap/page.hpp"
+#include "transaction/visibility.hpp"
 
 using namespace edb;
 
@@ -23,6 +25,36 @@ namespace {
         result.push_back(std::byte{static_cast<unsigned char>(value)});
     }
     return result;
+}
+
+class FakeStatusReader final : public TransactionStatusReader {
+   public:
+    auto set(TxId id, TxStatus status) -> void { statuses[id] = status; }
+
+    [[nodiscard]] auto status(TxId id) const -> Result<TxStatus> override {
+        const auto found = statuses.find(id);
+        if (found == statuses.end()) {
+            return std::unexpected(Error::NotFound);
+        }
+        return found->second;
+    }
+
+   private:
+    std::map<TxId, TxStatus> statuses;
+};
+
+[[nodiscard]] auto make_snapshot(TxId xmax, std::vector<TxId> active = {}) -> Snapshot {
+    auto xmin = xmax;
+    for (const auto id : active) {
+        if (id.value < xmin.value) {
+            xmin = id;
+        }
+    }
+    return Snapshot{.xmin = xmin, .xmax = xmax, .active = std::move(active)};
+}
+
+[[nodiscard]] auto make_tx(TxId id, std::vector<TxId> active = {}) -> Transaction {
+    return Transaction{.id = id, .snapshot = make_snapshot(id, std::move(active))};
 }
 
 }  // namespace
@@ -106,6 +138,34 @@ class HeapEngineTest : public ::testing::Test {
         return tuples;
     }
 
+    [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine,
+                                           const VisibilityContext& context,
+                                           const TransactionStatusReader& statuses)
+        -> Result<std::vector<std::vector<std::byte>>> {
+        auto handle = engine.begin_scan(context, statuses);
+        if (!handle) {
+            return std::unexpected(handle.error());
+        }
+
+        std::vector<std::vector<std::byte>> tuples;
+        while (true) {
+            auto next = engine.scan_next(*handle);
+            if (!next) {
+                return std::unexpected(next.error());
+            }
+            if (!next->has_value()) {
+                break;
+            }
+            tuples.push_back((*next)->data);
+        }
+        auto status = engine.end_scan(*handle);
+        if (!status) {
+            return std::unexpected(status.error());
+        }
+        return tuples;
+    }
+
+   public:
     MockHeapIOOps io;
     PageStore page_store;
 };
@@ -197,4 +257,94 @@ TEST_F(HeapEngineTest, ReopenScansPersistedTuples) {
     ASSERT_EQ(tuples->size(), std::size_t{2});
     EXPECT_EQ((*tuples)[0], first);
     EXPECT_EQ((*tuples)[1], second);
+}
+
+TEST_F(HeapEngineTest, TransactionalInsertIsVisibleToOwningTransaction) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    const auto tx = make_tx(TxId{u64{1}});
+    const auto payload = make_tuple({0x31U});
+
+    ASSERT_TRUE(engine.insert(tx, payload).has_value());
+
+    auto tuples = collect_scan(engine,
+                               VisibilityContext{.snapshot = tx.snapshot, .current_tx = tx.id},
+                               statuses);
+    ASSERT_TRUE(tuples.has_value());
+    ASSERT_EQ(tuples->size(), std::size_t{1});
+    EXPECT_EQ((*tuples)[0], payload);
+}
+
+TEST_F(HeapEngineTest, TransactionalScanHidesOtherInProgressInsert) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::InProgress);
+
+    const auto writer = make_tx(TxId{u64{1}});
+    const auto reader = Transaction{.id = TxId{u64{2}},
+                                    .snapshot = make_snapshot(TxId{u64{3}}, {writer.id})};
+    ASSERT_TRUE(engine.insert(writer, make_tuple({0x41U})).has_value());
+
+    auto tuples = collect_scan(
+        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
+    ASSERT_TRUE(tuples.has_value());
+    EXPECT_TRUE(tuples->empty());
+}
+
+TEST_F(HeapEngineTest, TransactionalScanShowsCommittedInsertToLaterSnapshot) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::Committed);
+    const auto writer = make_tx(TxId{u64{1}});
+    const auto reader = Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{3}})};
+    const auto payload = make_tuple({0x51U});
+
+    ASSERT_TRUE(engine.insert(writer, payload).has_value());
+
+    auto tuples = collect_scan(
+        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
+    ASSERT_TRUE(tuples.has_value());
+    ASSERT_EQ(tuples->size(), std::size_t{1});
+    EXPECT_EQ((*tuples)[0], payload);
+}
+
+TEST_F(HeapEngineTest, TransactionalDeleteUsesXmaxVisibility) {
+    EdbHeapEngine engine;
+    open_engine(engine);
+    FakeStatusReader statuses;
+    statuses.set(TxId{u64{1}}, TxStatus::Committed);
+    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
+
+    const auto inserter = make_tx(TxId{u64{1}});
+    const auto deleter = make_tx(TxId{u64{2}});
+    const auto payload = make_tuple({0x61U});
+    auto id = engine.insert(inserter, payload);
+    ASSERT_TRUE(id.has_value());
+    ASSERT_TRUE(engine.delete_tuple(deleter, *id).has_value());
+
+    auto own_scan = collect_scan(
+        engine, VisibilityContext{.snapshot = deleter.snapshot, .current_tx = deleter.id}, statuses);
+    ASSERT_TRUE(own_scan.has_value());
+    EXPECT_TRUE(own_scan->empty());
+
+    const auto concurrent_reader =
+        Transaction{.id = TxId{u64{3}}, .snapshot = make_snapshot(TxId{u64{4}}, {deleter.id})};
+    auto concurrent_scan = collect_scan(engine,
+                                        VisibilityContext{.snapshot = concurrent_reader.snapshot,
+                                                          .current_tx = concurrent_reader.id},
+                                        statuses);
+    ASSERT_TRUE(concurrent_scan.has_value());
+    ASSERT_EQ(concurrent_scan->size(), std::size_t{1});
+    EXPECT_EQ((*concurrent_scan)[0], payload);
+
+    statuses.set(deleter.id, TxStatus::Committed);
+    const auto later_reader = Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
+    auto later_scan = collect_scan(
+        engine, VisibilityContext{.snapshot = later_reader.snapshot, .current_tx = later_reader.id},
+        statuses);
+    ASSERT_TRUE(later_scan.has_value());
+    EXPECT_TRUE(later_scan->empty());
 }

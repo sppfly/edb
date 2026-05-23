@@ -29,6 +29,8 @@ struct Slot {
 [[nodiscard]] auto insert_tuple(std::span<std::byte> page, std::span<const std::byte> tuple)
     -> Result<u16>;
 [[nodiscard]] auto delete_tuple(std::span<std::byte> page, u16 slot_idx) -> VoidResult;
+[[nodiscard]] auto overwrite_tuple(std::span<std::byte> page, u16 slot_idx,
+                                   std::span<const std::byte> tuple) -> VoidResult;
 [[nodiscard]] auto read_tuple(std::span<const std::byte> page, u16 slot_idx)
     -> Result<std::vector<std::byte>>;
 [[nodiscard]] auto is_live_slot(std::span<const std::byte> page, u16 slot_idx) -> Result<b8>;

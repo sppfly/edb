@@ -6,9 +6,11 @@
 
 #include <optional>
 #include <span>
+#include <map>
 
 #include "storage/buffer/buffer_pool.hpp"
 #include "storage/engine/engine_ops.hpp"
+#include "transaction/visibility.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -18,12 +20,25 @@ class EdbHeapEngine final : public StorageEngineOps {
    public:
     EdbHeapEngine() = default;
 
+    using StorageEngineOps::begin_scan;
+    using StorageEngineOps::delete_tuple;
+    using StorageEngineOps::insert;
+    using StorageEngineOps::update_tuple;
+
     EdbHeapEngine(const EdbHeapEngine&) = delete;
     EdbHeapEngine& operator=(const EdbHeapEngine&) = delete;
     EdbHeapEngine(EdbHeapEngine&&) = delete;
     EdbHeapEngine& operator=(EdbHeapEngine&&) = delete;
 
     ~EdbHeapEngine() override = default;
+
+    [[nodiscard]] auto insert(const Transaction& tx, std::span<const std::byte> tuple)
+        -> Result<TupleId>;
+    [[nodiscard]] auto delete_tuple(const Transaction& tx, TupleId id) -> VoidResult;
+    [[nodiscard]] auto update_tuple(const Transaction& tx, TupleId id,
+                                    std::span<const std::byte> tuple) -> Result<TupleId>;
+    [[nodiscard]] auto begin_scan(const VisibilityContext& context,
+                                  const TransactionStatusReader& statuses) -> Result<ScanHandle>;
 
    private:
     auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
@@ -38,17 +53,31 @@ class EdbHeapEngine final : public StorageEngineOps {
     [[nodiscard]] auto page_size_impl() const -> usize override;
 
     [[nodiscard]] auto check_open() const -> VoidResult;
+    auto insert_encoded_tuple(std::span<const std::byte> tuple) -> Result<TupleId>;
     auto insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
         -> Result<std::optional<TupleId>>;
     auto insert_into_new_page(std::span<const std::byte> tuple) -> Result<TupleId>;
+    auto scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_id, u16 slot_idx)
+        -> Result<std::optional<Tuple>>;
+
+    [[nodiscard]] auto mark_deleted(TupleId id, TxId xmax) -> VoidResult;
+    [[nodiscard]] auto unpin_clean(FrameHandle& handle) -> VoidResult;
 
     [[nodiscard]] static auto encode_cursor(u64 page_id, u16 slot_idx) -> u64;
+    [[nodiscard]] static auto encode_cursor(u16 scan_id, u64 page_id, u16 slot_idx) -> u64;
+    [[nodiscard]] static auto cursor_scan_id(ScanHandle handle) -> u16;
     [[nodiscard]] static auto cursor_page_id(ScanHandle handle) -> u64;
     [[nodiscard]] static auto cursor_slot_idx(ScanHandle handle) -> u16;
 
     PageStore* page_store{nullptr};
     EngineConfig config{};
     BufferPool buffer_pool;
+    struct ScanContext {
+        VisibilityContext              context;
+        const TransactionStatusReader* statuses{nullptr};
+    };
+    std::map<u16, ScanContext> scan_contexts;
+    u16 next_scan_id{1};
     b8 opened{false};
 };
 

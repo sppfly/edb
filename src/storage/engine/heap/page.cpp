@@ -164,6 +164,28 @@ auto delete_tuple(std::span<std::byte> page, u16 slot_idx) -> VoidResult {
     return {};
 }
 
+auto overwrite_tuple(std::span<std::byte> page, u16 slot_idx, std::span<const std::byte> tuple)
+    -> VoidResult {
+    auto slot = read_slot(page, slot_idx);
+    if (!slot) {
+        return std::unexpected(slot.error());
+    }
+    if (slot->len == u16{0}) {
+        return std::unexpected(Error::NotFound);
+    }
+    if (slot->len.value != tuple.size()) {
+        return std::unexpected(Error::InvalidArgument);
+    }
+    if ((static_cast<std::size_t>(slot->offset.value) + static_cast<std::size_t>(slot->len.value)) >
+        page.size()) {
+        return std::unexpected(Error::Corruption);
+    }
+
+    auto dst = page.subspan(slot->offset.value, slot->len.value);
+    std::ranges::copy(tuple, dst.begin());
+    return {};
+}
+
 auto read_tuple(std::span<const std::byte> page, u16 slot_idx)
     -> Result<std::vector<std::byte>> {
     auto slot = read_slot(page, slot_idx);
