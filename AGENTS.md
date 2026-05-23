@@ -15,7 +15,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full phased plan with interface designs
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **0** | Project infrastructure (CMake, tooling, primitives, error, logging, gtest) | 🔲 |
+| **0** | Project infrastructure (CMake, tooling, primitives, error, logging, gtest) | ✅ |
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | 🔲 |
 | **2** | Storage engine — Heap (page format, buffer pool, `EdbStorageEngineOps`) | 🔲 |
 | **3** | Type system (`EdbTypeRegistry`, `EdbTypeOps`, built-in types) | 🔲 |
