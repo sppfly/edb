@@ -2,7 +2,7 @@
 
 > Status legend: 🔲 not started · 🔄 in progress · ✅ done
 >
-> **Current priority**: Phase 2. Goal: end-to-end write-tuple / scan-tuple through the full storage stack.
+> **Current priority**: Phase 3 → 4a. Goal: construct a developer-facing table object, insert typed rows, scan them back, and verify decoded values without SQL.
 >
 > Detailed per-phase plans live in [`docs/plan/`](plan/).
 
@@ -15,9 +15,9 @@
 | **0** | Project infrastructure (CMake, tooling, primitives, error, logging, gtest) | ✅ | [phase0.md](plan/phase0.md) |
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ | [phase1.md](plan/phase1.md) |
 | **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | ✅ | [phase2.md](plan/phase2.md) |
-| **3** | Type system (`EdbTypeRegistry`, `EdbTypeImpl`, built-in types) | 🔲 | [phase3.md](plan/phase3.md) |
-| **4** | Catalog (system tables, initdb bootstrap, catalog cache) | 🔲 | [phase4.md](plan/phase4.md) |
-| **5** | Query engine — basic (parser, analyzer, Volcano executor) | 🔲 | [phase5.md](plan/phase5.md) |
+| **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | 🔲 | [phase3.md](plan/phase3.md) |
+| **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache) | 🔲 | [phase4.md](plan/phase4.md) |
+| **5** | Query engine — basic SQL front-end over the table/catalog API | 🔲 | [phase5.md](plan/phase5.md) |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔲 | [phase6.md](plan/phase6.md) |
 | **7** | Network (PostgreSQL wire protocol v3, simple query mode) | 🔲 | [phase7.md](plan/phase7.md) |
 | **8** | xNVMe I/O backend + Disk Scheduler + POSIX vs xNVMe benchmark | 🔲 | [phase8.md](plan/phase8.md) |
@@ -74,11 +74,17 @@ Sub-phases: **2a** Page Store · **2b** `EdbStorageEngineOps` interface · **2c*
 
 → See [plan/phase3.md](plan/phase3.md) for full detail.
 
+Sub-phases: **3a** Type registry · **3b** Built-in types · **3c** Typed values and row encoding
+
 ---
 
-## Phase 4 — Catalog 🔲
+## Phase 4 — Table and Catalog Layer 🔲
 
 → See [plan/phase4.md](plan/phase4.md) for full detail.
+
+Sub-phases: **4a** Developer table API · **4b** System catalog persistence · **4c** initdb/bootstrap · **4d** Catalog cache and DDL API
+
+**Earliest table usability milestone**: Phase 4a. Developers can construct an `EdbTable` / `EdbRelation` in code, insert typed rows through the heap engine, scan them back, decode them through Phase 3 types, and verify values without SQL.
 
 ---
 

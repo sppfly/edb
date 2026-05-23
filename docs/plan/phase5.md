@@ -1,6 +1,8 @@
 # Phase 5 — Basic Query Engine 🔲
 
-Parse SQL, bind to catalog, execute via Volcano iterator model.
+Parse SQL, bind to the Phase 4 table/catalog API, and execute via Volcano iterator model.
+
+By Phase 5, table usability already exists for developers through Phase 4a. Phase 5 turns that internal API into user-facing SQL: `CREATE TABLE`, `INSERT`, and `SELECT` should call the same table/relation layer instead of duplicating storage logic.
 
 ## Pipeline
 
@@ -35,16 +37,16 @@ struct EdbExecNode {
 
 | Node | Function |
 |---|---|
-| `SeqScan` | Iterate all tuples in a relation via `EdbStorageEngineOps::scan_next` |
+| `SeqScan` | Iterate rows via `EdbTable` / `EdbRelation`, which delegates to `EdbStorageEngineOps::scan_next` |
 | `Filter` | Evaluate predicate, pass matching tuples downstream |
 | `Project` | Evaluate expression list, emit result tuples |
-| `Insert` | Write tuples via `EdbStorageEngineOps::insert` |
-| `Update` | Delete old tuple + insert new via engine |
-| `Delete` | Mark tuples dead via `EdbStorageEngineOps::delete_` |
+| `Insert` | Encode rows through the table schema and write via `EdbTable::insert` |
+| `Update` | Rewrite rows through the table API, which delegates to the storage engine |
+| `Delete` | Mark rows dead through the table API, which delegates to `EdbStorageEngineOps::delete_tuple` |
 
 ## Deliverables
 
 - [ ] Lexer + recursive-descent parser (SELECT / INSERT / UPDATE / DELETE / CREATE TABLE)
 - [ ] Analyzer: resolve table/column names via catalog, type-check expressions
 - [ ] `SeqScan`, `Filter`, `Project`, DML nodes
-- [ ] Integration test: CREATE TABLE → INSERT → SELECT → verify
+- [ ] Integration test: SQL `CREATE TABLE` → `INSERT` → `SELECT` → verify through the Phase 4 table API

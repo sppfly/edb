@@ -2,6 +2,8 @@
 
 Extensible type registry modelled after PostgreSQL's `pg_type`. Types can be built-in or loaded at runtime from extensions.
 
+Phase 3 also provides the typed value and row-encoding primitives needed by Phase 4a so developers can construct a table-like object in code, insert typed rows, scan heap tuples, and decode them back into values before the SQL layer exists.
+
 ## Interface: `EdbTypeOps` (`src/types/type_ops.hpp`)
 
 ```cpp
@@ -52,8 +54,55 @@ public:
 | `bool` | `b8` | 1 |
 | `text` | `std::string` | variable |
 
+## Typed Values and Row Encoding
+
+Phase 2 stores raw tuple bytes. Phase 3 defines how typed values become those bytes.
+
+```cpp
+struct EdbValue {
+    u32 type_oid;
+    std::vector<std::byte> bytes;
+};
+
+struct EdbColumnSchema {
+    std::string name;
+    u32 type_oid;
+    b8 nullable;
+};
+
+class EdbRowCodec {
+public:
+    auto encode(std::span<const EdbValue> values) const -> EdbResult<std::vector<std::byte>>;
+    auto decode(std::span<const std::byte> tuple) const -> EdbResult<std::vector<EdbValue>>;
+};
+```
+
+The row codec is schema-driven but catalog-independent: Phase 4a can build an `EdbTable` from an in-memory schema first, then Phase 4b/4c can persist and bootstrap those schemas through system catalog tables.
+
+## Sub-phases
+
+### Phase 3a — Type Registry
+
+- Define `EdbTypeImpl`, `EdbType`, and `EdbTypeRegistry`
+- Assign stable OIDs for built-in types
+- Support lookup by name and OID
+
+### Phase 3b — Built-in Types
+
+- Implement `int32`, `int64`, `float64`, `bool`, and `text`
+- Test parse/format round-trip, compare ordering, and hash consistency
+
+### Phase 3c — Typed Values and Row Encoding
+
+- Define `EdbValue`, `EdbColumnSchema`, and `EdbRowCodec`
+- Encode fixed-width and variable-width values into heap tuple bytes
+- Decode heap tuple bytes back into typed values
+- Unit test row round-trips for mixed fixed/variable schemas
+
 ## Deliverables
 
 - [ ] `EdbTypeImpl` concept + `EdbType` struct
 - [ ] `EdbTypeRegistry` with OID assignment
 - [ ] All 5 built-in types with unit tests (from_text/to_text round-trip, compare ordering, hash consistency)
+- [ ] `EdbValue` and schema-driven `EdbRowCodec`
+- [ ] Unit tests for encode/decode round-trips over mixed schemas
