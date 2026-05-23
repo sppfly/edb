@@ -1,5 +1,6 @@
 add_library(edb_transaction STATIC
   transaction_manager.cpp
+  visibility.cpp
 )
 
 target_include_directories(edb_transaction PUBLIC

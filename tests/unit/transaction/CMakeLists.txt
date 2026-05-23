@@ -1,5 +1,6 @@
 add_executable(test_transaction
   transaction_manager_test.cpp
+  visibility_test.cpp
 )
 
 target_link_libraries(test_transaction
