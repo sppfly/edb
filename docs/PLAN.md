@@ -2,7 +2,7 @@
 
 > Status legend: 🔲 not started · 🔄 in progress · ✅ done
 >
-> **Current priority**: Phase 4e + Phase 6 hardening → Phase 7a. Goal: decouple catalog table storage from the heap engine, then turn the current autocommit transaction slice into a durable, session-scoped database context before adding a REPL or async I/O work.
+> **Current priority**: Phase 6 hardening → Phase 7a. Goal: turn the current autocommit transaction slice into a durable, session-scoped database context before adding a REPL or async I/O work.
 >
 > Detailed per-phase plans live in [`docs/plan/`](plan/).
 
@@ -16,7 +16,7 @@
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ | [phase1.md](plan/phase1.md) |
 | **2** | Storage layer (Page Store → Engine interface → Buffer Pool → Heap Engine) | ✅ | [phase2.md](plan/phase2.md) |
 | **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | ✅ | [phase3.md](plan/phase3.md) |
-| **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache, engine factory boundary) | 🔄 | [phase4.md](plan/phase4.md) |
+| **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache, engine factory boundary) | ✅ | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic SQL front-end over the table/catalog API | ✅ | [phase5.md](plan/phase5.md) |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔄 | [phase6.md](plan/phase6.md) |
 | **7** | Embedded database/session API + local REPL; optional network later | 🔲 | [phase7.md](plan/phase7.md) |
@@ -29,13 +29,12 @@
 
 The plan tracks two different things: completed vertical slices and full production-grade phase closure. Phase 5 has reached its minimum success criterion: SQL `CREATE TABLE`, `INSERT`, and `SELECT` flow through parser, binder, logical plan, physical plan, executor, catalog, table, row codec, heap engine, buffer pool, page store, and storage I/O.
 
-Phase 4 is functionally usable but not architecturally closed. The catalog currently owns `EdbHeapEngine` directly inside its opened-table bundle, so catalog metadata and user table opening are still hardwired to the heap engine. Phase 4 remains in progress until catalog opens table storage through a storage-engine factory or equivalent relation storage boundary.
+Phase 4 is now architecturally closed as well as functionally usable. Catalog relation opening now goes through a `StorageEngineFactory`, while heap remains the default policy via `HeapStorageEngineFactory`. Catalog no longer owns `EdbHeapEngine` directly inside its opened-table bundle, so alternate storage engines can plug into the same relation-opening path without changing catalog code.
 
 Phase 6 is in progress, not fully complete. EDB now has transaction IDs, snapshots, MVCC tuple visibility, transaction-aware heap scans/inserts/deletes/updates, autocommit wrapping in `QueryEngine::execute()`, a lock manager with deadlock detection, and WAL/recovery primitives. The remaining Phase 6 work is to connect WAL to the normal SQL commit path, introduce explicit database/session transaction ownership, expose SQL update/delete and later explicit transaction statements, and add cleanup for obsolete MVCC versions.
 
-Near-term priorities:
+Updated near-term priorities:
 
-- finish Phase 4e: replace catalog's direct `EdbHeapEngine` ownership with an engine factory / relation storage boundary
 - finish the Phase 6 durability path: heap WAL append, commit record, flush rule, and recovery through the normal execution path
 - introduce a `Database` / `Session` context that owns transaction, lock, WAL, catalog, and storage state explicitly
 - keep the existing single-statement autocommit API as a compatibility path over the session API
@@ -129,11 +128,11 @@ Sub-phases: **3a** Type registry · **3b** Built-in types · **3c** Typed values
 
 ---
 
-## Phase 4 — Table and Catalog Layer 🔄
+## Phase 4 — Table and Catalog Layer ✅
 
 → See [plan/phase4.md](plan/phase4.md) for full detail.
 
-Sub-phases: **4a** Developer table API ✅ · **4b** System catalog persistence ✅ · **4c** initdb/bootstrap ✅ · **4d** Catalog cache and DDL API ✅ · **4e** Storage engine factory boundary 🔲
+Sub-phases: **4a** Developer table API ✅ · **4b** System catalog persistence ✅ · **4c** initdb/bootstrap ✅ · **4d** Catalog cache and DDL API ✅ · **4e** Storage engine factory boundary ✅
 
 **Earliest table usability milestone**: Phase 4a. Developers can construct an `EdbTable` / `EdbRelation` in code, insert typed rows through the heap engine, scan them back, decode them through Phase 3 types, and verify values without SQL.
 

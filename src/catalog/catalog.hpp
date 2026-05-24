@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "catalog/table.hpp"
-#include "storage/engine/heap/heap_engine.hpp"
+#include "storage/engine/engine_factory.hpp"
 #include "storage/io/io_ops.hpp"
 #include "storage/page/page_store.hpp"
 #include "types/registry.hpp"
@@ -62,6 +62,8 @@ class Catalog {
    public:
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
             const EngineConfig& engine_config);
+    Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
+        StorageEngineFactory& engine_factory, const EngineConfig& engine_config);
 
     Catalog(const Catalog&) = delete;
     Catalog& operator=(const Catalog&) = delete;
@@ -85,11 +87,12 @@ class Catalog {
     struct OpenedTableBundle {
         std::unique_ptr<StorageIOOps> backend;
         PageStore page_store;
-        EdbHeapEngine engine;
+        std::unique_ptr<StorageEngineOps> engine;
         std::unique_ptr<Table> table;
 
-        auto open(const TypeRegistry& registry, RelationBackendFactory& factory,
-                  const TableSchema& schema, const EngineConfig& engine_config) -> VoidResult;
+        auto open(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
+                  StorageEngineFactory& engine_factory, const TableSchema& schema,
+                  const EngineConfig& engine_config) -> VoidResult;
         auto close() -> VoidResult;
     };
 
@@ -123,6 +126,8 @@ class Catalog {
 
     const TypeRegistry* types{nullptr};
     RelationBackendFactory* backends{nullptr};
+    std::unique_ptr<StorageEngineFactory> owned_engines;
+    StorageEngineFactory* engines{nullptr};
     EngineConfig config{};
     b8 opened{false};
     mutable std::recursive_mutex latch;

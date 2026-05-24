@@ -1,6 +1,7 @@
 # src/storage/engine — Pluggable storage engine interface
 
 add_library(edb_engine STATIC
+    engine_factory.cpp
     engine_ops.cpp
     heap/page.cpp
     heap/heap_engine.cpp

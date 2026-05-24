@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "storage/engine/heap/heap_engine.hpp"
 #include "types/builtin_types.hpp"
 
 using namespace edb;
@@ -74,6 +75,29 @@ class MemoryRelationBackendFactory final : public RelationBackendFactory {
 
    private:
     std::unordered_map<u32, std::shared_ptr<std::vector<std::byte>>> relations;
+};
+
+class TrackingEngineFactory final : public StorageEngineFactory {
+   public:
+    struct OpenCall {
+        u32 relation_oid;
+        std::string relation_name;
+    };
+
+    [[nodiscard]] auto open_engine(u32 relation_oid, std::string_view relation_name,
+                                   PageStore& page_store, const EngineConfig& config)
+        -> Result<std::unique_ptr<StorageEngineOps>> override {
+        open_calls.push_back(OpenCall{.relation_oid = relation_oid,
+                                      .relation_name = std::string{relation_name}});
+
+        auto engine = std::make_unique<EdbHeapEngine>();
+        if (auto status = engine->open(page_store, config); !status) {
+            return std::unexpected(status.error());
+        }
+        return std::unique_ptr<StorageEngineOps>{std::move(engine)};
+    }
+
+    std::vector<OpenCall> open_calls;
 };
 
 auto make_row(TypeRegistry& registry, const Type& int_type, std::string_view int_text,
@@ -210,4 +234,24 @@ TEST_F(EdbCatalogTest, DropTableRemovesMetadataAndHandleLookup) {
     ASSERT_FALSE(table.has_value());
     EXPECT_EQ(klass.error(), Error::NotFound);
     EXPECT_EQ(table.error(), Error::NotFound);
+}
+
+TEST_F(EdbCatalogTest, CatalogOpensRelationsThroughInjectedEngineFactory) {
+    TrackingEngineFactory engine_factory;
+    Catalog catalog{registry, factory, engine_factory, default_engine_config()};
+    ASSERT_TRUE(catalog.open().has_value());
+    ASSERT_EQ(engine_factory.open_calls.size(), std::size_t{4});
+
+    const auto int_type = registry.lookup("int32");
+    ASSERT_TRUE(int_type.has_value());
+    auto created = catalog.create_table(CreateTableSpec{
+        .name = "factory_users",
+        .columns = {{.name = "id", .type_oid = (*int_type)->oid, .nullable = b8{false}}}});
+    ASSERT_TRUE(created.has_value());
+
+    auto table = catalog.open_table("factory_users");
+    ASSERT_TRUE(table.has_value());
+    ASSERT_EQ(engine_factory.open_calls.size(), std::size_t{5});
+    EXPECT_EQ(engine_factory.open_calls.back().relation_oid.value, created->value);
+    EXPECT_EQ(engine_factory.open_calls.back().relation_name, std::string{"factory_users"});
 }

@@ -19,14 +19,14 @@ See [docs/PLAN.md](docs/PLAN.md) for the full phased plan with interface designs
 | **1** | Storage I/O backend (`EdbStorageIOOps`, POSIX backend) | ✅ |
 | **2** | Storage layer — Page Store, Buffer Pool, Heap Engine | ✅ |
 | **3** | Type system + typed value encoding | ✅ |
-| **4** | Table/catalog layer (system tables, bootstrap, cache, engine factory boundary) | 🔄 |
+| **4** | Table/catalog layer (system tables, bootstrap, cache, engine factory boundary) | ✅ |
 | **5** | Query engine — basic SQL front-end and reference executor | ✅ |
 | **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔄 |
 | **7** | Embedded session API + local REPL; network optional later | 🔲 |
 | **8** | Async I/O foundation + io_uring/xNVMe + Disk Scheduler | 🔲 |
 | **9** | Distributed — Raft, partitioning, 2PC (future) | 🔲 |
 
-**Current priority**: Phase 4e + Phase 6 hardening → Phase 7a. Goal: decouple catalog from direct heap-engine ownership, connect WAL to the normal SQL commit path, and introduce explicit database/session ownership before adding REPL, network, or async I/O work.
+**Current priority**: Phase 6 hardening → Phase 7a. Goal: connect WAL to the normal SQL commit path and introduce explicit database/session ownership before adding REPL, network, or async I/O work.
 
 Status legend: 🔲 not started · 🔄 in progress · ✅ done
 

@@ -1,4 +1,4 @@
-# Phase 4 — Table and Catalog Layer 🔄
+# Phase 4 — Table and Catalog Layer ✅
 
 Developer-facing table/relation abstraction plus system tables that describe database objects. The catalog is initially stored using the heap engine from Phase 2.
 
@@ -6,11 +6,9 @@ The first goal is not SQL. The first goal is a code-level table usability milest
 
 ## Current Status
 
-Phase 4 is functionally usable but not architecturally complete. The table API, system catalog tables, bootstrap path, catalog cache, and DDL API exist and are used by the SQL path. However, `Catalog::OpenedTableBundle` currently owns `EdbHeapEngine` directly, which hardwires heap storage into the catalog layer.
+Phase 4 is now complete. The table API, system catalog tables, bootstrap path, catalog cache, DDL API, and storage-engine factory boundary all exist and are exercised by the SQL path. Catalog relation opening now goes through `StorageEngineFactory`, with heap selected by the default `HeapStorageEngineFactory` policy instead of being hardwired into `Catalog::OpenedTableBundle`.
 
-That coupling violates the long-term storage-engine extensibility goal. Phase 4 remains open until catalog table opening goes through a storage-engine factory or equivalent relation storage boundary. Heap can remain the default engine, but catalog should not need to include or name `EdbHeapEngine` directly.
-
-See [phase4_catalog_storage_boundary.md](phase4_catalog_storage_boundary.md) for the current design discussion summary and the intended Phase 4e direction.
+See [phase4_catalog_storage_boundary.md](phase4_catalog_storage_boundary.md) for the implemented Phase 4e boundary summary.
 
 ## Phase 4a — Developer Table API ✅
 
@@ -81,11 +79,11 @@ public:
 - **Cache**: hash map keyed by OID + name; invalidated on any DDL
 - **DDL**: `create_table` persists metadata and returns a table/relation handle usable by Phase 5
 
-## Phase 4e — Storage Engine Factory Boundary 🔲
+## Phase 4e — Storage Engine Factory Boundary ✅
 
 Decouple catalog from concrete storage engine classes.
 
-Current problem:
+Previous problem:
 
 ```cpp
 struct OpenedTableBundle {
@@ -96,17 +94,16 @@ struct OpenedTableBundle {
 };
 ```
 
-This makes heap storage a catalog implementation detail and prevents future relation storage choices such as heap, columnar, PAX, vector-aware, or full-text-aware engines from plugging in through the same catalog path.
+That made heap storage a catalog implementation detail and prevented future relation storage choices such as heap, columnar, PAX, vector-aware, or full-text-aware engines from plugging in through the same catalog path.
 
-Target shape:
+Implemented shape:
 
-- catalog stores relation metadata and storage-engine choice, not concrete engine objects
-- a `StorageEngineFactory` or relation storage factory creates `StorageEngineOps` instances
-- heap remains the default engine for system tables and user tables
+- catalog stores relation metadata and delegates engine selection to `StorageEngineFactory`
+- `HeapStorageEngineFactory` remains the default engine policy for system tables and user tables
 - `Catalog` depends on `StorageEngineOps`, `PageStore`, and factories, not on `EdbHeapEngine`
-- tests can open catalog/user tables through a fake or alternate engine factory without changing catalog code
+- tests can open catalog and user tables through an injected engine factory without changing catalog code
 
-This boundary should be introduced before adding more storage engines, before Phase 8 async storage work, and before Phase 9 distributed placement metadata relies on relation storage choices.
+This boundary is now in place before adding more storage engines, before Phase 8 async storage work, and before Phase 9 distributed placement metadata relies on relation storage choices.
 
 ## Deliverables
 
@@ -116,6 +113,6 @@ This boundary should be introduced before adding more storage engines, before Ph
 - [x] `initdb` bootstrap sequence
 - [x] `EdbCatalog` read/write API with cache
 - [x] Unit tests for bootstrap + DDL round-trips
-- [ ] Storage-engine factory / relation storage boundary
-- [ ] Remove direct `EdbHeapEngine` ownership from `Catalog::OpenedTableBundle`
-- [ ] Catalog tests that prove heap is selected through the factory rather than hardcoded
+- [x] Storage-engine factory / relation storage boundary
+- [x] Remove direct `EdbHeapEngine` ownership from `Catalog::OpenedTableBundle`
+- [x] Catalog tests that prove heap is selected through the factory rather than hardcoded

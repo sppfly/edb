@@ -43,12 +43,25 @@ auto compare_attnum(const CatalogAttribute& lhs, const CatalogAttribute& rhs) ->
 
 Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
                  const EngineConfig& engine_config)
-    : types{&registry}, backends{&backend_factory}, config{engine_config} {}
+    : types{&registry},
+      backends{&backend_factory},
+      owned_engines{std::make_unique<HeapStorageEngineFactory>()},
+      engines{owned_engines.get()},
+      config{engine_config} {}
 
-auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry, RelationBackendFactory& factory,
-                                      const TableSchema& schema, const EngineConfig& engine_config)
-    -> VoidResult {
-    auto opened_backend = factory.open_backend(schema.relation_oid, schema.name);
+Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
+                 StorageEngineFactory& engine_factory, const EngineConfig& engine_config)
+    : types{&registry},
+      backends{&backend_factory},
+      engines{&engine_factory},
+      config{engine_config} {}
+
+auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry,
+                                      RelationBackendFactory& backend_factory,
+                                      StorageEngineFactory& engine_factory,
+                                      const TableSchema& schema,
+                                      const EngineConfig& engine_config) -> VoidResult {
+    auto opened_backend = backend_factory.open_backend(schema.relation_oid, schema.name);
     if (!opened_backend) {
         return std::unexpected(opened_backend.error());
     }
@@ -61,25 +74,30 @@ auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry, RelationBack
         return page_status;
     }
 
-    auto engine_status = engine.open(page_store, engine_config);
-    if (!engine_status) {
+    auto opened_engine =
+        engine_factory.open_engine(schema.relation_oid, schema.name, page_store, engine_config);
+    if (!opened_engine) {
         if (auto page_status = page_store.close(); !page_status) {
             return page_status;
         }
         backend.reset();
-        return engine_status;
+        return std::unexpected(opened_engine.error());
     }
 
-    table = std::make_unique<Table>(registry, engine, schema);
+    engine = std::move(*opened_engine);
+    table = std::make_unique<Table>(registry, *engine, schema);
     return {};
 }
 
 auto Catalog::OpenedTableBundle::close() -> VoidResult {
     table.reset();
 
-    auto engine_status = engine.close();
-    if (!engine_status) {
-        return engine_status;
+    if (engine != nullptr) {
+        auto engine_status = engine->close();
+        if (!engine_status) {
+            return engine_status;
+        }
+        engine.reset();
     }
     auto page_status = page_store.close();
     if (!page_status) {
@@ -179,16 +197,20 @@ auto Catalog::open_system_tables() -> VoidResult {
                     {.name = "indrelid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "am_name", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
 
-    if (auto status = type_table.open(*types, *backends, type_schema, config); !status) {
+    if (auto status = type_table.open(*types, *backends, *engines, type_schema, config);
+        !status) {
         return status;
     }
-    if (auto status = class_table.open(*types, *backends, class_schema, config); !status) {
+    if (auto status = class_table.open(*types, *backends, *engines, class_schema, config);
+        !status) {
         return status;
     }
-    if (auto status = attribute_table.open(*types, *backends, attribute_schema, config); !status) {
+    if (auto status =
+            attribute_table.open(*types, *backends, *engines, attribute_schema, config);
+        !status) {
         return status;
     }
-    return index_table.open(*types, *backends, index_schema, config);
+    return index_table.open(*types, *backends, *engines, index_schema, config);
 }
 
 auto Catalog::bootstrap_if_needed() -> VoidResult {
@@ -667,12 +689,12 @@ auto Catalog::drop_table(u32 class_oid) -> VoidResult {
     }
 
     for (const auto& row : *attribute_rows) {
-        auto status = attribute_table.engine.delete_tuple(row.id);
+        auto status = attribute_table.engine->delete_tuple(row.id);
         if (!status) {
             return status;
         }
     }
-    auto class_status = class_table.engine.delete_tuple((**class_row).id);
+    auto class_status = class_table.engine->delete_tuple((**class_row).id);
     if (!class_status) {
         return class_status;
     }
@@ -712,7 +734,7 @@ auto Catalog::ensure_user_table_open(u32 relation_oid, std::string_view relation
     }
 
     auto bundle = std::make_unique<OpenedTableBundle>();
-    auto status = bundle->open(*types, *backends, schema, config);
+    auto status = bundle->open(*types, *backends, *engines, schema, config);
     if (!status) {
         return std::unexpected(status.error());
     }

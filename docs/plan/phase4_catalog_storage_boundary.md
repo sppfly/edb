@@ -1,6 +1,6 @@
 # Phase 4 Catalog / Storage Boundary Notes
 
-This note summarizes the current discussion around `Catalog`, `Table`, `StorageEngineOps`, `BufferPool`, and `PageStore`. It is intended to be updated as the Phase 4e design evolves.
+This note summarizes the Phase 4e design and the boundary now implemented around `Catalog`, `Table`, `StorageEngineOps`, `BufferPool`, and `PageStore`.
 
 ## Current Layering
 
@@ -45,11 +45,11 @@ This does not mean every future storage engine must use `BufferPool` in the same
 
 So `Catalog` is not just “a bunch of system tables”. It is the API layer over those tables and the component that translates metadata into a runtime relation handle.
 
-## The Current Coupling Problem
+## The Coupling Problem Phase 4e Closed
 
 The coupling issue is not that system tables currently use heap storage. That is a reasonable default.
 
-The real issue is that `Catalog` directly names and owns `EdbHeapEngine` in `OpenedTableBundle`:
+The real issue was that `Catalog` directly named and owned `EdbHeapEngine` in `OpenedTableBundle`:
 
 ```cpp
 struct OpenedTableBundle {
@@ -65,7 +65,7 @@ This has two effects:
 1. `Catalog` is directly coupled to one concrete engine class.
 2. The same bundle shape is used for both system tables and user tables, so user-table opening is also hardwired to heap today.
 
-That is why Phase 4 is still open even though system tables being OLTP-style heap relations is acceptable.
+That is why Phase 4 remained open even though system tables being OLTP-style heap relations was acceptable.
 
 ## What Is Not A Problem
 
@@ -77,11 +77,11 @@ These statements are compatible with the intended design:
 
 The architectural issue is specifically where the heap choice is expressed.
 
-## What Should Change In Phase 4e
+## What Changed In Phase 4e
 
-The heap decision should move out of `Catalog`'s concrete member types and into a storage factory boundary.
+The heap decision moved out of `Catalog`'s concrete member types and into a storage factory boundary.
 
-Target direction:
+Implemented direction:
 
 - `Catalog` depends on `StorageEngineOps` and a factory, not directly on `EdbHeapEngine`
 - the factory chooses heap for system tables by policy
@@ -99,11 +99,12 @@ public:
 };
 ```
 
-Then:
+With the implemented boundary:
 
 - `RelationBackendFactory` chooses the byte-level backend
 - `StorageEngineFactory` chooses the tuple-level engine
 - `Catalog` composes the two without naming a specific engine type
+- `HeapStorageEngineFactory` provides the default policy when no alternate engine factory is injected
 
 ## Why This Matters
 
@@ -124,5 +125,5 @@ With this boundary:
 
 - `Catalog` is more than system-table maintenance; it is the metadata API and relation opener.
 - The problem is not “system tables use heap”.
-- The problem is “Catalog directly owns `EdbHeapEngine`, and therefore all relation opening is currently heap-specific”.
-- Phase 4e should introduce a storage-engine factory boundary while preserving heap as the default policy.
+- The problem was “Catalog directly owns `EdbHeapEngine`, and therefore all relation opening is currently heap-specific”.
+- Phase 4e now introduces a storage-engine factory boundary while preserving heap as the default policy.
