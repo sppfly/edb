@@ -1,4 +1,4 @@
-# Phase 3 — Type System 🔲
+# Phase 3 — Type System ✅
 
 Extensible type registry modelled after PostgreSQL's `pg_type`. Types can be built-in or loaded at runtime from extensions.
 
@@ -102,8 +102,8 @@ The row codec is schema-driven but catalog-independent: Phase 4a can build an `E
 
 ## Deliverables
 
-- [ ] `EdbTypeImpl` concept + `EdbType` struct
-- [ ] `EdbTypeRegistry` with OID assignment
-- [ ] All 5 built-in types with unit tests (from_text/to_text round-trip, compare ordering, hash consistency)
-- [ ] `EdbValue` and schema-driven `EdbRowCodec`
-- [ ] Unit tests for encode/decode round-trips over mixed schemas
+- [x] `EdbTypeImpl` concept + `EdbType` struct
+- [x] `EdbTypeRegistry` with OID assignment
+- [x] All 5 built-in types with unit tests (from_text/to_text round-trip, compare ordering, hash consistency)
+- [x] `EdbValue` and schema-driven `EdbRowCodec`
+- [x] Unit tests for encode/decode round-trips over mixed schemas

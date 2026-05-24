@@ -1,4 +1,4 @@
-# Phase 5 — Query Engine Foundation 🔲
+# Phase 5 — Query Engine Foundation ✅
 
 Phase 5 should not try to finish the entire query engine in one step. The right goal is to define the stable skeleton that later executors can plug into, then implement the smallest reference path that proves end-to-end SQL usability.
 
@@ -11,6 +11,17 @@ By Phase 5, table usability already exists for developers through Phase 4. Phase
 - Preserve room for later execution backends: Volcano, vectorized, morsel-driven, and specialized scan/execution paths.
 - Preserve room for later access paths and physical algorithms: indexes, join algorithms, aggregation strategies, and scan variants.
 - Reuse the Phase 4 table/catalog API instead of duplicating storage logic in the query layer.
+
+## Current Status
+
+Phase 5 has reached its minimum success criterion. The repository has a layered SQL path for `CREATE TABLE`, `INSERT INTO ... VALUES`, and `SELECT ... FROM ...` with simple predicates. The path flows through lexer, parser, binder, logical plan, physical plan, reference executor, catalog/table APIs, row codec, and heap storage.
+
+Remaining Phase 5 work is hardening rather than proving first usability:
+
+- stabilize the physical execution boundary before adding a second backend
+- make result and expression representation easier to reuse for batches later
+- keep scan work splittable for future prefetch, morsel scheduling, and async I/O
+- defer the second execution backend until the session/transaction boundary is stable
 
 ## Stable Skeleton
 
@@ -115,7 +126,7 @@ Important future extension points include:
 
 ## Phase 5 Sub-Phases
 
-### 5a. SQL Frontend
+### 5a. SQL Frontend ✅
 
 Implement the smallest useful SQL syntax surface:
 
@@ -131,7 +142,7 @@ Deliverables:
 - AST definitions
 - parser tests
 
-### 5b. Binder
+### 5b. Binder ✅
 
 Resolve:
 
@@ -145,7 +156,7 @@ Deliverables:
 - bound statement / expression IR
 - binder tests for name resolution and type errors
 
-### 5c. Logical Plan
+### 5c. Logical Plan ✅
 
 Introduce a backend-neutral logical operator tree.
 
@@ -164,7 +175,7 @@ Deliverables:
 - lowering from bound statements to logical plan
 - tests for logical plan shape
 
-### 5d. Reference Physical Plan + Reference Executor
+### 5d. Reference Physical Plan + Reference Executor ✅
 
 Implement the simplest end-to-end path that is easy to reason about and validate.
 
@@ -204,7 +215,7 @@ Deliverables:
 - row-oriented reference executor
 - integration tests: SQL `CREATE TABLE` → `INSERT` → `SELECT`
 
-### 5e. Physical Execution Boundary Hardening
+### 5e. Physical Execution Boundary Hardening 🔲
 
 Before adding a second executor, solidify the shared physical boundary:
 
@@ -215,7 +226,7 @@ Before adding a second executor, solidify the shared physical boundary:
 
 This sub-phase may involve refactoring the reference executor without changing SQL behavior.
 
-### 5f. Second Backend
+### 5f. Second Backend 🔲
 
 Only after 5a through 5e are stable should a second backend be added.
 
@@ -257,7 +268,7 @@ Phase 5 is successful when the repository has both:
 
 Minimum end-to-end milestone:
 
-- SQL `CREATE TABLE`
-- SQL `INSERT`
-- SQL `SELECT`
-- all routed through the existing Phase 4 catalog/table path
+- [x] SQL `CREATE TABLE`
+- [x] SQL `INSERT`
+- [x] SQL `SELECT`
+- [x] all routed through the existing Phase 4 catalog/table path

@@ -9,6 +9,17 @@ The correct goal for this phase is:
 3. add a scheduler only once the system can actually benefit from queue depth
 4. keep xNVMe as a hardware-specific backend, not the only reason Phase 8 exists
 
+## Phase 8 Entry Criteria
+
+Phase 8 should wait until the local engine has enough stable behavior to measure. The entry criteria are:
+
+- a `Database` / `Session` boundary owns storage, WAL, transaction, and lock state explicitly
+- normal SQL commits use the WAL durability path rather than only WAL unit tests
+- at least one workload can naturally issue multiple useful page requests, such as scan prefetch, batched page fetch, background flush, or WAL/background sync
+- the benchmark harness can report queue depth, buffered/direct I/O mode, access pattern, latency, and throughput separately
+
+Without these, an async backend can be implemented but not evaluated honestly.
+
 ## Why This Phase Exists
 
 Synchronous POSIX I/O (`pread64`/`pwrite64`) delegates scheduling to the kernel. Replacing it with an async API only matters once EDB can issue more than one useful request at a time.
@@ -56,7 +67,9 @@ Examples:
 - buffer/page interfaces that can express multiple outstanding reads
 - queue-depth-aware benchmark harnesses
 
-This can be introduced before transactions and before any complex scheduler.
+This is the first Phase 8 task only after Phase 7a gives the storage/query stack a stable place to own request queues and benchmark state.
+
+The request abstractions can be sketched early, but implementation should wait until the storage/query stack has a real consumer for queue depth. It still comes before any complex scheduler.
 
 ### 8b. io_uring Backend
 
