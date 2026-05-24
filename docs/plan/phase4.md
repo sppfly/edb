@@ -10,6 +10,8 @@ Phase 4 is functionally usable but not architecturally complete. The table API, 
 
 That coupling violates the long-term storage-engine extensibility goal. Phase 4 remains open until catalog table opening goes through a storage-engine factory or equivalent relation storage boundary. Heap can remain the default engine, but catalog should not need to include or name `EdbHeapEngine` directly.
 
+See [phase4_catalog_storage_boundary.md](phase4_catalog_storage_boundary.md) for the current design discussion summary and the intended Phase 4e direction.
+
 ## Phase 4a — Developer Table API ✅
 
 `EdbTable` / `EdbRelation` wraps a schema, a relation identifier, and a storage engine handle. It is the first layer where a heap tuple becomes a logical table row.
