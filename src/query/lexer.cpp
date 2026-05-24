@@ -2,8 +2,8 @@
 
 #include "query/lexer.hpp"
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <string>
 #include <string_view>
@@ -20,31 +20,31 @@ constexpr auto to_lower(char c) noexcept -> char {
 // Flat keyword table — sorted for readability; linear scan is fine for ~20 entries.
 struct KwEntry {
     std::string_view word;
-    TokenKind        kind;
+    TokenKind kind;
 };
 
 constexpr std::array KEYWORDS = std::to_array<KwEntry>({
-    {.word = "and",     .kind = TokenKind::KwAnd},
-    {.word = "as",      .kind = TokenKind::KwAs},
-    {.word = "create",  .kind = TokenKind::KwCreate},
+    {.word = "and", .kind = TokenKind::KwAnd},
+    {.word = "as", .kind = TokenKind::KwAs},
+    {.word = "create", .kind = TokenKind::KwCreate},
     {.word = "default", .kind = TokenKind::KwDefault},
-    {.word = "exists",  .kind = TokenKind::KwExists},
-    {.word = "false",   .kind = TokenKind::KwFalse},
-    {.word = "from",    .kind = TokenKind::KwFrom},
-    {.word = "if",      .kind = TokenKind::KwIf},
-    {.word = "insert",  .kind = TokenKind::KwInsert},
-    {.word = "into",    .kind = TokenKind::KwInto},
-    {.word = "key",     .kind = TokenKind::KwKey},
-    {.word = "not",     .kind = TokenKind::KwNot},
-    {.word = "null",    .kind = TokenKind::KwNull},
-    {.word = "or",      .kind = TokenKind::KwOr},
+    {.word = "exists", .kind = TokenKind::KwExists},
+    {.word = "false", .kind = TokenKind::KwFalse},
+    {.word = "from", .kind = TokenKind::KwFrom},
+    {.word = "if", .kind = TokenKind::KwIf},
+    {.word = "insert", .kind = TokenKind::KwInsert},
+    {.word = "into", .kind = TokenKind::KwInto},
+    {.word = "key", .kind = TokenKind::KwKey},
+    {.word = "not", .kind = TokenKind::KwNot},
+    {.word = "null", .kind = TokenKind::KwNull},
+    {.word = "or", .kind = TokenKind::KwOr},
     {.word = "primary", .kind = TokenKind::KwPrimary},
-    {.word = "select",  .kind = TokenKind::KwSelect},
-    {.word = "table",   .kind = TokenKind::KwTable},
-    {.word = "true",    .kind = TokenKind::KwTrue},
-    {.word = "unique",  .kind = TokenKind::KwUnique},
-    {.word = "values",  .kind = TokenKind::KwValues},
-    {.word = "where",   .kind = TokenKind::KwWhere},
+    {.word = "select", .kind = TokenKind::KwSelect},
+    {.word = "table", .kind = TokenKind::KwTable},
+    {.word = "true", .kind = TokenKind::KwTrue},
+    {.word = "unique", .kind = TokenKind::KwUnique},
+    {.word = "values", .kind = TokenKind::KwValues},
+    {.word = "where", .kind = TokenKind::KwWhere},
 });
 
 auto match_keyword(std::string_view lower_text) noexcept -> TokenKind {
@@ -68,7 +68,8 @@ auto Lexer::cur_char() const noexcept -> char {
     if (at_end()) {
         return '\0';
     }
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — at_end() checked above
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — at_end()
+    // checked above
     return src[static_cast<std::size_t>(pos)];  // raw-primitive: operator[] takes size_t
 }
 
@@ -85,7 +86,7 @@ auto Lexer::advance() noexcept -> char {
 }
 
 auto Lexer::make_tok(TokenKind k, usize start, u32 tl, u32 tc) const noexcept -> Token {
-    auto off = static_cast<std::size_t>(start);         // raw-primitive: substr takes size_t
+    auto off = static_cast<std::size_t>(start);        // raw-primitive: substr takes size_t
     auto len = static_cast<std::size_t>(pos - start);  // raw-primitive: substr takes size_t
     return Token{.kind = k, .text = src.substr(off, len), .line = tl, .col = tc};
 }
@@ -115,7 +116,8 @@ auto Lexer::skip_whitespace_and_comments() -> void {
             advance();
         } else if (c == '-') {
             auto next_pos = static_cast<std::size_t>(pos) + 1U;  // raw-primitive: size_t arithmetic
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — bounds checked above
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) —
+            // bounds checked above
             if (next_pos < src.size() && src[next_pos] == '-') {
                 skip_line_comment();
             } else {
@@ -123,7 +125,8 @@ auto Lexer::skip_whitespace_and_comments() -> void {
             }
         } else if (c == '/') {
             auto next_pos = static_cast<std::size_t>(pos) + 1U;  // raw-primitive: size_t arithmetic
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — bounds checked above
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) —
+            // bounds checked above
             if (next_pos < src.size() && src[next_pos] == '*') {
                 skip_block_comment();
             } else {
@@ -145,7 +148,7 @@ auto Lexer::scan_ident_or_kw(usize start, u32 tok_line, u32 tok_col) -> Token {
             break;
         }
     }
-    auto off = static_cast<std::size_t>(start);         // raw-primitive
+    auto off = static_cast<std::size_t>(start);        // raw-primitive
     auto len = static_cast<std::size_t>(pos - start);  // raw-primitive
     std::string_view raw = src.substr(off, len);
 
@@ -173,7 +176,8 @@ auto Lexer::scan_number(usize start, u32 tok_line, u32 tok_col) -> Token {
         auto next_pos = static_cast<std::size_t>(pos) + 1U;  // raw-primitive
         // Ensure the dot is followed by a digit (not e.g. a range operator)
         if (next_pos < src.size() &&
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — bounds checked above
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) —
+            // bounds checked above
             static_cast<bool>(std::isdigit(static_cast<unsigned char>(src[next_pos])))) {
             is_float = true;
             advance();  // consume .
@@ -223,25 +227,41 @@ auto Lexer::scan_one() -> Token {
         return Token{.kind = TokenKind::Eof, .text = {}, .line = line, .col = col};
     }
 
-    usize start    = pos;
-    u32   tok_line = line;
-    u32   tok_col  = col;
-    char  c        = advance();
+    usize start = pos;
+    u32 tok_line = line;
+    u32 tok_col = col;
+    char c = advance();
 
     switch (c) {
-        case '(':  return make_tok(TokenKind::LParen,    start, tok_line, tok_col);
-        case ')':  return make_tok(TokenKind::RParen,    start, tok_line, tok_col);
-        case ',':  return make_tok(TokenKind::Comma,     start, tok_line, tok_col);
-        case ';':  return make_tok(TokenKind::Semicolon, start, tok_line, tok_col);
-        case '*':  return make_tok(TokenKind::Star,      start, tok_line, tok_col);
-        case '.':  return make_tok(TokenKind::Dot,       start, tok_line, tok_col);
-        case '=':  return make_tok(TokenKind::Eq,        start, tok_line, tok_col);
+        case '(':
+            return make_tok(TokenKind::LParen, start, tok_line, tok_col);
+        case ')':
+            return make_tok(TokenKind::RParen, start, tok_line, tok_col);
+        case ',':
+            return make_tok(TokenKind::Comma, start, tok_line, tok_col);
+        case ';':
+            return make_tok(TokenKind::Semicolon, start, tok_line, tok_col);
+        case '*':
+            return make_tok(TokenKind::Star, start, tok_line, tok_col);
+        case '.':
+            return make_tok(TokenKind::Dot, start, tok_line, tok_col);
+        case '=':
+            return make_tok(TokenKind::Eq, start, tok_line, tok_col);
         case '<':
-            if (!at_end() && cur_char() == '=') { advance(); return make_tok(TokenKind::Le,  start, tok_line, tok_col); }
-            if (!at_end() && cur_char() == '>') { advance(); return make_tok(TokenKind::Neq, start, tok_line, tok_col); }
+            if (!at_end() && cur_char() == '=') {
+                advance();
+                return make_tok(TokenKind::Le, start, tok_line, tok_col);
+            }
+            if (!at_end() && cur_char() == '>') {
+                advance();
+                return make_tok(TokenKind::Neq, start, tok_line, tok_col);
+            }
             return make_tok(TokenKind::Lt, start, tok_line, tok_col);
         case '>':
-            if (!at_end() && cur_char() == '=') { advance(); return make_tok(TokenKind::Ge, start, tok_line, tok_col); }
+            if (!at_end() && cur_char() == '=') {
+                advance();
+                return make_tok(TokenKind::Ge, start, tok_line, tok_col);
+            }
             return make_tok(TokenKind::Gt, start, tok_line, tok_col);
         case '\'':
             return scan_string(start, tok_line, tok_col);

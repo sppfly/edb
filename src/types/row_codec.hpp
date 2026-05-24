@@ -36,8 +36,7 @@ class RowCodec {
 
     [[nodiscard]] auto encode(std::span<const Value> values) const
         -> Result<std::vector<std::byte>>;
-    [[nodiscard]] auto decode(std::span<const std::byte> tuple) const
-        -> Result<std::vector<Value>>;
+    [[nodiscard]] auto decode(std::span<const std::byte> tuple) const -> Result<std::vector<Value>>;
 
     [[nodiscard]] auto columns() const -> std::span<const ColumnSchema>;
 

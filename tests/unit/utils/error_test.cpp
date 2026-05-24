@@ -84,7 +84,7 @@ TEST(EdbError, ErrorNameOkIsOk) {
 
 TEST(EdbError, ValueOr) {
     Result<int> bad{std::unexpected(Error::NotFound)};  // raw-primitive: gtest int
-    EXPECT_EQ(bad.value_or(-1), -1);                          // raw-primitive: gtest int
+    EXPECT_EQ(bad.value_or(-1), -1);                    // raw-primitive: gtest int
 }
 
 TEST(EdbError, AndThenChaining) {

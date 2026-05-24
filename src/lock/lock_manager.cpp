@@ -20,7 +20,8 @@ auto LockTag::operator<=>(const LockTag& other) const noexcept {
 
 auto LockTag::operator==(const LockTag& other) const noexcept -> bool {
     return kind == other.kind && relation_oid == other.relation_oid &&
-           tuple_id.page_id == other.tuple_id.page_id && tuple_id.slot_idx == other.tuple_id.slot_idx;
+           tuple_id.page_id == other.tuple_id.page_id &&
+           tuple_id.slot_idx == other.tuple_id.slot_idx;
 }
 
 auto LockManager::acquire(TxId tx_id, LockTag tag, LockMode mode) -> VoidResult {

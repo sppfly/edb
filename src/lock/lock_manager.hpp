@@ -27,8 +27,8 @@ enum class LockMode : std::uint8_t {
 
 struct LockTag {
     LockTagKind kind{LockTagKind::Relation};
-    u32         relation_oid{0};
-    TupleId     tuple_id{.page_id = u64{0}, .slot_idx = u16{0}};
+    u32 relation_oid{0};
+    TupleId tuple_id{.page_id = u64{0}, .slot_idx = u16{0}};
 
     [[nodiscard]] auto operator<=>(const LockTag& other) const noexcept;
     [[nodiscard]] auto operator==(const LockTag& other) const noexcept -> bool;
@@ -42,7 +42,7 @@ class LockManager {
 
    private:
     struct GrantedLock {
-        TxId     tx_id{u64{0}};
+        TxId tx_id{u64{0}};
         LockMode mode{LockMode::Shared};
     };
 
@@ -60,8 +60,8 @@ class LockManager {
         -> std::set<TxId>;
     auto grant_or_upgrade(TxId tx_id, const LockTag& tag, LockMode mode) -> void;
     [[nodiscard]] auto has_cycle_from(TxId start) const -> b8;
-    [[nodiscard]] auto has_cycle_dfs(CycleSearch search, TxId current,
-                                     std::set<TxId>& seen) const -> b8;
+    [[nodiscard]] auto has_cycle_dfs(CycleSearch search, TxId current, std::set<TxId>& seen) const
+        -> b8;
     auto remove_wait_edges_for(TxId tx_id) -> void;
 
     mutable std::mutex latch;

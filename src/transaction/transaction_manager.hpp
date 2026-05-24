@@ -29,13 +29,13 @@ enum class TxStatus : std::uint8_t {  // raw-primitive: enum base type requires 
 };
 
 struct Snapshot {
-    TxId              xmin{u64{0}};
-    TxId              xmax{u64{0}};
+    TxId xmin{u64{0}};
+    TxId xmax{u64{0}};
     std::vector<TxId> active;
 };
 
 struct Transaction {
-    TxId     id{u64{0}};
+    TxId id{u64{0}};
     Snapshot snapshot;
 };
 
@@ -59,10 +59,10 @@ class TransactionManager {
     [[nodiscard]] auto snapshot_locked() const -> Snapshot;
     [[nodiscard]] auto finish_locked(TxId id, TxStatus final_status) -> VoidResult;
 
-    mutable std::mutex       latch;
-    TxId                     next_id{u64{1}};
+    mutable std::mutex latch;
+    TxId next_id{u64{1}};
     std::map<TxId, TxStatus> statuses;
-    std::set<TxId>           active;
+    std::set<TxId> active;
 };
 
 }  // namespace edb

@@ -42,8 +42,7 @@ auto append_u64(std::vector<std::byte>& bytes, u64 value) -> void {
     return u16{static_cast<std::uint16_t>(lo | static_cast<std::uint16_t>(hi << 8U))};
 }
 
-[[nodiscard]] auto read_u32(std::span<const std::byte> bytes, std::size_t offset)
-    -> std::uint32_t {
+[[nodiscard]] auto read_u32(std::span<const std::byte> bytes, std::size_t offset) -> std::uint32_t {
     auto value = std::uint32_t{0};
     for (std::size_t index = 0; index < std::size_t{4}; ++index) {
         const auto shift = static_cast<unsigned>(index * 8U);
@@ -64,7 +63,7 @@ auto append_u64(std::vector<std::byte>& bytes, u64 value) -> void {
 }
 
 struct HeapInsertPayload {
-    TupleId                id;
+    TupleId id;
     std::vector<std::byte> tuple;
 };
 

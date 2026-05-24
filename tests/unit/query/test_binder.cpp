@@ -1,7 +1,5 @@
 // tests/unit/query/test_binder.cpp
 
-#include "query/binder.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -14,6 +12,7 @@
 #include <vector>
 
 #include "catalog/catalog.hpp"
+#include "query/binder.hpp"
 #include "query/parser.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
@@ -111,11 +110,12 @@ class BinderTest : public ::testing::Test {
 
         auto created = catalog.create_table(CreateTableSpec{
             .name = "users",
-            .columns = {
-                {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
-                {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
-                {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
-            },
+            .columns =
+                {
+                    {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
+                    {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
+                    {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
+                },
         });
         EXPECT_TRUE(created.has_value());
         return *created;
@@ -128,8 +128,8 @@ class BinderTest : public ::testing::Test {
 };
 
 TEST_F(BinderTest, BindCreateTableResolvesBuiltinTypesAndNullability) {
-    auto stmt = parse_stmt(
-        "CREATE TABLE users (id INTEGER NOT NULL, name TEXT, nick VARCHAR(100) UNIQUE)");
+    auto stmt =
+        parse_stmt("CREATE TABLE users (id INTEGER NOT NULL, name TEXT, nick VARCHAR(100) UNIQUE)");
 
     Binder binder{catalog, registry};
     auto bound = binder.bind(stmt);

@@ -6,8 +6,7 @@
 
 namespace edb {
 
-Table::Table(const TypeRegistry& registry, StorageEngineOps& engine,
-                   TableSchema schema)
+Table::Table(const TypeRegistry& registry, StorageEngineOps& engine, TableSchema schema)
     : storage{&engine},
       table_schema{std::move(schema)},
       row_codec{registry, table_schema.columns} {}

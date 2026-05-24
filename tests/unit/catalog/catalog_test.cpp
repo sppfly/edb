@@ -85,10 +85,9 @@ auto make_row(TypeRegistry& registry, const Type& int_type, std::string_view int
     EXPECT_TRUE(first.has_value());
     EXPECT_TRUE(second.has_value());
     EXPECT_TRUE(third.has_value());
-    return std::vector<Value>{
-        {.type_oid = int_type.oid, .bytes = *first, .is_null = b8{false}},
-        {.type_oid = text_type.oid, .bytes = *second, .is_null = b8{false}},
-        {.type_oid = bool_type.oid, .bytes = *third, .is_null = b8{false}}};
+    return std::vector<Value>{{.type_oid = int_type.oid, .bytes = *first, .is_null = b8{false}},
+                              {.type_oid = text_type.oid, .bytes = *second, .is_null = b8{false}},
+                              {.type_oid = bool_type.oid, .bytes = *third, .is_null = b8{false}}};
 }
 
 auto row_value_text(TypeRegistry& registry, const Value& value) -> std::string {

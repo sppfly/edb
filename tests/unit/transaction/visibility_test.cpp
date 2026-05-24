@@ -51,8 +51,8 @@ TEST(Visibility, CommittedInsertBeforeSnapshotIsVisible) {
     statuses.set(TxId{u64{1}}, TxStatus::Committed);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{3}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{3}}), .current_tx = TxId{u64{2}}};
 
     EXPECT_TRUE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -72,8 +72,8 @@ TEST(Visibility, OwnInsertIsVisible) {
     FakeStatusReader statuses;
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{2}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{2}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{2}}), .current_tx = TxId{u64{2}}};
 
     EXPECT_TRUE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -83,8 +83,8 @@ TEST(Visibility, AbortedInsertIsInvisible) {
     statuses.set(TxId{u64{1}}, TxStatus::Aborted);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{3}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{3}}), .current_tx = TxId{u64{2}}};
 
     EXPECT_FALSE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -94,8 +94,8 @@ TEST(Visibility, InsertCommittedAfterSnapshotIsInvisible) {
     statuses.set(TxId{u64{5}}, TxStatus::Committed);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{5}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{4}}),
-                                           .current_tx = TxId{u64{3}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{4}}), .current_tx = TxId{u64{3}}};
 
     EXPECT_FALSE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -106,8 +106,8 @@ TEST(Visibility, CommittedDeleteBeforeSnapshotHidesTuple) {
     statuses.set(TxId{u64{2}}, TxStatus::Committed);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{2}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{4}}),
-                                           .current_tx = TxId{u64{3}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{4}}), .current_tx = TxId{u64{3}}};
 
     EXPECT_FALSE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -130,8 +130,8 @@ TEST(Visibility, AbortedDeleteKeepsTupleVisible) {
     statuses.set(TxId{u64{2}}, TxStatus::Aborted);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{2}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{4}}),
-                                           .current_tx = TxId{u64{3}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{4}}), .current_tx = TxId{u64{3}}};
 
     EXPECT_TRUE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -141,8 +141,8 @@ TEST(Visibility, OwnDeleteHidesTupleFromSelf) {
     statuses.set(TxId{u64{1}}, TxStatus::Committed);
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{2}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{2}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{2}}), .current_tx = TxId{u64{2}}};
 
     EXPECT_FALSE(static_cast<bool>(visible(tuple, context, statuses)));
 }
@@ -151,8 +151,8 @@ TEST(Visibility, MissingTransactionStatusPropagatesError) {
     FakeStatusReader statuses;
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{3}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{3}}), .current_tx = TxId{u64{2}}};
 
     auto result = Visibility::is_visible(tuple, context, statuses);
     ASSERT_FALSE(result.has_value());
@@ -163,8 +163,8 @@ TEST(Visibility, InvalidInsertingTransactionIsRejected) {
     FakeStatusReader statuses;
 
     const auto tuple = TupleHeader{.xmin = TxId{u64{0}}, .xmax = TxId{u64{0}}, .flags = u16{0}};
-    const auto context = VisibilityContext{.snapshot = snapshot(TxId{u64{3}}),
-                                           .current_tx = TxId{u64{2}}};
+    const auto context =
+        VisibilityContext{.snapshot = snapshot(TxId{u64{3}}), .current_tx = TxId{u64{2}}};
 
     auto result = Visibility::is_visible(tuple, context, statuses);
     ASSERT_FALSE(result.has_value());

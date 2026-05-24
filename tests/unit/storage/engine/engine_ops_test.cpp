@@ -72,7 +72,7 @@ class MockEngineOps : public StorageEngineOps {
         EXPECT_EQ(handle.value.value, u64{42}.value);
         handle.value = u64{43};
         return Tuple{.id = TupleId{.page_id = u64{1}, .slot_idx = u16{2}},
-                        .data = {std::byte{0xAA}, std::byte{0xBB}}};
+                     .data = {std::byte{0xAA}, std::byte{0xBB}}};
     }
 
     auto end_scan_impl(ScanHandle& handle) -> VoidResult override {

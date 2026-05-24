@@ -11,7 +11,9 @@ auto PhysicalPlanner::build(LogicalPlan plan) -> Result<PhysicalPlan> {
     return build_node(std::move(plan.node));
 }
 
-auto PhysicalPlanner::error_message() const noexcept -> std::string_view { return last_error; }
+auto PhysicalPlanner::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 auto PhysicalPlanner::build_node(LogicalPlan::Node node) -> Result<PhysicalPlan> {
     if (auto* create_stmt = std::get_if<LogicalCreateTable>(&node); create_stmt != nullptr) {
@@ -29,7 +31,8 @@ auto PhysicalPlanner::build_node(LogicalPlan::Node node) -> Result<PhysicalPlan>
             return std::unexpected(input.error());
         }
         return PhysicalPlan{
-            .node = PhysicalFilter{.input = std::move(*input), .predicate = std::move(filter->predicate)},
+            .node = PhysicalFilter{.input = std::move(*input),
+                                   .predicate = std::move(filter->predicate)},
         };
     }
     if (auto* project = std::get_if<LogicalProject>(&node); project != nullptr) {

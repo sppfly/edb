@@ -67,10 +67,9 @@ auto make_row(TypeRegistry& registry, const Type& first_type, std::string_view f
     EXPECT_TRUE(first.has_value());
     EXPECT_TRUE(second.has_value());
     EXPECT_TRUE(third.has_value());
-    return std::vector<Value>{
-        {.type_oid = first_type.oid, .bytes = *first, .is_null = b8{false}},
-        {.type_oid = second_type.oid, .bytes = *second, .is_null = b8{false}},
-        {.type_oid = third_type.oid, .bytes = *third, .is_null = b8{false}}};
+    return std::vector<Value>{{.type_oid = first_type.oid, .bytes = *first, .is_null = b8{false}},
+                              {.type_oid = second_type.oid, .bytes = *second, .is_null = b8{false}},
+                              {.type_oid = third_type.oid, .bytes = *third, .is_null = b8{false}}};
 }
 
 auto to_text(TypeRegistry& registry, const Value& value) -> std::string {
@@ -87,8 +86,8 @@ class EdbTableTest : public ::testing::Test {
         ASSERT_TRUE(register_builtin_types(registry).has_value());
         ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{512}}).has_value());
         ASSERT_TRUE(engine
-                        .open(page_store, EngineConfig{.page_size = usize{512},
-                                                          .buffer_pool_pages = usize{4}})
+                        .open(page_store,
+                              EngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}})
                         .has_value());
 
         const auto int_type = registry.lookup("int32");

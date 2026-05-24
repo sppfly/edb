@@ -1,7 +1,5 @@
 // tests/unit/query/test_logical_plan.cpp
 
-#include "query/logical_plan.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -14,6 +12,7 @@
 
 #include "catalog/catalog.hpp"
 #include "query/binder.hpp"
+#include "query/logical_plan.hpp"
 #include "query/parser.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
@@ -114,11 +113,12 @@ class LogicalPlanTest : public ::testing::Test {
 
         auto created = catalog.create_table(CreateTableSpec{
             .name = "users",
-            .columns = {
-                {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
-                {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
-                {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
-            },
+            .columns =
+                {
+                    {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
+                    {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
+                    {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
+                },
         });
         ASSERT_TRUE(created.has_value());
     }

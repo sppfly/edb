@@ -1,7 +1,5 @@
 // tests/unit/query/test_exec.cpp
 
-#include "query/exec.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -13,6 +11,7 @@
 
 #include "catalog/catalog.hpp"
 #include "query/binder.hpp"
+#include "query/exec.hpp"
 #include "query/logical_plan.hpp"
 #include "query/parser.hpp"
 #include "query/physical_plan.hpp"
@@ -162,8 +161,8 @@ class ExecTest : public ::testing::Test {
 };
 
 TEST_F(ExecTest, ExecuteCreateTableCreatesCatalogEntry) {
-    const auto rows = run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)",
-                              catalog, registry);
+    const auto rows =
+        run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)", catalog, registry);
     EXPECT_TRUE(rows.empty());
 
     auto klass = catalog.get_class("users");
@@ -174,9 +173,9 @@ TEST_F(ExecTest, ExecuteCreateTableCreatesCatalogEntry) {
 }
 
 TEST_F(ExecTest, ExecuteInsertWritesRowsIntoTable) {
-    EXPECT_TRUE(run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)",
-                        catalog, registry)
-                    .empty());
+    EXPECT_TRUE(
+        run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)", catalog, registry)
+            .empty());
 
     const auto rows = run_sql("INSERT INTO users VALUES (1, 'alice', TRUE)", catalog, registry);
     EXPECT_TRUE(rows.empty());
@@ -192,9 +191,9 @@ TEST_F(ExecTest, ExecuteInsertWritesRowsIntoTable) {
 }
 
 TEST_F(ExecTest, ExecuteSelectReturnsProjectedRows) {
-    EXPECT_TRUE(run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)",
-                        catalog, registry)
-                    .empty());
+    EXPECT_TRUE(
+        run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)", catalog, registry)
+            .empty());
     EXPECT_TRUE(run_sql("INSERT INTO users VALUES (1, 'alice', TRUE)", catalog, registry).empty());
     EXPECT_TRUE(run_sql("INSERT INTO users VALUES (2, 'bob', FALSE)", catalog, registry).empty());
 
@@ -208,9 +207,9 @@ TEST_F(ExecTest, ExecuteSelectReturnsProjectedRows) {
 }
 
 TEST_F(ExecTest, ExecuteSelectStarReturnsAllColumns) {
-    EXPECT_TRUE(run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)",
-                        catalog, registry)
-                    .empty());
+    EXPECT_TRUE(
+        run_sql("CREATE TABLE users (id INTEGER, name TEXT, active BOOLEAN)", catalog, registry)
+            .empty());
     EXPECT_TRUE(run_sql("INSERT INTO users VALUES (1, 'alice', TRUE)", catalog, registry).empty());
 
     const auto rows = run_sql("SELECT * FROM users", catalog, registry);

@@ -45,8 +45,8 @@ class Parser {
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
    private:
-    Lexer       lexer;
-    Token       cur{};
+    Lexer lexer;
+    Token cur{};
     std::string last_error;
 
     // Token control
@@ -60,23 +60,23 @@ class Parser {
     auto parse_err(std::string msg) -> Error;
 
     // Statement parsers
-    [[nodiscard]] auto parse_stmt()         -> Result<Stmt>;
+    [[nodiscard]] auto parse_stmt() -> Result<Stmt>;
     [[nodiscard]] auto parse_create_table() -> Result<CreateTableStmt>;
-    [[nodiscard]] auto parse_insert()       -> Result<InsertStmt>;
-    [[nodiscard]] auto parse_select()       -> Result<SelectStmt>;
+    [[nodiscard]] auto parse_insert() -> Result<InsertStmt>;
+    [[nodiscard]] auto parse_select() -> Result<SelectStmt>;
 
     // Sub-parsers
-    [[nodiscard]] auto parse_col_def()          -> Result<ColumnDef>;
-    [[nodiscard]] auto parse_type_name()        -> Result<TypeName>;
-    [[nodiscard]] auto parse_select_items()     -> Result<std::vector<SelectItem>>;
-    [[nodiscard]] auto parse_expr_list()        -> Result<std::vector<Expr>>;
+    [[nodiscard]] auto parse_col_def() -> Result<ColumnDef>;
+    [[nodiscard]] auto parse_type_name() -> Result<TypeName>;
+    [[nodiscard]] auto parse_select_items() -> Result<std::vector<SelectItem>>;
+    [[nodiscard]] auto parse_expr_list() -> Result<std::vector<Expr>>;
 
     // Expression parsers (precedence climbing)
-    [[nodiscard]] auto parse_expr()    -> Result<Expr>;
-    [[nodiscard]] auto parse_or()      -> Result<Expr>;
-    [[nodiscard]] auto parse_and()     -> Result<Expr>;
-    [[nodiscard]] auto parse_not()     -> Result<Expr>;
-    [[nodiscard]] auto parse_cmp()     -> Result<Expr>;
+    [[nodiscard]] auto parse_expr() -> Result<Expr>;
+    [[nodiscard]] auto parse_or() -> Result<Expr>;
+    [[nodiscard]] auto parse_and() -> Result<Expr>;
+    [[nodiscard]] auto parse_not() -> Result<Expr>;
+    [[nodiscard]] auto parse_cmp() -> Result<Expr>;
     [[nodiscard]] auto parse_primary() -> Result<Expr>;
 };
 

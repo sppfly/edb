@@ -41,15 +41,13 @@ auto append_u64(std::vector<std::byte>& bytes, u64 value) -> void {
     }
 }
 
-[[nodiscard]] auto read_u16(std::span<const std::byte> bytes, std::size_t offset)
-    -> std::uint16_t {
+[[nodiscard]] auto read_u16(std::span<const std::byte> bytes, std::size_t offset) -> std::uint16_t {
     const auto lo = static_cast<std::uint16_t>(std::to_integer<unsigned char>(bytes[offset]));
     const auto hi = static_cast<std::uint16_t>(std::to_integer<unsigned char>(bytes[offset + 1U]));
     return static_cast<std::uint16_t>(lo | static_cast<std::uint16_t>(hi << 8U));
 }
 
-[[nodiscard]] auto read_u32(std::span<const std::byte> bytes, std::size_t offset)
-    -> std::uint32_t {
+[[nodiscard]] auto read_u32(std::span<const std::byte> bytes, std::size_t offset) -> std::uint32_t {
     auto value = std::uint32_t{0};
     for (std::size_t index = 0; index < std::size_t{4}; ++index) {
         const auto shift = static_cast<unsigned>(index * 8U);
@@ -123,8 +121,8 @@ auto write_crc(std::vector<std::byte>& bytes, std::uint32_t crc) -> void {
     return {};
 }
 
-[[nodiscard]] auto decode_record(std::span<const std::byte> header,
-                                 std::vector<std::byte> payload) -> Result<WalRecord> {
+[[nodiscard]] auto decode_record(std::span<const std::byte> header, std::vector<std::byte> payload)
+    -> Result<WalRecord> {
     if (read_u32(header, std::size_t{0}) != WAL_MAGIC) {
         return std::unexpected(Error::Corruption);
     }
@@ -139,14 +137,13 @@ auto write_crc(std::vector<std::byte>& bytes, std::uint32_t crc) -> void {
         return std::unexpected(Error::Corruption);
     }
 
-    return WalRecord{.lsn = read_u64(header, std::size_t{4}),
-                     .prev_lsn = read_u64(header, std::size_t{12}),
-                     .tx_id = TxId{read_u64(header, std::size_t{20})},
-                     .resource_manager = static_cast<WalResourceManager>(
-                         read_u16(header, std::size_t{28})),
-                     .record_type = static_cast<WalRecordType>(
-                         read_u16(header, std::size_t{30})),
-                     .payload = std::move(payload)};
+    return WalRecord{
+        .lsn = read_u64(header, std::size_t{4}),
+        .prev_lsn = read_u64(header, std::size_t{12}),
+        .tx_id = TxId{read_u64(header, std::size_t{20})},
+        .resource_manager = static_cast<WalResourceManager>(read_u16(header, std::size_t{28})),
+        .record_type = static_cast<WalRecordType>(read_u16(header, std::size_t{30})),
+        .payload = std::move(payload)};
 }
 
 }  // namespace

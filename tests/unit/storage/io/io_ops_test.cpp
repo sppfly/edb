@@ -118,7 +118,7 @@ TEST(EdbStorageIOOpsDefaults, ReadvLoopsOverRead) {
     std::array<std::byte, 4> dst0{};
     std::array<std::byte, 2> dst1{};
     std::array<IOVec, 2> iov{IOVec{.offset = u64{0}, .buf = dst0},
-                                IOVec{.offset = u64{4}, .buf = dst1}};
+                             IOVec{.offset = u64{4}, .buf = dst1}};
 
     auto res = backend.readv(iov);
     ASSERT_TRUE(res.has_value());
@@ -140,7 +140,7 @@ TEST(EdbStorageIOOpsDefaults, WritevLoopsOverWrite) {
     std::array<std::byte, 3> buf1{std::byte{0x0A}, std::byte{0x0B}, std::byte{0x0C}};
 
     std::array<IOVec, 2> wv{IOVec{.offset = u64{100}, .buf = buf0},
-                               IOVec{.offset = u64{200}, .buf = buf1}};
+                            IOVec{.offset = u64{200}, .buf = buf1}};
     // writev takes span<const EdbIOVec>
     auto res = backend.writev(std::span<const IOVec>{wv});
     ASSERT_TRUE(res.has_value());

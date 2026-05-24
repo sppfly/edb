@@ -9,7 +9,9 @@ namespace edb {
 
 namespace {
 
-[[nodiscard]] auto is_valid_tx(TxId id) -> bool { return id.value != u64{0}; }
+[[nodiscard]] auto is_valid_tx(TxId id) -> bool {
+    return id.value != u64{0};
+}
 
 [[nodiscard]] auto is_active_in_snapshot(const Snapshot& snapshot, TxId id) -> bool {
     return std::ranges::find(snapshot.active, id) != snapshot.active.end();

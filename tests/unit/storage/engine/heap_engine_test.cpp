@@ -108,8 +108,8 @@ class HeapEngineTest : public ::testing::Test {
 
     auto open_engine(EdbHeapEngine& engine) -> void {
         ASSERT_TRUE(engine
-                        .open(page_store, EngineConfig{.page_size = usize{256},
-                                                          .buffer_pool_pages = usize{2}})
+                        .open(page_store,
+                              EngineConfig{.page_size = usize{256}, .buffer_pool_pages = usize{2}})
                         .has_value());
     }
 
@@ -138,8 +138,7 @@ class HeapEngineTest : public ::testing::Test {
         return tuples;
     }
 
-    [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine,
-                                           const VisibilityContext& context,
+    [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine, const VisibilityContext& context,
                                            const TransactionStatusReader& statuses)
         -> Result<std::vector<std::vector<std::byte>>> {
         auto handle = engine.begin_scan(context, statuses);
@@ -268,9 +267,8 @@ TEST_F(HeapEngineTest, TransactionalInsertIsVisibleToOwningTransaction) {
 
     ASSERT_TRUE(engine.insert(tx, payload).has_value());
 
-    auto tuples = collect_scan(engine,
-                               VisibilityContext{.snapshot = tx.snapshot, .current_tx = tx.id},
-                               statuses);
+    auto tuples = collect_scan(
+        engine, VisibilityContext{.snapshot = tx.snapshot, .current_tx = tx.id}, statuses);
     ASSERT_TRUE(tuples.has_value());
     ASSERT_EQ(tuples->size(), std::size_t{1});
     EXPECT_EQ((*tuples)[0], payload);
@@ -283,8 +281,8 @@ TEST_F(HeapEngineTest, TransactionalScanHidesOtherInProgressInsert) {
     statuses.set(TxId{u64{1}}, TxStatus::InProgress);
 
     const auto writer = make_tx(TxId{u64{1}});
-    const auto reader = Transaction{.id = TxId{u64{2}},
-                                    .snapshot = make_snapshot(TxId{u64{3}}, {writer.id})};
+    const auto reader =
+        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{3}}, {writer.id})};
     ASSERT_TRUE(engine.insert(writer, make_tuple({0x41U})).has_value());
 
     auto tuples = collect_scan(
@@ -326,7 +324,8 @@ TEST_F(HeapEngineTest, TransactionalDeleteUsesXmaxVisibility) {
     ASSERT_TRUE(engine.delete_tuple(deleter, *id).has_value());
 
     auto own_scan = collect_scan(
-        engine, VisibilityContext{.snapshot = deleter.snapshot, .current_tx = deleter.id}, statuses);
+        engine, VisibilityContext{.snapshot = deleter.snapshot, .current_tx = deleter.id},
+        statuses);
     ASSERT_TRUE(own_scan.has_value());
     EXPECT_TRUE(own_scan->empty());
 
@@ -341,7 +340,8 @@ TEST_F(HeapEngineTest, TransactionalDeleteUsesXmaxVisibility) {
     EXPECT_EQ((*concurrent_scan)[0], payload);
 
     statuses.set(deleter.id, TxStatus::Committed);
-    const auto later_reader = Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
+    const auto later_reader =
+        Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
     auto later_scan = collect_scan(
         engine, VisibilityContext{.snapshot = later_reader.snapshot, .current_tx = later_reader.id},
         statuses);

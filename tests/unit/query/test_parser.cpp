@@ -121,8 +121,8 @@ TEST(Parser, InsertNullLiteral) {
 TEST(Parser, InsertBoolLiterals) {
     auto stmt = parse_one("INSERT INTO t VALUES (TRUE, FALSE)");
     auto& ins = std::get<InsertStmt>(stmt);
-    auto& e0  = ins.rows[0][0];
-    auto& e1  = ins.rows[0][1];
+    auto& e0 = ins.rows[0][0];
+    auto& e1 = ins.rows[0][1];
     EXPECT_TRUE(std::holds_alternative<BoolLiteral>(std::get<Literal>(e0)));
     EXPECT_TRUE(std::holds_alternative<BoolLiteral>(std::get<Literal>(e1)));
     EXPECT_TRUE(static_cast<bool>(std::get<BoolLiteral>(std::get<Literal>(e0)).value));
@@ -163,7 +163,7 @@ TEST(Parser, SelectColumns) {
 TEST(Parser, SelectAlias) {
     auto stmt = parse_one("SELECT id AS user_id FROM t");
     auto& sel = std::get<SelectStmt>(stmt);
-    auto& ei  = std::get<ExprItem>(sel.items[0]);
+    auto& ei = std::get<ExprItem>(sel.items[0]);
     ASSERT_TRUE(ei.alias.has_value());
     EXPECT_EQ(*ei.alias, "user_id");
 }
@@ -185,7 +185,7 @@ TEST(Parser, SelectWhereEq) {
 TEST(Parser, SelectWhereLt) {
     auto stmt = parse_one("SELECT * FROM t WHERE age < 18");
     auto& sel = std::get<SelectStmt>(stmt);
-    auto& be  = *std::get<std::unique_ptr<BinaryExpr>>(*sel.where);
+    auto& be = *std::get<std::unique_ptr<BinaryExpr>>(*sel.where);
     EXPECT_EQ(be.op, BinaryOp::Lt);
 }
 
@@ -201,7 +201,7 @@ TEST(Parser, SelectWhereAndOr) {
 TEST(Parser, SelectWhereStringLiteral) {
     auto stmt = parse_one("SELECT * FROM t WHERE name = 'alice'");
     auto& sel = std::get<SelectStmt>(stmt);
-    auto& be  = *std::get<std::unique_ptr<BinaryExpr>>(*sel.where);
+    auto& be = *std::get<std::unique_ptr<BinaryExpr>>(*sel.where);
     auto& lit = std::get<Literal>(be.right);
     EXPECT_EQ(std::get<StrLiteral>(lit).value, "alice");
 }

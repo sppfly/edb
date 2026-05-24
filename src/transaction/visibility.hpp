@@ -13,7 +13,7 @@ namespace edb {
 struct TupleHeader {
     TxId xmin{u64{0}};
     TxId xmax{u64{0}};
-    u16  flags{0};
+    u16 flags{0};
 };
 
 class TransactionStatusReader {
@@ -30,13 +30,12 @@ class TransactionStatusReader {
 
 struct VisibilityContext {
     Snapshot snapshot;
-    TxId     current_tx{u64{0}};
+    TxId current_tx{u64{0}};
 };
 
 class Visibility {
    public:
-    [[nodiscard]] static auto is_visible(const TupleHeader& tuple,
-                                         const VisibilityContext& context,
+    [[nodiscard]] static auto is_visible(const TupleHeader& tuple, const VisibilityContext& context,
                                          const TransactionStatusReader& statuses) -> Result<b8>;
 };
 

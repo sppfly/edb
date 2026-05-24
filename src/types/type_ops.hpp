@@ -22,7 +22,7 @@ namespace edb {
 
 template <typename T>
 concept TypeImpl = requires(std::string_view text, std::span<const std::byte> lhs,
-                               std::span<const std::byte> rhs) {
+                            std::span<const std::byte> rhs) {
     { T::from_text(text) } -> std::same_as<Result<std::vector<std::byte>>>;
     { T::to_text(lhs) } -> std::same_as<std::string>;
     { T::compare(lhs, rhs) } -> std::same_as<std::strong_ordering>;

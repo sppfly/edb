@@ -128,8 +128,7 @@ auto LruKPolicy::record_evict_impl(u64 /*page_id*/, usize /*frame_index*/) -> Vo
     return {};
 }
 
-auto LruKPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
-    -> Result<usize> {
+auto LruKPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames) -> Result<usize> {
     auto found = b8{false};
     auto victim = usize{0};
     auto victim_has_full_history = b8{true};
@@ -275,8 +274,7 @@ auto ArcPolicy::record_evict_impl(u64 page_id, usize /*frame_index*/) -> VoidRes
     return {};
 }
 
-auto ArcPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
-    -> Result<usize> {
+auto ArcPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames) -> Result<usize> {
     if (t1.size() > target_recent.value ||
         (pending_b2_hit.value && t1.size() == target_recent.value)) {
         auto recent = choose_from_lru(t1, frames);
@@ -296,10 +294,9 @@ auto ArcPolicy::choose_victim_impl(std::span<const EvictionFrameState> frames)
     return std::unexpected(Error::BufferPoolFull);
 }
 
-auto ArcPolicy::choose_from_lru(std::list<u64>& pages,
-                                   std::span<const EvictionFrameState> frames)
+auto ArcPolicy::choose_from_lru(std::list<u64>& pages, std::span<const EvictionFrameState> frames)
     -> Result<usize> {
-    for (auto & page : std::views::reverse(pages)) {
+    for (auto& page : std::views::reverse(pages)) {
         const auto frame = resident_frames.find(page);
         if (frame != resident_frames.end() && is_evictable(frames, frame->second).value) {
             return frame->second;
@@ -324,8 +321,7 @@ auto ArcPolicy::prune_ghosts() -> void {
     }
 }
 
-auto make_eviction_policy(const EvictionPolicyConfig& config)
-    -> std::unique_ptr<EvictionPolicy> {
+auto make_eviction_policy(const EvictionPolicyConfig& config) -> std::unique_ptr<EvictionPolicy> {
     switch (config.kind) {
         case EvictionPolicyKind::ClockSweep:
             return std::make_unique<ClockSweepPolicy>();

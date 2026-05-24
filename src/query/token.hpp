@@ -50,20 +50,20 @@ enum class TokenKind : uint8_t {  // raw-primitive: enum base requires stdint ty
     KwWhere,
 
     // Punctuation
-    LParen,    // (
-    RParen,    // )
-    Comma,     // ,
-    Semicolon, // ;
-    Star,      // *
-    Dot,       // .
+    LParen,     // (
+    RParen,     // )
+    Comma,      // ,
+    Semicolon,  // ;
+    Star,       // *
+    Dot,        // .
 
     // Comparison operators
-    Eq,  // =
-    Neq, // <>
-    Lt,  // <
-    Le,  // <=
-    Gt,  // >
-    Ge,  // >=
+    Eq,   // =
+    Neq,  // <>
+    Lt,   // <
+    Le,   // <=
+    Gt,   // >
+    Ge,   // >=
 
     // Special
     Eof,
@@ -73,45 +73,84 @@ enum class TokenKind : uint8_t {  // raw-primitive: enum base requires stdint ty
 // Human-readable name — useful in error messages.
 constexpr std::string_view token_kind_name(TokenKind k) noexcept {
     switch (k) {
-        case TokenKind::LitInteger:  return "integer literal";
-        case TokenKind::LitFloat:    return "float literal";
-        case TokenKind::LitString:   return "string literal";
-        case TokenKind::Identifier:  return "identifier";
-        case TokenKind::KwAnd:       return "AND";
-        case TokenKind::KwAs:        return "AS";
-        case TokenKind::KwCreate:    return "CREATE";
-        case TokenKind::KwDefault:   return "DEFAULT";
-        case TokenKind::KwExists:    return "EXISTS";
-        case TokenKind::KwFalse:     return "FALSE";
-        case TokenKind::KwFrom:      return "FROM";
-        case TokenKind::KwIf:        return "IF";
-        case TokenKind::KwInsert:    return "INSERT";
-        case TokenKind::KwInto:      return "INTO";
-        case TokenKind::KwKey:       return "KEY";
-        case TokenKind::KwNot:       return "NOT";
-        case TokenKind::KwNull:      return "NULL";
-        case TokenKind::KwOr:        return "OR";
-        case TokenKind::KwPrimary:   return "PRIMARY";
-        case TokenKind::KwSelect:    return "SELECT";
-        case TokenKind::KwTable:     return "TABLE";
-        case TokenKind::KwTrue:      return "TRUE";
-        case TokenKind::KwUnique:    return "UNIQUE";
-        case TokenKind::KwValues:    return "VALUES";
-        case TokenKind::KwWhere:     return "WHERE";
-        case TokenKind::LParen:      return "(";
-        case TokenKind::RParen:      return ")";
-        case TokenKind::Comma:       return ",";
-        case TokenKind::Semicolon:   return ";";
-        case TokenKind::Star:        return "*";
-        case TokenKind::Dot:         return ".";
-        case TokenKind::Eq:          return "=";
-        case TokenKind::Neq:         return "<>";
-        case TokenKind::Lt:          return "<";
-        case TokenKind::Le:          return "<=";
-        case TokenKind::Gt:          return ">";
-        case TokenKind::Ge:          return ">=";
-        case TokenKind::Eof:         return "<EOF>";
-        case TokenKind::Unknown:     return "<unknown>";
+        case TokenKind::LitInteger:
+            return "integer literal";
+        case TokenKind::LitFloat:
+            return "float literal";
+        case TokenKind::LitString:
+            return "string literal";
+        case TokenKind::Identifier:
+            return "identifier";
+        case TokenKind::KwAnd:
+            return "AND";
+        case TokenKind::KwAs:
+            return "AS";
+        case TokenKind::KwCreate:
+            return "CREATE";
+        case TokenKind::KwDefault:
+            return "DEFAULT";
+        case TokenKind::KwExists:
+            return "EXISTS";
+        case TokenKind::KwFalse:
+            return "FALSE";
+        case TokenKind::KwFrom:
+            return "FROM";
+        case TokenKind::KwIf:
+            return "IF";
+        case TokenKind::KwInsert:
+            return "INSERT";
+        case TokenKind::KwInto:
+            return "INTO";
+        case TokenKind::KwKey:
+            return "KEY";
+        case TokenKind::KwNot:
+            return "NOT";
+        case TokenKind::KwNull:
+            return "NULL";
+        case TokenKind::KwOr:
+            return "OR";
+        case TokenKind::KwPrimary:
+            return "PRIMARY";
+        case TokenKind::KwSelect:
+            return "SELECT";
+        case TokenKind::KwTable:
+            return "TABLE";
+        case TokenKind::KwTrue:
+            return "TRUE";
+        case TokenKind::KwUnique:
+            return "UNIQUE";
+        case TokenKind::KwValues:
+            return "VALUES";
+        case TokenKind::KwWhere:
+            return "WHERE";
+        case TokenKind::LParen:
+            return "(";
+        case TokenKind::RParen:
+            return ")";
+        case TokenKind::Comma:
+            return ",";
+        case TokenKind::Semicolon:
+            return ";";
+        case TokenKind::Star:
+            return "*";
+        case TokenKind::Dot:
+            return ".";
+        case TokenKind::Eq:
+            return "=";
+        case TokenKind::Neq:
+            return "<>";
+        case TokenKind::Lt:
+            return "<";
+        case TokenKind::Le:
+            return "<=";
+        case TokenKind::Gt:
+            return ">";
+        case TokenKind::Ge:
+            return ">=";
+        case TokenKind::Eof:
+            return "<EOF>";
+        case TokenKind::Unknown:
+            return "<unknown>";
     }
     return "<unknown>";
 }
@@ -120,10 +159,10 @@ constexpr std::string_view token_kind_name(TokenKind k) noexcept {
 // Token
 // ---------------------------------------------------------------------------
 struct Token {
-    TokenKind        kind{TokenKind::Unknown};
+    TokenKind kind{TokenKind::Unknown};
     std::string_view text;
-    u32              line{u32{1}};
-    u32              col{u32{1}};
+    u32 line{u32{1}};
+    u32 col{u32{1}};
 };
 
 }  // namespace edb

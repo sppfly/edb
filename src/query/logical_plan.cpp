@@ -20,7 +20,9 @@ auto LogicalPlanner::build(BoundStmt stmt) -> Result<LogicalPlan> {
     return plan_err("unsupported bound statement");
 }
 
-auto LogicalPlanner::error_message() const noexcept -> std::string_view { return last_error; }
+auto LogicalPlanner::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 auto LogicalPlanner::build_select(BoundSelectStmt stmt) -> Result<LogicalPlan> {
     auto plan = std::make_unique<LogicalPlan>(

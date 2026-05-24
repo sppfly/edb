@@ -1,7 +1,6 @@
 // tests/unit/wal/wal_manager_test.cpp
 
 #include "wal/wal_manager.hpp"
-#include "wal/recovery.hpp"
 
 #include <gtest/gtest.h>
 
@@ -16,6 +15,7 @@
 #include "storage/engine/heap/heap_engine.hpp"
 #include "storage/engine/heap/page.hpp"
 #include "storage/page/page_store.hpp"
+#include "wal/recovery.hpp"
 
 using namespace edb;
 
@@ -90,8 +90,8 @@ auto payload(std::string_view text) -> std::vector<std::byte> {
 
 [[nodiscard]] auto collect_visible(EdbHeapEngine& engine, const TransactionStatusReader& statuses)
     -> Result<std::vector<std::vector<std::byte>>> {
-    const auto context = VisibilityContext{.snapshot = make_snapshot(TxId{u64{10}}),
-                                           .current_tx = TxId{u64{10}}};
+    const auto context =
+        VisibilityContext{.snapshot = make_snapshot(TxId{u64{10}}), .current_tx = TxId{u64{10}}};
     auto scan = engine.begin_scan(context, statuses);
     if (!scan) {
         return std::unexpected(scan.error());
@@ -170,9 +170,8 @@ TEST(WalManager, FlushPersistsRecordsThroughReopen) {
     WalManager wal{io};
     ASSERT_TRUE(wal.open().has_value());
 
-    auto lsn = wal.append(WalAppendRecord{.tx_id = TxId{u64{3}},
-                                          .record_type = WalRecordType::Commit,
-                                          .payload = payload("done")});
+    auto lsn = wal.append(WalAppendRecord{
+        .tx_id = TxId{u64{3}}, .record_type = WalRecordType::Commit, .payload = payload("done")});
     ASSERT_TRUE(lsn.has_value());
     ASSERT_TRUE(wal.flush(*lsn).has_value());
     EXPECT_EQ(wal.flushed_lsn(), *lsn);
@@ -192,9 +191,8 @@ TEST(WalManager, TracksAppendedAndFlushedLsnSeparately) {
     WalManager wal{io};
     ASSERT_TRUE(wal.open().has_value());
 
-    auto lsn = wal.append(WalAppendRecord{.tx_id = TxId{u64{4}},
-                                          .record_type = WalRecordType::Commit,
-                                          .payload = payload("commit")});
+    auto lsn = wal.append(WalAppendRecord{
+        .tx_id = TxId{u64{4}}, .record_type = WalRecordType::Commit, .payload = payload("commit")});
     ASSERT_TRUE(lsn.has_value());
     EXPECT_EQ(wal.appended_lsn(), *lsn);
     EXPECT_EQ(wal.flushed_lsn(), u64{0});
@@ -242,9 +240,8 @@ TEST(WalManager, CorruptRecordCrcIsRejected) {
     WalManager wal{io};
     ASSERT_TRUE(wal.open().has_value());
 
-    auto lsn = wal.append(WalAppendRecord{.tx_id = TxId{u64{9}},
-                                          .record_type = WalRecordType::Commit,
-                                          .payload = payload("stable")});
+    auto lsn = wal.append(WalAppendRecord{
+        .tx_id = TxId{u64{9}}, .record_type = WalRecordType::Commit, .payload = payload("stable")});
     ASSERT_TRUE(lsn.has_value());
     ASSERT_GT(bytes->size(), std::size_t{42});
     (*bytes)[42] ^= std::byte{0x01};
@@ -261,13 +258,13 @@ TEST(WalRecovery, CommittedInsertSurvivesCrashSimulation) {
     PageStore source_store;
     ASSERT_TRUE(source_store.open(source_io, PageStoreConfig{.page_size = page_size}).has_value());
     EdbHeapEngine source_engine;
-    ASSERT_TRUE(source_engine
-                    .open(source_store,
-                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
-                    .has_value());
+    ASSERT_TRUE(
+        source_engine
+            .open(source_store, EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+            .has_value());
     const auto user_tuple = payload("committed");
-    auto id = source_engine.insert(Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})},
-                                   user_tuple);
+    auto id = source_engine.insert(
+        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})}, user_tuple);
     ASSERT_TRUE(id.has_value());
     ASSERT_TRUE(source_engine.close().has_value());
 
@@ -310,12 +307,12 @@ TEST(WalRecovery, UncommittedInsertIsInvisibleAfterRecovery) {
     PageStore source_store;
     ASSERT_TRUE(source_store.open(source_io, PageStoreConfig{.page_size = page_size}).has_value());
     EdbHeapEngine source_engine;
-    ASSERT_TRUE(source_engine
-                    .open(source_store,
-                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
-                    .has_value());
-    auto id = source_engine.insert(Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})},
-                                   payload("lost"));
+    ASSERT_TRUE(
+        source_engine
+            .open(source_store, EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+            .has_value());
+    auto id = source_engine.insert(
+        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})}, payload("lost"));
     ASSERT_TRUE(id.has_value());
     ASSERT_TRUE(source_engine.close().has_value());
 
@@ -352,12 +349,12 @@ TEST(WalRecovery, HeapInsertRedoIsIdempotent) {
     PageStore source_store;
     ASSERT_TRUE(source_store.open(source_io, PageStoreConfig{.page_size = page_size}).has_value());
     EdbHeapEngine source_engine;
-    ASSERT_TRUE(source_engine
-                    .open(source_store,
-                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
-                    .has_value());
-    auto id = source_engine.insert(Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})},
-                                   payload("once"));
+    ASSERT_TRUE(
+        source_engine
+            .open(source_store, EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+            .has_value());
+    auto id = source_engine.insert(
+        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{2}})}, payload("once"));
     ASSERT_TRUE(id.has_value());
     ASSERT_TRUE(source_engine.close().has_value());
 
@@ -402,10 +399,10 @@ TEST(WalRecovery, CheckpointRedoLsnSkipsEarlierWalRecords) {
     PageStore source_store;
     ASSERT_TRUE(source_store.open(source_io, PageStoreConfig{.page_size = page_size}).has_value());
     EdbHeapEngine source_engine;
-    ASSERT_TRUE(source_engine
-                    .open(source_store,
-                          EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
-                    .has_value());
+    ASSERT_TRUE(
+        source_engine
+            .open(source_store, EngineConfig{.page_size = page_size, .buffer_pool_pages = usize{2}})
+            .has_value());
     const auto skipped_payload = std::string(190, 's');
     auto skipped_id = source_engine.insert(
         Transaction{.id = TxId{u64{1}}, .snapshot = make_snapshot(TxId{u64{1}})},

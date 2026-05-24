@@ -1,21 +1,20 @@
 // tests/regression/phase5_query_engine_sql_path.cpp
 
-#include "query/query_engine.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <memory>
-#include <sstream>
 #include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
 #include "catalog/catalog.hpp"
+#include "query/query_engine.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
 
@@ -171,14 +170,14 @@ auto append_query_result(std::ostringstream& output, const QueryResult& result,
     output << ")\n\n";
 }
 
-auto run_regression_script(std::string_view sql, QueryEngine& engine,
-                           const TypeRegistry& registry) -> std::string {
+auto run_regression_script(std::string_view sql, QueryEngine& engine, const TypeRegistry& registry)
+    -> std::string {
     std::ostringstream output;
     for (const auto& statement : split_sql_statements(sql)) {
         auto result = engine.execute(statement);
         if (!result) {
-            output << "ERROR: " << edb_error_name(result.error()) << ": "
-                   << engine.error_message() << "\n\n";
+            output << "ERROR: " << edb_error_name(result.error()) << ": " << engine.error_message()
+                   << "\n\n";
             continue;
         }
         append_query_result(output, *result, registry);

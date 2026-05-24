@@ -70,7 +70,8 @@ auto literal_text(const Literal& literal) -> std::optional<std::string> {
             using LiteralT = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<LiteralT, IntLiteral> ||
                           std::is_same_v<LiteralT, FloatLiteral>) {
-                return std::to_string(value.value.value);  // raw-primitive: std::to_string uses primitive scalars
+                return std::to_string(
+                    value.value.value);  // raw-primitive: std::to_string uses primitive scalars
             } else if constexpr (std::is_same_v<LiteralT, StrLiteral>) {
                 return value.value;
             } else if constexpr (std::is_same_v<LiteralT, BoolLiteral>) {
@@ -83,7 +84,8 @@ auto literal_text(const Literal& literal) -> std::optional<std::string> {
 }
 
 auto make_attnum(std::size_t index) -> u32 {
-    return u32{static_cast<std::uint32_t>(index + 1U)};  // raw-primitive: schema index narrows to catalog attnum
+    return u32{static_cast<std::uint32_t>(
+        index + 1U)};  // raw-primitive: schema index narrows to catalog attnum
 }
 
 }  // namespace
@@ -118,7 +120,9 @@ auto Binder::bind(const Stmt& stmt) -> Result<BoundStmt> {
     return std::unexpected(Error::NotSupported);
 }
 
-auto Binder::error_message() const noexcept -> std::string_view { return last_error; }
+auto Binder::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 auto Binder::bind_create_table(const CreateTableStmt& stmt) -> Result<BoundCreateTableStmt> {
     if (catalog == nullptr) {
@@ -142,10 +146,10 @@ auto Binder::bind_create_table(const CreateTableStmt& stmt) -> Result<BoundCreat
         const auto type_name = canonical_type_name(column.type);
         auto type = catalog->get_type(type_name);
         if (!type) {
-            bind_err(std::format("unknown type '{}' for column '{}'", column.type.name,
-                                 column.name));
+            bind_err(
+                std::format("unknown type '{}' for column '{}'", column.type.name, column.name));
             return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound
-                                                                      : type.error());
+                                                                   : type.error());
         }
 
         columns.emplace_back(BoundColumnDef{
@@ -210,8 +214,8 @@ auto Binder::bind_insert(const InsertStmt& stmt) -> Result<BoundInsertStmt> {
                 return std::unexpected(Error::AnalyzerError);
             }
 
-            auto bound_literal = bind_literal(*literal, &target_columns[index].type,
-                                              target_columns[index].nullable);
+            auto bound_literal =
+                bind_literal(*literal, &target_columns[index].type, target_columns[index].nullable);
             if (!bound_literal) {
                 return std::unexpected(bound_literal.error());
             }
@@ -361,8 +365,8 @@ auto Binder::coerce_literal_to_type(const Literal& literal, const BoundTypeRef& 
                                     b8 target_nullable) -> Result<BoundLiteral> {
     if (std::holds_alternative<NullLiteral>(literal)) {
         if (!static_cast<bool>(target_nullable)) {
-            bind_err(std::format("NULL is not allowed for non-nullable type '{}'",
-                                 target_type.name));
+            bind_err(
+                std::format("NULL is not allowed for non-nullable type '{}'", target_type.name));
             return std::unexpected(Error::AnalyzerError);
         }
         return BoundLiteral{
@@ -378,7 +382,8 @@ auto Binder::coerce_literal_to_type(const Literal& literal, const BoundTypeRef& 
 
     auto type = types->lookup(target_type.oid);
     if (!type) {
-        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound : type.error());
+        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound
+                                                               : type.error());
     }
 
     const auto text = literal_text(literal);
@@ -390,7 +395,8 @@ auto Binder::coerce_literal_to_type(const Literal& literal, const BoundTypeRef& 
 
     return BoundLiteral{
         .type = target_type,
-        .value = Value{.type_oid = target_type.oid, .bytes = std::move(*bytes), .is_null = b8{false}},
+        .value =
+            Value{.type_oid = target_type.oid, .bytes = std::move(*bytes), .is_null = b8{false}},
     };
 }
 
@@ -500,7 +506,8 @@ auto Binder::lookup_type(std::string_view name) const -> Result<BoundTypeRef> {
 
     auto type = catalog->get_type(name);
     if (!type) {
-        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound : type.error());
+        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound
+                                                               : type.error());
     }
     return BoundTypeRef{.oid = type->oid, .name = type->name, .param = std::nullopt};
 }
@@ -512,11 +519,14 @@ auto Binder::lookup_type(u32 oid) const -> Result<BoundTypeRef> {
 
     auto type = types->lookup(oid);
     if (!type) {
-        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound : type.error());
+        return std::unexpected(type.error() == Error::NotFound ? Error::TypeNotFound
+                                                               : type.error());
     }
     return BoundTypeRef{.oid = (*type)->oid, .name = (*type)->name, .param = std::nullopt};
 }
 
-auto Binder::bind_err(std::string msg) -> void { last_error = std::move(msg); }
+auto Binder::bind_err(std::string msg) -> void {
+    last_error = std::move(msg);
+}
 
 }  // namespace edb

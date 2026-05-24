@@ -41,9 +41,9 @@ TEST(EdbRowCodec, EncodesAndDecodesMixedSchemaRoundTrip) {
     ASSERT_TRUE(bool_type.has_value());
 
     RowCodec codec{registry,
-                      {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
-                       {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
-                       {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}}}};
+                   {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
+                    {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
+                    {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}}}};
 
     const auto encoded = codec.encode(std::vector<Value>{
         make_value(registry, **int32_type, "7"), make_value(registry, **text_type, "alice"),
@@ -68,12 +68,12 @@ TEST(EdbRowCodec, SupportsNullableColumns) {
     ASSERT_TRUE(text_type.has_value());
 
     RowCodec codec{registry,
-                      {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
-                       {.name = "nickname", .type_oid = (*text_type)->oid, .nullable = b8{true}}}};
+                   {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
+                    {.name = "nickname", .type_oid = (*text_type)->oid, .nullable = b8{true}}}};
 
-    const auto encoded = codec.encode(std::vector<Value>{
-        make_value(registry, **int32_type, "9"),
-        Value{.type_oid = (*text_type)->oid, .bytes = {}, .is_null = b8{true}}});
+    const auto encoded = codec.encode(
+        std::vector<Value>{make_value(registry, **int32_type, "9"),
+                           Value{.type_oid = (*text_type)->oid, .bytes = {}, .is_null = b8{true}}});
     ASSERT_TRUE(encoded.has_value());
 
     const auto decoded = codec.decode(*encoded);
@@ -91,7 +91,7 @@ TEST(EdbRowCodec, RejectsSchemaValueCountMismatch) {
     const auto int32_type = registry.lookup("int32");
     ASSERT_TRUE(int32_type.has_value());
     RowCodec codec{registry,
-                      {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
+                   {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
 
     const auto encoded = codec.encode({});
 
@@ -106,12 +106,12 @@ TEST(EdbRowCodec, RejectsFixedWidthLengthMismatch) {
     const auto int32_type = registry.lookup("int32");
     ASSERT_TRUE(int32_type.has_value());
     RowCodec codec{registry,
-                      {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
+                   {{.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}}}};
 
     const auto encoded =
         codec.encode(std::vector<Value>{Value{.type_oid = (*int32_type)->oid,
-                                                    .bytes = {std::byte{1}, std::byte{2}},
-                                                    .is_null = b8{false}}});
+                                              .bytes = {std::byte{1}, std::byte{2}},
+                                              .is_null = b8{false}}});
 
     ASSERT_FALSE(encoded.has_value());
     EXPECT_EQ(encoded.error(), Error::InvalidArgument);
@@ -124,7 +124,7 @@ TEST(EdbRowCodec, RejectsCorruptTuplePayload) {
     const auto text_type = registry.lookup("text");
     ASSERT_TRUE(text_type.has_value());
     RowCodec codec{registry,
-                      {{.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
+                   {{.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
 
     auto encoded = codec.encode(std::vector<Value>{make_value(registry, **text_type, "hello")});
     ASSERT_TRUE(encoded.has_value());

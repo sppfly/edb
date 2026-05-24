@@ -18,7 +18,7 @@
 
 namespace edb {
 
-enum class EvictionPolicyKind: std::uint8_t {
+enum class EvictionPolicyKind : std::uint8_t {
     ClockSweep,
     LruK,
     Arc,
@@ -78,8 +78,7 @@ class ClockSweepPolicy final : public EvictionPolicy {
     auto record_miss_impl(u64 page_id) -> VoidResult override;
     auto record_load_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_evict_impl(u64 page_id, usize frame_index) -> VoidResult override;
-    auto choose_victim_impl(std::span<const EvictionFrameState> frames)
-        -> Result<usize> override;
+    auto choose_victim_impl(std::span<const EvictionFrameState> frames) -> Result<usize> override;
 
     std::vector<b8> referenced;
     usize clock_hand{0};
@@ -95,8 +94,7 @@ class LruKPolicy final : public EvictionPolicy {
     auto record_miss_impl(u64 page_id) -> VoidResult override;
     auto record_load_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_evict_impl(u64 page_id, usize frame_index) -> VoidResult override;
-    auto choose_victim_impl(std::span<const EvictionFrameState> frames)
-        -> Result<usize> override;
+    auto choose_victim_impl(std::span<const EvictionFrameState> frames) -> Result<usize> override;
 
     usize k_history{2};
     u64 tick{0};
@@ -105,7 +103,7 @@ class LruKPolicy final : public EvictionPolicy {
 
 class ArcPolicy final : public EvictionPolicy {
    public:
-    enum class Location: std::uint8_t {
+    enum class Location : std::uint8_t {
         T1,
         T2,
         B1,
@@ -118,8 +116,7 @@ class ArcPolicy final : public EvictionPolicy {
     auto record_miss_impl(u64 page_id) -> VoidResult override;
     auto record_load_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_evict_impl(u64 page_id, usize frame_index) -> VoidResult override;
-    auto choose_victim_impl(std::span<const EvictionFrameState> frames)
-        -> Result<usize> override;
+    auto choose_victim_impl(std::span<const EvictionFrameState> frames) -> Result<usize> override;
 
     auto choose_from_lru(std::list<u64>& pages, std::span<const EvictionFrameState> frames)
         -> Result<usize>;
@@ -136,7 +133,6 @@ class ArcPolicy final : public EvictionPolicy {
     std::unordered_map<u64, usize> resident_frames;
 };
 
-auto make_eviction_policy(const EvictionPolicyConfig& config)
-    -> std::unique_ptr<EvictionPolicy>;
+auto make_eviction_policy(const EvictionPolicyConfig& config) -> std::unique_ptr<EvictionPolicy>;
 
 }  // namespace edb

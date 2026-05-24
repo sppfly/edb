@@ -1,7 +1,5 @@
 // tests/unit/query/test_physical_plan.cpp
 
-#include "query/physical_plan.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -16,6 +14,7 @@
 #include "query/binder.hpp"
 #include "query/logical_plan.hpp"
 #include "query/parser.hpp"
+#include "query/physical_plan.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
 
@@ -119,11 +118,12 @@ class PhysicalPlanTest : public ::testing::Test {
 
         auto created = catalog.create_table(CreateTableSpec{
             .name = "users",
-            .columns = {
-                {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
-                {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
-                {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
-            },
+            .columns =
+                {
+                    {.name = "id", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
+                    {.name = "name", .type_oid = (*text_type)->oid, .nullable = b8{false}},
+                    {.name = "active", .type_oid = (*bool_type)->oid, .nullable = b8{false}},
+                },
         });
         ASSERT_TRUE(created.has_value());
     }
@@ -180,8 +180,8 @@ TEST_F(PhysicalPlanTest, LowerSelectWithWhereToProjectOverFilterOverSeqScan) {
     LogicalPlanner logical_planner;
     PhysicalPlanner physical_planner;
 
-    auto logical = parse_bind_and_lower("SELECT id FROM users WHERE active = TRUE", binder,
-                                        logical_planner);
+    auto logical =
+        parse_bind_and_lower("SELECT id FROM users WHERE active = TRUE", binder, logical_planner);
     auto physical = physical_planner.build(std::move(logical));
     ASSERT_TRUE(physical.has_value()) << physical_planner.error_message();
     ASSERT_TRUE(std::holds_alternative<PhysicalProject>(physical->node));

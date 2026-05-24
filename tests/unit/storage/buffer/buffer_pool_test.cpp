@@ -172,14 +172,13 @@ TEST_F(BufferPoolTest, FetchNewReturnsZeroedDirtyPage) {
 TEST_F(BufferPoolTest, FetchWorksWithConfiguredLruKPolicy) {
     allocate_pages(usize{2});
     BufferPool pool;
-    ASSERT_TRUE(
-        pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
-                                                  .eviction =
-                                                      EvictionPolicyConfig{
-                                                          .kind = EvictionPolicyKind::LruK,
-                                                          .lru_k_history = usize{2},
-                                                      }})
-            .has_value());
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
+                                                       .eviction =
+                                                           EvictionPolicyConfig{
+                                                               .kind = EvictionPolicyKind::LruK,
+                                                               .lru_k_history = usize{2},
+                                                           }})
+                    .has_value());
 
     auto first = pool.fetch(u64{0});
     ASSERT_TRUE(first.has_value());
@@ -193,13 +192,12 @@ TEST_F(BufferPoolTest, FetchWorksWithConfiguredLruKPolicy) {
 TEST_F(BufferPoolTest, FetchWorksWithConfiguredArcPolicy) {
     allocate_pages(usize{2});
     BufferPool pool;
-    ASSERT_TRUE(
-        pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
-                                                  .eviction =
-                                                      EvictionPolicyConfig{
-                                                          .kind = EvictionPolicyKind::Arc,
-                                                      }})
-            .has_value());
+    ASSERT_TRUE(pool.open(page_store, BufferPoolConfig{.capacity_pages = usize{1},
+                                                       .eviction =
+                                                           EvictionPolicyConfig{
+                                                               .kind = EvictionPolicyKind::Arc,
+                                                           }})
+                    .has_value());
 
     auto first = pool.fetch(u64{0});
     ASSERT_TRUE(first.has_value());

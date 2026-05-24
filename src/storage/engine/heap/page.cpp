@@ -50,8 +50,7 @@ auto write_u64(std::span<std::byte> page, usize offset, u64 value) -> void {
 [[nodiscard]] auto read_u64(std::span<const std::byte> page, usize offset) -> u64 {
     auto value = std::uint64_t{0};
     for (usize index{0}; index < usize{8}; ++index) {
-        value |= static_cast<std::uint64_t>(page[offset.value + index.value]) <<
-                 (index.value * 8U);
+        value |= static_cast<std::uint64_t>(page[offset.value + index.value]) << (index.value * 8U);
     }
     return u64{value};
 }
@@ -210,8 +209,7 @@ auto overwrite_tuple(std::span<std::byte> page, u16 slot_idx, std::span<const st
     return {};
 }
 
-auto read_tuple(std::span<const std::byte> page, u16 slot_idx)
-    -> Result<std::vector<std::byte>> {
+auto read_tuple(std::span<const std::byte> page, u16 slot_idx) -> Result<std::vector<std::byte>> {
     auto slot = read_slot(page, slot_idx);
     if (!slot) {
         return std::unexpected(slot.error());

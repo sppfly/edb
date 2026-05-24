@@ -86,8 +86,7 @@ struct StorageIOOps {
     /// Write exactly buf.size() bytes to byte offset `offset`.
     /// Returns the number of bytes actually written.
     /// Returns EdbError::IoError on OS failure.
-    auto write(u64 offset, std::span<const std::byte> buf)
-        -> Result<usize> EDB_PRE(!buf.empty()) {
+    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> EDB_PRE(!buf.empty()) {
         return write_impl(offset, buf);
     }
 
@@ -192,17 +191,17 @@ inline auto StorageIOOps::writev_impl(std::span<const IOVec> iov) -> Result<usiz
 }
 
 inline auto StorageIOOps::mmap_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len,
-                                       [[maybe_unused]] i32 prot) -> Result<std::byte*> {
+                                    [[maybe_unused]] i32 prot) -> Result<std::byte*> {
     return std::unexpected(Error::NotSupported);
 }
 
-inline auto StorageIOOps::munmap_impl([[maybe_unused]] std::byte* addr,
-                                         [[maybe_unused]] usize len) -> VoidResult {
+inline auto StorageIOOps::munmap_impl([[maybe_unused]] std::byte* addr, [[maybe_unused]] usize len)
+    -> VoidResult {
     return std::unexpected(Error::NotSupported);
 }
 
-inline auto StorageIOOps::sync_range_impl([[maybe_unused]] u64 offset,
-                                             [[maybe_unused]] usize len) -> VoidResult {
+inline auto StorageIOOps::sync_range_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len)
+    -> VoidResult {
     return datasync();
 }
 

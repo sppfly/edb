@@ -9,7 +9,7 @@
 namespace edb {
 
 FrameHandle::FrameHandle(BufferPool* owner, usize frame_index, u64 page_id,
-                               std::span<std::byte> bytes_view)
+                         std::span<std::byte> bytes_view)
     : pool{owner}, index{frame_index}, id{page_id}, bytes{bytes_view} {}
 
 FrameHandle::FrameHandle(FrameHandle&& other) noexcept
@@ -228,8 +228,8 @@ auto BufferPool::choose_victim() -> Result<usize> {
     states.reserve(frames.size());
     for (const auto& frame : frames) {
         states.push_back(EvictionFrameState{.page_id = frame.page_id,
-                                               .valid = frame.valid,
-                                               .pinned = b8{frame.pin_count > usize{0}}});
+                                            .valid = frame.valid,
+                                            .pinned = b8{frame.pin_count > usize{0}}});
     }
     return eviction_policy->choose_victim(states);
 }

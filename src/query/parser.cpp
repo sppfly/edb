@@ -18,9 +18,13 @@ Parser::Parser(std::string_view src) noexcept : lexer{src} {
     advance();  // prime cur with the first token
 }
 
-auto Parser::advance() -> void { cur = lexer.next(); }
+auto Parser::advance() -> void {
+    cur = lexer.next();
+}
 
-auto Parser::check(TokenKind k) const noexcept -> bool { return cur.kind == k; }
+auto Parser::check(TokenKind k) const noexcept -> bool {
+    return cur.kind == k;
+}
 
 auto Parser::match(TokenKind k) -> bool {
     if (check(k)) {
@@ -32,8 +36,8 @@ auto Parser::match(TokenKind k) -> bool {
 
 auto Parser::expect(TokenKind k) -> Result<Token> {
     if (!check(k)) {
-        parse_err(std::format("expected {} but got '{}' at line {}:{}",
-                              token_kind_name(k), cur.text,
+        parse_err(std::format("expected {} but got '{}' at line {}:{}", token_kind_name(k),
+                              cur.text,
                               static_cast<uint32_t>(cur.line),   // raw-primitive: format arg
                               static_cast<uint32_t>(cur.col)));  // raw-primitive: format arg
         return std::unexpected(Error::ParseError);
@@ -45,8 +49,7 @@ auto Parser::expect(TokenKind k) -> Result<Token> {
 
 auto Parser::expect_identifier() -> Result<std::string> {
     if (cur.kind != TokenKind::Identifier) {
-        parse_err(std::format("expected identifier but got '{}' at line {}:{}",
-                              cur.text,
+        parse_err(std::format("expected identifier but got '{}' at line {}:{}", cur.text,
                               static_cast<uint32_t>(cur.line),   // raw-primitive
                               static_cast<uint32_t>(cur.col)));  // raw-primitive
         return std::unexpected(Error::ParseError);
@@ -61,7 +64,9 @@ auto Parser::parse_err(std::string msg) -> Error {
     return Error::ParseError;
 }
 
-auto Parser::error_message() const noexcept -> std::string_view { return last_error; }
+auto Parser::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 // ---------------------------------------------------------------------------
 // Top-level
@@ -168,8 +173,8 @@ auto Parser::parse_create_table() -> Result<CreateTableStmt> {
     }
 
     return CreateTableStmt{
-        .table_name    = std::move(*name),
-        .columns       = std::move(cols),
+        .table_name = std::move(*name),
+        .columns = std::move(cols),
         .if_not_exists = if_not_exists,
     };
 }
@@ -205,7 +210,7 @@ auto Parser::parse_col_def() -> Result<ColumnDef> {
                 return std::unexpected(r.error());
             }
             col.primary_key = b8{true};
-            col.not_null    = b8{true};  // PRIMARY KEY implies NOT NULL
+            col.not_null = b8{true};  // PRIMARY KEY implies NOT NULL
         } else if (match(TokenKind::KwUnique)) {
             col.unique_constraint = b8{true};
         } else {
@@ -224,8 +229,7 @@ auto Parser::parse_type_name() -> Result<TypeName> {
 
     // Handle two-word types: DOUBLE PRECISION (case-insensitive second word)
     if (*name == "double" || *name == "DOUBLE") {
-        if (check(TokenKind::Identifier) &&
-            (cur.text == "precision" || cur.text == "PRECISION")) {
+        if (check(TokenKind::Identifier) && (cur.text == "precision" || cur.text == "PRECISION")) {
             advance();
             return TypeName{.name = "double precision", .param = std::nullopt};
         }
@@ -239,9 +243,10 @@ auto Parser::parse_type_name() -> Result<TypeName> {
         }
         std::string_view num_text = cur.text;
         u32 val{};
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw pointer range
-        auto [ptr, ec] = std::from_chars(num_text.data(), num_text.data() + num_text.size(),
-                                         val.value);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw
+        // pointer range
+        auto [ptr, ec] =
+            std::from_chars(num_text.data(), num_text.data() + num_text.size(), val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid type parameter '{}'", num_text));
             return std::unexpected(Error::ParseError);
@@ -317,9 +322,9 @@ auto Parser::parse_insert() -> Result<InsertStmt> {
     }
 
     return InsertStmt{
-        .table_name   = std::move(*name),
+        .table_name = std::move(*name),
         .column_names = std::move(col_names),
-        .rows         = std::move(rows),
+        .rows = std::move(rows),
     };
 }
 
@@ -353,9 +358,9 @@ auto Parser::parse_select() -> Result<SelectStmt> {
     }
 
     return SelectStmt{
-        .items      = std::move(*items),
+        .items = std::move(*items),
         .table_name = std::move(*table),
-        .where      = std::move(where),
+        .where = std::move(where),
     };
 }
 
@@ -405,7 +410,9 @@ auto Parser::parse_expr_list() -> Result<std::vector<Expr>> {
 // Expression grammar (precedence climbing)
 // ---------------------------------------------------------------------------
 
-auto Parser::parse_expr() -> Result<Expr> { return parse_or(); }
+auto Parser::parse_expr() -> Result<Expr> {
+    return parse_or();
+}
 
 auto Parser::parse_or() -> Result<Expr> {
     auto left = parse_and();
@@ -418,8 +425,8 @@ auto Parser::parse_or() -> Result<Expr> {
             return right;
         }
         auto node = std::make_unique<BinaryExpr>(BinaryExpr{
-            .op    = BinaryOp::Or,
-            .left  = std::move(*left),
+            .op = BinaryOp::Or,
+            .left = std::move(*left),
             .right = std::move(*right),
         });
         left = Expr{std::move(node)};
@@ -438,8 +445,8 @@ auto Parser::parse_and() -> Result<Expr> {
             return right;
         }
         auto node = std::make_unique<BinaryExpr>(BinaryExpr{
-            .op    = BinaryOp::And,
-            .left  = std::move(*left),
+            .op = BinaryOp::And,
+            .left = std::move(*left),
             .right = std::move(*right),
         });
         left = Expr{std::move(node)};
@@ -486,8 +493,8 @@ auto Parser::parse_cmp() -> Result<Expr> {
             return right;
         }
         auto node = std::make_unique<BinaryExpr>(BinaryExpr{
-            .op    = op,
-            .left  = std::move(*left),
+            .op = op,
+            .left = std::move(*left),
             .right = std::move(*right),
         });
         return Expr{std::move(node)};
@@ -524,7 +531,8 @@ auto Parser::parse_primary() -> Result<Expr> {
     if (check(TokenKind::LitInteger)) {
         std::string_view text = cur.text;
         i64 val{};
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw pointer range
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw
+        // pointer range
         auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid integer literal '{}'", text));
@@ -538,7 +546,8 @@ auto Parser::parse_primary() -> Result<Expr> {
     if (check(TokenKind::LitFloat)) {
         std::string_view text = cur.text;
         f64 val{};
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw pointer range
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic) — from_chars requires raw
+        // pointer range
         auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), val.value);
         if (ec != std::errc{}) {
             parse_err(std::format("invalid float literal '{}'", text));
@@ -555,12 +564,14 @@ auto Parser::parse_primary() -> Result<Expr> {
         std::string value;
         value.reserve(raw.size());
         for (std::size_t i = 1; i + 1 < raw.size(); ++i) {  // raw-primitive: size_t loop index
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — i bounds-checked by loop condition
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — i
+            // bounds-checked by loop condition
             if (raw[i] == '\'' && i + 2 < raw.size() && raw[i + 1] == '\'') {
                 value += '\'';
                 ++i;
             } else {
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — i bounds-checked by loop condition
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access) — i
+                // bounds-checked by loop condition
                 value += raw[i];
             }
         }
@@ -575,8 +586,7 @@ auto Parser::parse_primary() -> Result<Expr> {
         return Expr{ColumnRef{std::move(name)}};
     }
 
-    parse_err(std::format("unexpected token '{}' in expression at line {}:{}",
-                          cur.text,
+    parse_err(std::format("unexpected token '{}' in expression at line {}:{}", cur.text,
                           static_cast<uint32_t>(cur.line),   // raw-primitive
                           static_cast<uint32_t>(cur.col)));  // raw-primitive
     return std::unexpected(Error::ParseError);

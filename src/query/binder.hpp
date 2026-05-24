@@ -8,10 +8,10 @@
 // intentionally small so later SELECT/INSERT binding can extend it without
 // reshaping the entry point.
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <memory>
 #include <variant>
 #include <vector>
 
@@ -22,30 +22,30 @@
 namespace edb {
 
 struct BoundTypeRef {
-    u32                oid{0};
-    std::string        name;
+    u32 oid{0};
+    std::string name;
     std::optional<u32> param;
 };
 
 struct BoundColumnDef {
-    std::string  name;
+    std::string name;
     BoundTypeRef type;
-    b8           nullable{b8{true}};
-    b8           primary_key{b8{false}};
-    b8           unique_constraint{b8{false}};
+    b8 nullable{b8{true}};
+    b8 primary_key{b8{false}};
+    b8 unique_constraint{b8{false}};
 };
 
 struct BoundLiteral {
     BoundTypeRef type;
-    Value        value;
+    Value value;
 };
 
 struct BoundColumnRef {
-    u32          relation_oid{0};
-    u32          attnum{0};
-    std::string  name;
+    u32 relation_oid{0};
+    u32 attnum{0};
+    std::string name;
     BoundTypeRef type;
-    b8           nullable{b8{false}};
+    b8 nullable{b8{false}};
 };
 
 struct BoundBinaryExpr;
@@ -53,20 +53,20 @@ struct BoundBinaryExpr;
 using BoundExpr = std::variant<BoundLiteral, BoundColumnRef, std::unique_ptr<BoundBinaryExpr>>;
 
 struct BoundBinaryExpr {
-    BinaryOp     op{};
-    BoundExpr    left;
-    BoundExpr    right;
+    BinaryOp op{};
+    BoundExpr left;
+    BoundExpr right;
     BoundTypeRef type;
 };
 
 struct BoundTableRef {
-    u32                         relation_oid{0};
-    std::string                 name;
+    u32 relation_oid{0};
+    std::string name;
     std::vector<BoundColumnRef> columns;
 };
 
 struct BoundExprItem {
-    BoundExpr                  expr;
+    BoundExpr expr;
     std::optional<std::string> alias;
 };
 
@@ -75,21 +75,21 @@ struct BoundStarItem {};
 using BoundSelectItem = std::variant<BoundStarItem, BoundExprItem>;
 
 struct BoundCreateTableStmt {
-    std::string                 table_name;
+    std::string table_name;
     std::vector<BoundColumnDef> columns;
-    b8                          if_not_exists{b8{false}};
+    b8 if_not_exists{b8{false}};
 };
 
 struct BoundInsertStmt {
-    BoundTableRef                      table;
-    std::vector<BoundColumnRef>        columns;
+    BoundTableRef table;
+    std::vector<BoundColumnRef> columns;
     std::vector<std::vector<BoundLiteral>> rows;
 };
 
 struct BoundSelectStmt {
-    BoundTableRef                 table;
-    std::vector<BoundSelectItem>  items;
-    std::optional<BoundExpr>      where;
+    BoundTableRef table;
+    std::vector<BoundSelectItem> items;
+    std::optional<BoundExpr> where;
 };
 
 using BoundStmt = std::variant<BoundCreateTableStmt, BoundInsertStmt, BoundSelectStmt>;
@@ -111,8 +111,8 @@ class Binder {
         -> Result<BoundColumnRef>;
     [[nodiscard]] auto infer_literal_type(const Literal& literal) -> Result<BoundTypeRef>;
     [[nodiscard]] auto coerce_literal_to_type(const Literal& literal,
-                                              const BoundTypeRef& target_type,
-                                              b8 target_nullable) -> Result<BoundLiteral>;
+                                              const BoundTypeRef& target_type, b8 target_nullable)
+        -> Result<BoundLiteral>;
     [[nodiscard]] auto bind_literal(const Literal& literal, const BoundTypeRef* target_type,
                                     b8 target_nullable) -> Result<BoundLiteral>;
     [[nodiscard]] auto bind_expr(const Expr& expr, const BoundTableRef& table,
@@ -123,9 +123,9 @@ class Binder {
     [[nodiscard]] auto lookup_type(u32 oid) const -> Result<BoundTypeRef>;
     auto bind_err(std::string msg) -> void;
 
-    Catalog*     catalog{nullptr};
+    Catalog* catalog{nullptr};
     const TypeRegistry* types{nullptr};
-    std::string  last_error;
+    std::string last_error;
 };
 
 }  // namespace edb

@@ -30,7 +30,7 @@ struct LogicalScan {
 
 struct LogicalFilter {
     std::unique_ptr<LogicalPlan> input;
-    BoundExpr                    predicate;
+    BoundExpr predicate;
 };
 
 struct LogicalProject {

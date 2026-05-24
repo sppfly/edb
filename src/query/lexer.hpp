@@ -39,11 +39,11 @@ class Lexer {
 
    private:
     std::string_view src;
-    usize            pos;
-    u32              line{u32{1}};
-    u32              col{u32{1}};
+    usize pos;
+    u32 line{u32{1}};
+    u32 col{u32{1}};
 
-    bool  has_peek{false};
+    bool has_peek{false};
     Token peek_tok{};
 
     auto scan_one() -> Token;
@@ -57,8 +57,7 @@ class Lexer {
     [[nodiscard]] auto cur_char() const noexcept -> char;
     [[nodiscard]] auto at_end() const noexcept -> bool;
     auto advance() noexcept -> char;
-    [[nodiscard]] auto make_tok(TokenKind k, usize start, u32 tl, u32 tc) const noexcept
-        -> Token;
+    [[nodiscard]] auto make_tok(TokenKind k, usize start, u32 tl, u32 tc) const noexcept -> Token;
 };
 
 }  // namespace edb

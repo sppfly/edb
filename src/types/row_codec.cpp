@@ -58,12 +58,10 @@ auto set_null_bit(std::span<std::byte> bitmap, usize index) -> void {
 
 }  // namespace
 
-RowCodec::RowCodec(const TypeRegistry& registry_ref,
-                         std::vector<ColumnSchema> schema_def)
+RowCodec::RowCodec(const TypeRegistry& registry_ref, std::vector<ColumnSchema> schema_def)
     : registry{&registry_ref}, schema{std::move(schema_def)} {}
 
-auto RowCodec::encode(std::span<const Value> values) const
-    -> Result<std::vector<std::byte>> {
+auto RowCodec::encode(std::span<const Value> values) const -> Result<std::vector<std::byte>> {
     if (values.size() != schema.size()) {
         return std::unexpected(Error::InvalidArgument);
     }
@@ -123,8 +121,7 @@ auto RowCodec::encode(std::span<const Value> values) const
     return encoded;
 }
 
-auto RowCodec::decode(std::span<const std::byte> tuple) const
-    -> Result<std::vector<Value>> {
+auto RowCodec::decode(std::span<const std::byte> tuple) const -> Result<std::vector<Value>> {
     if (registry == nullptr) {
         return std::unexpected(Error::InvalidArgument);
     }

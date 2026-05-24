@@ -30,19 +30,16 @@ struct PhysicalSeqScan {
 
 struct PhysicalFilter {
     std::unique_ptr<PhysicalPlan> input;
-    BoundExpr                     predicate;
+    BoundExpr predicate;
 };
 
 struct PhysicalProject {
     std::unique_ptr<PhysicalPlan> input;
-    std::vector<BoundSelectItem>  items;
+    std::vector<BoundSelectItem> items;
 };
 
 struct PhysicalPlan {
-    using Node = std::variant<PhysicalCreateTable,
-                              PhysicalInsert,
-                              PhysicalSeqScan,
-                              PhysicalFilter,
+    using Node = std::variant<PhysicalCreateTable, PhysicalInsert, PhysicalSeqScan, PhysicalFilter,
                               PhysicalProject>;
 
     Node node;

@@ -26,19 +26,19 @@ enum class WalRecordType : std::uint8_t {
 };
 
 struct WalAppendRecord {
-    u64                   prev_lsn{0};
-    TxId                  tx_id{u64{0}};
-    WalResourceManager    resource_manager{WalResourceManager::Transaction};
-    WalRecordType         record_type{WalRecordType::Commit};
+    u64 prev_lsn{0};
+    TxId tx_id{u64{0}};
+    WalResourceManager resource_manager{WalResourceManager::Transaction};
+    WalRecordType record_type{WalRecordType::Commit};
     std::vector<std::byte> payload;
 };
 
 struct WalRecord {
-    u64                   lsn{0};
-    u64                   prev_lsn{0};
-    TxId                  tx_id{u64{0}};
-    WalResourceManager    resource_manager{WalResourceManager::Transaction};
-    WalRecordType         record_type{WalRecordType::Commit};
+    u64 lsn{0};
+    u64 prev_lsn{0};
+    TxId tx_id{u64{0}};
+    WalResourceManager resource_manager{WalResourceManager::Transaction};
+    WalRecordType record_type{WalRecordType::Commit};
     std::vector<std::byte> payload;
 };
 

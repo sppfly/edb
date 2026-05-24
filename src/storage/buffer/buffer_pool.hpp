@@ -28,8 +28,7 @@ class BufferPool;
 class FrameHandle {
    public:
     FrameHandle() = default;
-    FrameHandle(BufferPool* owner, usize frame_index, u64 page_id,
-                   std::span<std::byte> bytes);
+    FrameHandle(BufferPool* owner, usize frame_index, u64 page_id, std::span<std::byte> bytes);
 
     FrameHandle(const FrameHandle&) = delete;
     FrameHandle& operator=(const FrameHandle&) = delete;
