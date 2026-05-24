@@ -1,12 +1,9 @@
 // tests/unit/query/test_query_engine.cpp
 
-#include "query/query_engine.hpp"
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <memory>
-#include <mutex>
 #include <span>
 #include <string>
 #include <thread>
@@ -14,6 +11,7 @@
 #include <vector>
 
 #include "catalog/catalog.hpp"
+#include "query/query_engine.hpp"
 #include "storage/io/io_ops.hpp"
 #include "types/builtin_types.hpp"
 
@@ -134,7 +132,8 @@ TEST_F(QueryEngineTest, ExecuteRejectsMultipleStatements) {
     auto result = engine.execute("CREATE TABLE users (id INTEGER); SELECT * FROM users");
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), Error::InvalidArgument);
-    EXPECT_EQ(engine.error_message(), std::string_view{"execute expects exactly one SQL statement"});
+    EXPECT_EQ(engine.error_message(),
+              std::string_view{"execute expects exactly one SQL statement"});
 }
 
 TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
@@ -144,8 +143,8 @@ TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
     ASSERT_TRUE(create.has_value()) << engine.error_message();
 
     const auto oversized_payload = std::string(700, 'x');
-    auto failed_insert = engine.execute("INSERT INTO events VALUES (1, 'ok'), (2, '" +
-                                        oversized_payload + "')");
+    auto failed_insert =
+        engine.execute("INSERT INTO events VALUES (1, 'ok'), (2, '" + oversized_payload + "')");
     ASSERT_FALSE(failed_insert.has_value());
 
     auto selected = engine.execute("SELECT * FROM events");
@@ -158,13 +157,11 @@ TEST_F(QueryEngineTest, TwoThreadAutocommitInsertsAreVisible) {
     auto create = engine.execute("CREATE TABLE events (id INTEGER, payload TEXT)");
     ASSERT_TRUE(create.has_value()) << engine.error_message();
 
-    std::mutex sql_latch;
-    auto insert_rows = [&engine, &sql_latch](int base) {
+    auto insert_rows = [&engine](int base) {
         for (int index = 0; index < 10; ++index) {
             const auto id = base + index;
-            std::scoped_lock lock{sql_latch};
-            auto inserted = engine.execute("INSERT INTO events VALUES (" + std::to_string(id) +
-                                           ", 'event')");
+            auto inserted =
+                engine.execute("INSERT INTO events VALUES (" + std::to_string(id) + ", 'event')");
             ASSERT_TRUE(inserted.has_value()) << engine.error_message();
         }
     };

@@ -4,9 +4,10 @@
 //
 // First concrete storage engine: row-store heap pages with slot arrays.
 
+#include <map>
+#include <mutex>
 #include <optional>
 #include <span>
-#include <map>
 
 #include "storage/buffer/buffer_pool.hpp"
 #include "storage/engine/engine_ops.hpp"
@@ -51,8 +52,8 @@ class EdbHeapEngine final : public StorageEngineOps {
     auto update_tuple_impl(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
         -> Result<TupleId> override;
     auto begin_scan_impl() -> Result<ScanHandle> override;
-    auto begin_scan_impl(const VisibilityContext& context,
-                         const TransactionStatusReader& statuses) -> Result<ScanHandle> override;
+    auto begin_scan_impl(const VisibilityContext& context, const TransactionStatusReader& statuses)
+        -> Result<ScanHandle> override;
     auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> override;
     auto end_scan_impl(ScanHandle& handle) -> VoidResult override;
     [[nodiscard]] auto page_size_impl() const -> usize override;
@@ -65,8 +66,8 @@ class EdbHeapEngine final : public StorageEngineOps {
     auto scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_id, u16 slot_idx)
         -> Result<std::optional<Tuple>>;
 
-    [[nodiscard]] auto mark_deleted(TupleId id, TxId xmax,
-                                    const TransactionStatusReader* statuses) -> VoidResult;
+    [[nodiscard]] auto mark_deleted(TupleId id, TxId xmax, const TransactionStatusReader* statuses)
+        -> VoidResult;
     [[nodiscard]] static auto check_delete_conflict(TxId existing_xmax,
                                                     const TransactionStatusReader* statuses)
         -> VoidResult;
@@ -82,12 +83,13 @@ class EdbHeapEngine final : public StorageEngineOps {
     EngineConfig config{};
     BufferPool buffer_pool;
     struct ScanContext {
-        VisibilityContext              context;
+        VisibilityContext context;
         const TransactionStatusReader* statuses{nullptr};
     };
     std::map<u16, ScanContext> scan_contexts;
     u16 next_scan_id{1};
     b8 opened{false};
+    mutable std::mutex latch;
 };
 
 }  // namespace edb

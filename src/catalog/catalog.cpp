@@ -42,13 +42,12 @@ auto compare_attnum(const CatalogAttribute& lhs, const CatalogAttribute& rhs) ->
 }  // namespace
 
 Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
-                       const EngineConfig& engine_config)
+                 const EngineConfig& engine_config)
     : types{&registry}, backends{&backend_factory}, config{engine_config} {}
 
-auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry,
-                                         RelationBackendFactory& factory,
-                                         const TableSchema& schema,
-                                         const EngineConfig& engine_config) -> VoidResult {
+auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry, RelationBackendFactory& factory,
+                                      const TableSchema& schema, const EngineConfig& engine_config)
+    -> VoidResult {
     auto opened_backend = factory.open_backend(schema.relation_oid, schema.name);
     if (!opened_backend) {
         return std::unexpected(opened_backend.error());
@@ -97,6 +96,7 @@ auto Catalog::OpenedTableBundle::close() -> VoidResult {
 }
 
 auto Catalog::open() -> VoidResult {
+    std::scoped_lock guard{latch};
     if (auto status = open_system_tables(); !status) {
         return status;
     }
@@ -108,6 +108,7 @@ auto Catalog::open() -> VoidResult {
 }
 
 auto Catalog::close() -> VoidResult {
+    std::scoped_lock guard{latch};
     for (auto& [relation_oid, table] : user_tables) {
         (void)relation_oid;
         if (auto status = table->close(); !status) {
@@ -225,8 +226,7 @@ auto Catalog::bootstrap_types() -> VoidResult {
             return std::unexpected(Error::TypeNotFound);
         }
 
-        auto status =
-            type_table.table->insert(std::vector<Value>{*oid, *type_name, *type_length});
+        auto status = type_table.table->insert(std::vector<Value>{*oid, *type_name, *type_length});
         if (!status) {
             return std::unexpected(status.error());
         }
@@ -235,11 +235,11 @@ auto Catalog::bootstrap_types() -> VoidResult {
 }
 
 auto Catalog::bootstrap_classes() -> VoidResult {
-    const auto system_rows = std::array<std::pair<u32, std::string_view>, 4>{
-        {{TYPE_RELATION_OID, "edb_type"},
-         {CLASS_RELATION_OID, "edb_class"},
-         {ATTRIBUTE_RELATION_OID, "edb_attribute"},
-         {INDEX_RELATION_OID, "edb_index"}}};
+    const auto system_rows =
+        std::array<std::pair<u32, std::string_view>, 4>{{{TYPE_RELATION_OID, "edb_type"},
+                                                         {CLASS_RELATION_OID, "edb_class"},
+                                                         {ATTRIBUTE_RELATION_OID, "edb_attribute"},
+                                                         {INDEX_RELATION_OID, "edb_index"}}};
 
     for (const auto& [oid_value, name] : system_rows) {
         auto oid = make_int32_value(i32{static_cast<std::int32_t>(oid_value.value)});
@@ -264,8 +264,8 @@ auto Catalog::bootstrap_attributes() -> VoidResult {
         return std::unexpected(class_scan.error());
     }
 
-    auto write_schema_attributes =
-        [this](u32 relation_oid, const std::vector<ColumnSchema>& columns) -> VoidResult {
+    auto write_schema_attributes = [this](u32 relation_oid,
+                                          const std::vector<ColumnSchema>& columns) -> VoidResult {
         for (usize index{0}; index < usize{columns.size()}; ++index) {
             const auto& column = columns[index.value];
             auto relid = make_int32_value(i32{static_cast<std::int32_t>(relation_oid.value)});
@@ -434,6 +434,7 @@ auto Catalog::invalidate_class_cache(u32 class_oid, std::string_view class_name)
 }
 
 auto Catalog::get_type(std::string_view name) -> Result<CatalogType> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -460,6 +461,7 @@ auto Catalog::get_type(std::string_view name) -> Result<CatalogType> {
 }
 
 auto Catalog::get_class(std::string_view name) -> Result<CatalogClass> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -486,6 +488,7 @@ auto Catalog::get_class(std::string_view name) -> Result<CatalogClass> {
 }
 
 auto Catalog::get_attributes(u32 class_oid) -> Result<std::vector<CatalogAttribute>> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -536,6 +539,7 @@ auto Catalog::next_relation_oid() -> Result<u32> {
 }
 
 auto Catalog::create_table(const CreateTableSpec& spec) -> Result<u32> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -636,6 +640,7 @@ auto Catalog::lookup_attribute_rows(u32 class_oid) -> Result<std::vector<TableRo
 }
 
 auto Catalog::drop_table(u32 class_oid) -> VoidResult {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -678,7 +683,7 @@ auto Catalog::drop_table(u32 class_oid) -> VoidResult {
 }
 
 auto Catalog::ensure_user_table_open(u32 relation_oid, std::string_view relation_name,
-                                        std::span<const CatalogAttribute> attributes)
+                                     std::span<const CatalogAttribute> attributes)
     -> Result<Table*> {
     const auto opened_table = user_tables.find(relation_oid);
     if (opened_table != user_tables.end()) {
@@ -702,8 +707,8 @@ auto Catalog::ensure_user_table_open(u32 relation_oid, std::string_view relation
     schema.columns.reserve(resolved_attributes.size());
     for (const auto& attribute : resolved_attributes) {
         schema.columns.push_back(ColumnSchema{.name = attribute.name,
-                                                 .type_oid = attribute.type_oid,
-                                                 .nullable = attribute.nullable});
+                                              .type_oid = attribute.type_oid,
+                                              .nullable = attribute.nullable});
     }
 
     auto bundle = std::make_unique<OpenedTableBundle>();
@@ -718,6 +723,7 @@ auto Catalog::ensure_user_table_open(u32 relation_oid, std::string_view relation
 }
 
 auto Catalog::open_table(std::string_view name) -> Result<Table*> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }

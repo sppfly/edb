@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "catalog/catalog.hpp"
+#include "lock/lock_manager.hpp"
 #include "query/exec.hpp"
 #include "transaction/transaction_manager.hpp"
 #include "utils/error.hpp"
@@ -30,10 +31,11 @@ class QueryEngine {
     auto query_err(std::string_view msg, Error error) -> Result<QueryResult>;
     auto abort_query(TxId tx_id, std::string_view msg, Error error) -> Result<QueryResult>;
 
-    Catalog*            catalog{nullptr};
+    Catalog* catalog{nullptr};
     const TypeRegistry* types{nullptr};
-    TransactionManager  transactions;
-    std::string         last_error;
+    TransactionManager transactions;
+    LockManager locks;
+    std::string last_error;
 };
 
 }  // namespace edb

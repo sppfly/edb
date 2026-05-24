@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "catalog/catalog.hpp"
+#include "lock/lock_manager.hpp"
 #include "query/physical_plan.hpp"
 #include "transaction/visibility.hpp"
 #include "types/row_codec.hpp"
@@ -18,12 +19,13 @@ namespace edb {
 
 struct ExecRow {
     std::vector<BoundColumnRef> columns;
-    std::vector<Value>          values;
+    std::vector<Value> values;
 };
 
 struct ExecTransactionContext {
-    const Transaction*             tx{nullptr};
+    const Transaction* tx{nullptr};
     const TransactionStatusReader* statuses{nullptr};
+    LockManager* locks{nullptr};
 };
 
 class ExecNode {
@@ -53,10 +55,10 @@ class ExecBuilder {
     [[nodiscard]] auto build_node(PhysicalPlan::Node node) -> Result<std::unique_ptr<ExecNode>>;
     auto exec_err(std::string_view msg) -> Result<std::unique_ptr<ExecNode>>;
 
-    Catalog*             catalog{nullptr};
-    const TypeRegistry*  types{nullptr};
+    Catalog* catalog{nullptr};
+    const TypeRegistry* types{nullptr};
     ExecTransactionContext tx_context{};
-    std::string          last_error;
+    std::string last_error;
 };
 
 }  // namespace edb

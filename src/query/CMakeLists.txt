@@ -14,6 +14,7 @@ target_include_directories(edb_query PUBLIC
 
 target_link_libraries(edb_query PUBLIC
   edb_catalog
+  edb_lock
   edb_transaction
   edb_utils
 )

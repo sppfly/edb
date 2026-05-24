@@ -46,6 +46,16 @@ auto value_as_bool(const Value& value, const TypeRegistry& types) -> Result<b8> 
     return b8{(*type)->to_text(value.bytes) == std::string{"true"}};
 }
 
+auto acquire_relation_lock(const ExecTransactionContext& tx_context, u32 relation_oid,
+                           LockMode mode) -> VoidResult {
+    if (tx_context.tx == nullptr || tx_context.locks == nullptr) {
+        return {};
+    }
+    return tx_context.locks->acquire(
+        tx_context.tx->id, LockTag{.kind = LockTagKind::Relation, .relation_oid = relation_oid},
+        mode);
+}
+
 auto compare_values(BinaryOp op, const Value& left, const Value& right, const TypeRegistry& types)
     -> Result<b8> {
     if (static_cast<bool>(left.is_null) || static_cast<bool>(right.is_null)) {
@@ -80,7 +90,8 @@ auto compare_values(BinaryOp op, const Value& left, const Value& right, const Ty
     return std::unexpected(Error::InvalidArgument);
 }
 
-auto eval_expr(const BoundExpr& expr, const ExecRow& row, const TypeRegistry& types) -> Result<Value> {
+auto eval_expr(const BoundExpr& expr, const ExecRow& row, const TypeRegistry& types)
+    -> Result<Value> {
     if (const auto* literal = std::get_if<BoundLiteral>(&expr); literal != nullptr) {
         return literal->value;
     }
@@ -113,9 +124,10 @@ auto eval_expr(const BoundExpr& expr, const ExecRow& row, const TypeRegistry& ty
             return std::unexpected(right_bool.error());
         }
 
-        const auto result = binary.op == BinaryOp::And
-                                ? b8{static_cast<bool>(*left_bool) && static_cast<bool>(*right_bool)}
-                                : b8{static_cast<bool>(*left_bool) || static_cast<bool>(*right_bool)};
+        const auto result =
+            binary.op == BinaryOp::And
+                ? b8{static_cast<bool>(*left_bool) && static_cast<bool>(*right_bool)}
+                : b8{static_cast<bool>(*left_bool) || static_cast<bool>(*right_bool)};
         return make_bool_value(**bool_type, result);
     }
 
@@ -131,7 +143,8 @@ auto output_column(const BoundExpr& expr, const std::optional<std::string>& alia
     if (alias.has_value()) {
         return BoundColumnRef{
             .relation_oid = u32{0},
-            .attnum = u32{static_cast<std::uint32_t>(index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
+            .attnum = u32{static_cast<std::uint32_t>(
+                index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
             .name = *alias,
             .type = bound_expr_type(expr),
             .nullable = b8{true},
@@ -140,7 +153,8 @@ auto output_column(const BoundExpr& expr, const std::optional<std::string>& alia
     if (const auto* column = std::get_if<BoundColumnRef>(&expr); column != nullptr) {
         return BoundColumnRef{
             .relation_oid = u32{0},
-            .attnum = u32{static_cast<std::uint32_t>(index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
+            .attnum = u32{static_cast<std::uint32_t>(
+                index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
             .name = column->name,
             .type = column->type,
             .nullable = column->nullable,
@@ -148,7 +162,8 @@ auto output_column(const BoundExpr& expr, const std::optional<std::string>& alia
     }
     return BoundColumnRef{
         .relation_oid = u32{0},
-        .attnum = u32{static_cast<std::uint32_t>(index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
+        .attnum = u32{static_cast<std::uint32_t>(
+            index + 1U)},  // raw-primitive: projected column index becomes 1-based attnum
         .name = "?column?",
         .type = bound_expr_type(expr),
         .nullable = b8{true},
@@ -207,10 +222,10 @@ class CreateTableExecNode final : public ExecNode {
     }
 
    private:
-    Catalog*              catalog{nullptr};
-    BoundCreateTableStmt  stmt;
-    b8                    opened{b8{false}};
-    b8                    done{b8{false}};
+    Catalog* catalog{nullptr};
+    BoundCreateTableStmt stmt;
+    b8 opened{b8{false}};
+    b8 done{b8{false}};
 };
 
 class InsertExecNode final : public ExecNode {
@@ -221,6 +236,11 @@ class InsertExecNode final : public ExecNode {
     auto open() -> VoidResult override {
         if (catalog == nullptr) {
             return std::unexpected(Error::InvalidArgument);
+        }
+        if (auto locked =
+                acquire_relation_lock(tx_context, stmt.table.relation_oid, LockMode::Exclusive);
+            !locked) {
+            return locked;
         }
         auto table = catalog->open_table(stmt.table.name);
         if (!table) {
@@ -262,11 +282,11 @@ class InsertExecNode final : public ExecNode {
     }
 
    private:
-    Catalog*         catalog{nullptr};
+    Catalog* catalog{nullptr};
     ExecTransactionContext tx_context{};
-    BoundInsertStmt  stmt;
-    b8               opened{b8{false}};
-    b8               done{b8{false}};
+    BoundInsertStmt stmt;
+    b8 opened{b8{false}};
+    b8 done{b8{false}};
 };
 
 class SeqScanExecNode final : public ExecNode {
@@ -278,16 +298,20 @@ class SeqScanExecNode final : public ExecNode {
         if (catalog == nullptr) {
             return std::unexpected(Error::InvalidArgument);
         }
+        if (auto locked = acquire_relation_lock(tx_context, table.relation_oid, LockMode::Shared);
+            !locked) {
+            return locked;
+        }
         auto opened_table = catalog->open_table(table.name);
         if (!opened_table) {
             return std::unexpected(opened_table.error());
         }
         auto scanned = tx_context.tx == nullptr || tx_context.statuses == nullptr
                            ? (*opened_table)->scan()
-                           : (*opened_table)->scan(
-                                 VisibilityContext{.snapshot = tx_context.tx->snapshot,
-                                                   .current_tx = tx_context.tx->id},
-                                 *tx_context.statuses);
+                           : (*opened_table)
+                                 ->scan(VisibilityContext{.snapshot = tx_context.tx->snapshot,
+                                                          .current_tx = tx_context.tx->id},
+                                        *tx_context.statuses);
         if (!scanned) {
             return std::unexpected(scanned.error());
         }
@@ -317,12 +341,12 @@ class SeqScanExecNode final : public ExecNode {
     }
 
    private:
-    Catalog*                        catalog{nullptr};
-    ExecTransactionContext          tx_context{};
-    BoundTableRef                   table;
+    Catalog* catalog{nullptr};
+    ExecTransactionContext tx_context{};
+    BoundTableRef table;
     std::vector<std::vector<Value>> rows;
-    std::size_t                     index{0};
-    b8                              opened{b8{false}};
+    std::size_t index{0};
+    b8 opened{b8{false}};
 };
 
 class FilterExecNode final : public ExecNode {
@@ -376,8 +400,8 @@ class FilterExecNode final : public ExecNode {
 
    private:
     std::unique_ptr<ExecNode> input;
-    const TypeRegistry*       types{nullptr};
-    BoundExpr                 predicate;
+    const TypeRegistry* types{nullptr};
+    BoundExpr predicate;
 };
 
 class ProjectExecNode final : public ExecNode {
@@ -422,8 +446,8 @@ class ProjectExecNode final : public ExecNode {
             if (!value) {
                 return std::unexpected(value.error());
             }
-            projected.columns.push_back(output_column(expr_item.expr, expr_item.alias,
-                                                      projected.columns.size()));
+            projected.columns.push_back(
+                output_column(expr_item.expr, expr_item.alias, projected.columns.size()));
             projected.values.push_back(std::move(*value));
         }
 
@@ -439,8 +463,8 @@ class ProjectExecNode final : public ExecNode {
     }
 
    private:
-    std::unique_ptr<ExecNode>   input;
-    const TypeRegistry*         types{nullptr};
+    std::unique_ptr<ExecNode> input;
+    const TypeRegistry* types{nullptr};
     std::vector<BoundSelectItem> items;
 };
 
@@ -457,7 +481,9 @@ auto ExecBuilder::build(PhysicalPlan plan) -> Result<std::unique_ptr<ExecNode>> 
     return build_node(std::move(plan.node));
 }
 
-auto ExecBuilder::error_message() const noexcept -> std::string_view { return last_error; }
+auto ExecBuilder::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 auto ExecBuilder::build_node(PhysicalPlan::Node node) -> Result<std::unique_ptr<ExecNode>> {
     if (catalog == nullptr || types == nullptr) {

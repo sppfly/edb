@@ -73,8 +73,9 @@ auto QueryEngine::execute(std::string_view sql) -> Result<QueryResult> {
     }
 
     ManagerStatusReader status_reader{transactions};
-    ExecBuilder exec_builder{*catalog, *types,
-                             ExecTransactionContext{.tx = &*tx, .statuses = &status_reader}};
+    ExecBuilder exec_builder{
+        *catalog, *types,
+        ExecTransactionContext{.tx = &*tx, .statuses = &status_reader, .locks = &locks}};
     auto exec = exec_builder.build(std::move(*physical));
     if (!exec) {
         return abort_query(tx_id, exec_builder.error_message(), exec.error());
@@ -110,20 +111,26 @@ auto QueryEngine::execute(std::string_view sql) -> Result<QueryResult> {
     }
     auto committed = transactions.commit(tx_id);
     if (!committed) {
+        locks.release_all(tx_id);
         return query_err("transaction commit failed", committed.error());
     }
+    locks.release_all(tx_id);
     return result;
 }
 
-auto QueryEngine::error_message() const noexcept -> std::string_view { return last_error; }
+auto QueryEngine::error_message() const noexcept -> std::string_view {
+    return last_error;
+}
 
 auto QueryEngine::query_err(std::string_view msg, Error error) -> Result<QueryResult> {
     last_error = std::string{msg};
     return std::unexpected(error);
 }
 
-auto QueryEngine::abort_query(TxId tx_id, std::string_view msg, Error error) -> Result<QueryResult> {
+auto QueryEngine::abort_query(TxId tx_id, std::string_view msg, Error error)
+    -> Result<QueryResult> {
     const auto aborted = transactions.abort(tx_id);
+    locks.release_all(tx_id);
     if (!aborted) {
         return query_err("transaction abort failed", aborted.error());
     }

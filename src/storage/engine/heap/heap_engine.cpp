@@ -45,7 +45,7 @@ auto append_u64(std::vector<std::byte>& bytes, u64 value) -> void {
 }
 
 struct StoredHeapTuple {
-    TupleHeader            header;
+    TupleHeader header;
     std::vector<std::byte> payload;
 };
 
@@ -81,8 +81,8 @@ auto EdbHeapEngine::insert_impl(const Transaction& tx, std::span<const std::byte
     if (tx.id.value == u64{0}) {
         return std::unexpected(Error::InvalidArgument);
     }
-    auto stored = encode_heap_tuple(
-        TupleHeader{.xmin = tx.id, .xmax = TxId{u64{0}}, .flags = u16{0}}, tuple);
+    auto stored =
+        encode_heap_tuple(TupleHeader{.xmin = tx.id, .xmax = TxId{u64{0}}, .flags = u16{0}}, tuple);
     return insert_encoded_tuple(stored);
 }
 
@@ -93,8 +93,8 @@ auto EdbHeapEngine::delete_tuple_impl(const Transaction& tx, TupleId id) -> Void
     return mark_deleted(id, tx.id, nullptr);
 }
 
-auto EdbHeapEngine::update_tuple_impl(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
-    -> Result<TupleId> {
+auto EdbHeapEngine::update_tuple_impl(const Transaction& tx, TupleId id,
+                                      std::span<const std::byte> tuple) -> Result<TupleId> {
     auto delete_status = delete_tuple(tx, id);
     if (!delete_status) {
         return std::unexpected(delete_status.error());
@@ -122,6 +122,7 @@ auto EdbHeapEngine::update_tuple(const Transaction& tx, TupleId id,
 
 auto EdbHeapEngine::begin_scan_impl(const VisibilityContext& context,
                                     const TransactionStatusReader& statuses) -> Result<ScanHandle> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -137,11 +138,11 @@ auto EdbHeapEngine::begin_scan_impl(const VisibilityContext& context,
 }
 
 auto EdbHeapEngine::open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult {
+    std::scoped_lock guard{latch};
     page_store = &store;
     config = cfg;
-    auto status =
-        buffer_pool.open(store, BufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages,
-                                                    .eviction = cfg.buffer_eviction});
+    auto status = buffer_pool.open(store, BufferPoolConfig{.capacity_pages = cfg.buffer_pool_pages,
+                                                           .eviction = cfg.buffer_eviction});
     if (!status) {
         page_store = nullptr;
         return status;
@@ -151,6 +152,7 @@ auto EdbHeapEngine::open_impl(PageStore& store, const EngineConfig& cfg) -> Void
 }
 
 auto EdbHeapEngine::close_impl() -> VoidResult {
+    std::scoped_lock guard{latch};
     if (!opened.value) {
         return {};
     }
@@ -167,6 +169,7 @@ auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> Result<Tupl
 }
 
 auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple) -> Result<TupleId> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -189,6 +192,7 @@ auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple) -> Re
 }
 
 auto EdbHeapEngine::delete_tuple_impl(TupleId id) -> VoidResult {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -218,6 +222,7 @@ auto EdbHeapEngine::update_tuple_impl(TupleId id, std::span<const std::byte> tup
 }
 
 auto EdbHeapEngine::begin_scan_impl() -> Result<ScanHandle> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -225,6 +230,7 @@ auto EdbHeapEngine::begin_scan_impl() -> Result<ScanHandle> {
 }
 
 auto EdbHeapEngine::scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
     }
@@ -269,6 +275,7 @@ auto EdbHeapEngine::scan_next_impl(ScanHandle& handle) -> Result<std::optional<T
 }
 
 auto EdbHeapEngine::end_scan_impl(ScanHandle& handle) -> VoidResult {
+    std::scoped_lock guard{latch};
     scan_contexts.erase(cursor_scan_id(handle));
     handle.value = encode_cursor(u64{0}, u16{0});
     return {};
@@ -321,8 +328,7 @@ auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::
     return TupleId{.page_id = page_id, .slot_idx = *slot};
 }
 
-auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple)
-    -> Result<TupleId> {
+auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple) -> Result<TupleId> {
     auto allocated = page_store->allocate_page();
     if (!allocated) {
         return std::unexpected(allocated.error());
@@ -406,8 +412,9 @@ auto EdbHeapEngine::scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_i
     return Tuple{.id = tuple_id, .data = std::move(data)};
 }
 
-auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax,
-                                 const TransactionStatusReader* statuses) -> VoidResult {
+auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax, const TransactionStatusReader* statuses)
+    -> VoidResult {
+    std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return status;
     }
@@ -440,9 +447,9 @@ auto EdbHeapEngine::mark_deleted(TupleId id, TxId xmax,
 
     auto overwritten = heap::overwrite_tuple(
         handle->data(), id.slot_idx,
-        encode_heap_tuple(TupleHeader{.xmin = stored->header.xmin, .xmax = xmax,
-                                      .flags = stored->header.flags},
-                          stored->payload));
+        encode_heap_tuple(
+            TupleHeader{.xmin = stored->header.xmin, .xmax = xmax, .flags = stored->header.flags},
+            stored->payload));
     if (!overwritten) {
         if (auto status = unpin_clean(*handle); !status) {
             return status;

@@ -3,6 +3,7 @@
 // src/catalog/catalog.hpp
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -60,7 +61,7 @@ class RelationBackendFactory {
 class Catalog {
    public:
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
-               const EngineConfig& engine_config);
+            const EngineConfig& engine_config);
 
     Catalog(const Catalog&) = delete;
     Catalog& operator=(const Catalog&) = delete;
@@ -100,8 +101,7 @@ class Catalog {
     auto bootstrap_classes() -> VoidResult;
     auto bootstrap_attributes() -> VoidResult;
     auto ensure_user_table_open(u32 relation_oid, std::string_view relation_name,
-                                std::span<const CatalogAttribute> attributes)
-        -> Result<Table*>;
+                                std::span<const CatalogAttribute> attributes) -> Result<Table*>;
     auto lookup_class_row(u32 class_oid) -> Result<std::optional<TableRow>>;
     auto lookup_attribute_rows(u32 class_oid) -> Result<std::vector<TableRow>>;
     auto next_relation_oid() -> Result<u32>;
@@ -125,6 +125,7 @@ class Catalog {
     RelationBackendFactory* backends{nullptr};
     EngineConfig config{};
     b8 opened{false};
+    mutable std::recursive_mutex latch;
 
     OpenedTableBundle type_table{};
     OpenedTableBundle class_table{};
