@@ -19,8 +19,7 @@ class StorageEngineFactory {
     virtual ~StorageEngineFactory() = default;
 
     [[nodiscard]] virtual auto open_engine(u32 relation_oid, std::string_view relation_name,
-                                           PageStore& page_store,
-                                           const EngineConfig& config)
+                                           PageStore& page_store, const EngineConfig& config)
         -> Result<std::unique_ptr<StorageEngineOps>> = 0;
 };
 

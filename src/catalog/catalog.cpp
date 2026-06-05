@@ -56,11 +56,15 @@ Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_f
       engines{&engine_factory},
       config{engine_config} {}
 
+auto Catalog::set_wal_emitter(WalEmitter& wal_emitter) noexcept -> void {
+    config.wal = &wal_emitter;
+}
+
 auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry,
                                       RelationBackendFactory& backend_factory,
                                       StorageEngineFactory& engine_factory,
-                                      const TableSchema& schema,
-                                      const EngineConfig& engine_config) -> VoidResult {
+                                      const TableSchema& schema, const EngineConfig& engine_config)
+    -> VoidResult {
     auto opened_backend = backend_factory.open_backend(schema.relation_oid, schema.name);
     if (!opened_backend) {
         return std::unexpected(opened_backend.error());
@@ -197,16 +201,14 @@ auto Catalog::open_system_tables() -> VoidResult {
                     {.name = "indrelid", .type_oid = (*int32_type)->oid, .nullable = b8{false}},
                     {.name = "am_name", .type_oid = (*text_type)->oid, .nullable = b8{false}}}};
 
-    if (auto status = type_table.open(*types, *backends, *engines, type_schema, config);
-        !status) {
+    if (auto status = type_table.open(*types, *backends, *engines, type_schema, config); !status) {
         return status;
     }
     if (auto status = class_table.open(*types, *backends, *engines, class_schema, config);
         !status) {
         return status;
     }
-    if (auto status =
-            attribute_table.open(*types, *backends, *engines, attribute_schema, config);
+    if (auto status = attribute_table.open(*types, *backends, *engines, attribute_schema, config);
         !status) {
         return status;
     }

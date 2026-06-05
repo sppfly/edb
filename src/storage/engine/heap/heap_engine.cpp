@@ -83,7 +83,7 @@ auto EdbHeapEngine::insert_impl(const Transaction& tx, std::span<const std::byte
     }
     auto stored =
         encode_heap_tuple(TupleHeader{.xmin = tx.id, .xmax = TxId{u64{0}}, .flags = u16{0}}, tuple);
-    return insert_encoded_tuple(stored);
+    return insert_encoded_tuple(stored, tx.id, config.wal);
 }
 
 auto EdbHeapEngine::delete_tuple_impl(const Transaction& tx, TupleId id) -> VoidResult {
@@ -165,10 +165,11 @@ auto EdbHeapEngine::close_impl() -> VoidResult {
 auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> {
     auto stored = encode_heap_tuple(
         TupleHeader{.xmin = TxId{u64{1}}, .xmax = TxId{u64{0}}, .flags = u16{0}}, tuple);
-    return insert_encoded_tuple(stored);
+    return insert_encoded_tuple(stored, TxId{u64{0}}, nullptr);
 }
 
-auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple) -> Result<TupleId> {
+auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple, TxId tx_id,
+                                         WalEmitter* wal_emitter) -> Result<TupleId> {
     std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
@@ -180,7 +181,7 @@ auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple) -> Re
     }
 
     for (u64 page_id{0}; page_id < *count; ++page_id) {
-        auto inserted = insert_into_existing_page(page_id, tuple);
+        auto inserted = insert_into_existing_page(page_id, tuple, tx_id, wal_emitter);
         if (!inserted) {
             return std::unexpected(inserted.error());
         }
@@ -188,7 +189,7 @@ auto EdbHeapEngine::insert_encoded_tuple(std::span<const std::byte> tuple) -> Re
             return **inserted;
         }
     }
-    return insert_into_new_page(tuple);
+    return insert_into_new_page(tuple, tx_id, wal_emitter);
 }
 
 auto EdbHeapEngine::delete_tuple_impl(TupleId id) -> VoidResult {
@@ -292,7 +293,8 @@ auto EdbHeapEngine::check_open() const -> VoidResult {
     return {};
 }
 
-auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
+auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple,
+                                              TxId tx_id, WalEmitter* wal_emitter)
     -> Result<std::optional<TupleId>> {
     auto frame = buffer_pool.fetch(page_id);
     if (!frame) {
@@ -321,6 +323,25 @@ auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::
         }
         return std::unexpected(slot.error());
     }
+
+    // Emit WAL while the frame is still pinned, then stamp page_lsn.
+    if (wal_emitter != nullptr) {
+        auto lsn = wal_emitter->emit_heap_insert(
+            tx_id, TupleId{.page_id = page_id, .slot_idx = *slot}, tuple);
+        if (!lsn) {
+            if (auto unpinned = unpin_clean(*frame); !unpinned) {
+                return std::unexpected(unpinned.error());
+            }
+            return std::unexpected(lsn.error());
+        }
+        if (auto lsn_status = heap::set_page_lsn(frame->data(), *lsn); !lsn_status) {
+            if (auto unpinned = unpin_clean(*frame); !unpinned) {
+                return std::unexpected(unpinned.error());
+            }
+            return std::unexpected(lsn_status.error());
+        }
+    }
+
     auto status = buffer_pool.unpin(*frame, b8{true});
     if (!status) {
         return std::unexpected(status.error());
@@ -328,7 +349,8 @@ auto EdbHeapEngine::insert_into_existing_page(u64 page_id, std::span<const std::
     return TupleId{.page_id = page_id, .slot_idx = *slot};
 }
 
-auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple) -> Result<TupleId> {
+auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple, TxId tx_id,
+                                         WalEmitter* wal_emitter) -> Result<TupleId> {
     auto allocated = page_store->allocate_page();
     if (!allocated) {
         return std::unexpected(allocated.error());
@@ -351,6 +373,25 @@ auto EdbHeapEngine::insert_into_new_page(std::span<const std::byte> tuple) -> Re
         }
         return std::unexpected(slot.error());
     }
+
+    // Emit WAL while the frame is still pinned, then stamp page_lsn.
+    if (wal_emitter != nullptr) {
+        auto lsn = wal_emitter->emit_heap_insert(
+            tx_id, TupleId{.page_id = *allocated, .slot_idx = *slot}, tuple);
+        if (!lsn) {
+            if (auto unpinned = unpin_clean(*frame); !unpinned) {
+                return std::unexpected(unpinned.error());
+            }
+            return std::unexpected(lsn.error());
+        }
+        if (auto lsn_status = heap::set_page_lsn(frame->data(), *lsn); !lsn_status) {
+            if (auto unpinned = unpin_clean(*frame); !unpinned) {
+                return std::unexpected(unpinned.error());
+            }
+            return std::unexpected(lsn_status.error());
+        }
+    }
+
     auto status = buffer_pool.unpin(*frame, b8{true});
     if (!status) {
         return std::unexpected(status.error());

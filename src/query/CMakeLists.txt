@@ -17,4 +17,5 @@ target_link_libraries(edb_query PUBLIC
   edb_lock
   edb_transaction
   edb_utils
+  edb_wal
 )

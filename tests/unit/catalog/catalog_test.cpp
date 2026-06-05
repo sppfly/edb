@@ -87,8 +87,8 @@ class TrackingEngineFactory final : public StorageEngineFactory {
     [[nodiscard]] auto open_engine(u32 relation_oid, std::string_view relation_name,
                                    PageStore& page_store, const EngineConfig& config)
         -> Result<std::unique_ptr<StorageEngineOps>> override {
-        open_calls.push_back(OpenCall{.relation_oid = relation_oid,
-                                      .relation_name = std::string{relation_name}});
+        open_calls.push_back(
+            OpenCall{.relation_oid = relation_oid, .relation_name = std::string{relation_name}});
 
         auto engine = std::make_unique<EdbHeapEngine>();
         if (auto status = engine->open(page_store, config); !status) {

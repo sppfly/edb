@@ -20,10 +20,44 @@
 
 namespace edb {
 
+// Forward declaration
+struct TupleId;
+
+// ---------------------------------------------------------------------------
+// WalEmitter — abstract WAL emission interface
+//
+// Implemented by the query layer (edb_query) using WalManager. Injected into
+// EngineConfig so storage engines can emit WAL records without depending on
+// the WAL library directly (which would create a circular library dependency
+// since edb_wal already depends on edb_engine).
+//
+// Contract: the caller (storage engine) must hold the buffer-pool frame pinned
+// across the emit_heap_insert call. This ensures the page is not evicted to
+// disk before page_lsn is updated to the returned LSN.
+// ---------------------------------------------------------------------------
+class WalEmitter {
+   public:
+    WalEmitter() = default;
+    WalEmitter(const WalEmitter&) = delete;
+    WalEmitter& operator=(const WalEmitter&) = delete;
+    WalEmitter(WalEmitter&&) = delete;
+    WalEmitter& operator=(WalEmitter&&) = delete;
+    virtual ~WalEmitter() = default;
+
+    // Append a HEAP_INSERT WAL record for the tuple at `id`.
+    // `stored_bytes` is the complete on-page representation (tuple header +
+    // encoded payload). Returns the LSN assigned to the record; the caller
+    // must write it to the page as page_lsn before releasing the frame.
+    [[nodiscard]] virtual auto emit_heap_insert(TxId tx_id, TupleId id,
+                                                std::span<const std::byte> stored_bytes)
+        -> Result<u64> = 0;
+};
+
 struct EngineConfig {
     usize page_size{8192};
     usize buffer_pool_pages{1024};
     EvictionPolicyConfig buffer_eviction{};
+    WalEmitter* wal{nullptr};  // optional; if set, WAL records are emitted for mutations
 };
 
 struct TupleId {

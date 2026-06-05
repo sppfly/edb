@@ -59,10 +59,15 @@ class EdbHeapEngine final : public StorageEngineOps {
     [[nodiscard]] auto page_size_impl() const -> usize override;
 
     [[nodiscard]] auto check_open() const -> VoidResult;
-    auto insert_encoded_tuple(std::span<const std::byte> tuple) -> Result<TupleId>;
-    auto insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
-        -> Result<std::optional<TupleId>>;
-    auto insert_into_new_page(std::span<const std::byte> tuple) -> Result<TupleId>;
+    // wal_emitter and tx_id are used together: if wal_emitter != nullptr, a
+    // HEAP_INSERT WAL record is emitted (with tx_id) and page_lsn is updated
+    // before the frame is unpinned, enforcing WAL-before-data ordering.
+    auto insert_encoded_tuple(std::span<const std::byte> tuple, TxId tx_id, WalEmitter* wal_emitter)
+        -> Result<TupleId>;
+    auto insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple, TxId tx_id,
+                                   WalEmitter* wal_emitter) -> Result<std::optional<TupleId>>;
+    auto insert_into_new_page(std::span<const std::byte> tuple, TxId tx_id, WalEmitter* wal_emitter)
+        -> Result<TupleId>;
     auto scan_slot(FrameHandle& frame, ScanHandle& handle, u64 page_id, u16 slot_idx)
         -> Result<std::optional<Tuple>>;
 

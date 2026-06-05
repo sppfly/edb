@@ -63,7 +63,7 @@ class Catalog {
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
             const EngineConfig& engine_config);
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
-        StorageEngineFactory& engine_factory, const EngineConfig& engine_config);
+            StorageEngineFactory& engine_factory, const EngineConfig& engine_config);
 
     Catalog(const Catalog&) = delete;
     Catalog& operator=(const Catalog&) = delete;
@@ -73,6 +73,11 @@ class Catalog {
 
     auto open() -> VoidResult;
     auto close() -> VoidResult;
+
+    // Attach a WAL emitter so that all subsequent relation mutations emit WAL
+    // records. Must be called before the first SQL statement if durability is
+    // required. Safe to call when no tables are open.
+    auto set_wal_emitter(WalEmitter& wal_emitter) noexcept -> void;
 
     [[nodiscard]] auto get_type(std::string_view name) -> Result<CatalogType>;
     [[nodiscard]] auto get_class(std::string_view name) -> Result<CatalogClass>;
