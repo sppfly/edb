@@ -5,9 +5,12 @@
 #include <expected>
 #include <utility>
 
+#include "utils/assert.hpp"
+
 namespace edb {
 
 auto TypeRegistry::lookup(std::string_view name) const -> Result<const Type*> {
+    EDB_ASSERT(!name.empty());
     const auto found = by_name.find(std::string{name});
     if (found == by_name.end()) {
         return std::unexpected(Error::NotFound);
@@ -16,6 +19,7 @@ auto TypeRegistry::lookup(std::string_view name) const -> Result<const Type*> {
 }
 
 auto TypeRegistry::lookup(u32 oid) const -> Result<const Type*> {
+    EDB_ASSERT(oid > u32{0});
     const auto found = by_oid.find(oid);
     if (found == by_oid.end()) {
         return std::unexpected(Error::NotFound);

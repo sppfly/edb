@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 #include "types/type_ops.hpp"
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -25,7 +25,8 @@ class TypeRegistry {
     ~TypeRegistry() = default;
 
     template <TypeImpl T>
-    auto register_type(std::string_view name) -> VoidResult EDB_PRE(!name.empty()) {
+    auto register_type(std::string_view name) -> VoidResult {
+        EDB_ASSERT(!name.empty());
         Type type{};
         type.name = std::string{name};
         type.fixed_size = T::fixed_size();
@@ -38,8 +39,8 @@ class TypeRegistry {
         return register_type_impl(std::move(type));
     }
 
-    auto lookup(std::string_view name) const -> Result<const Type*> EDB_PRE(!name.empty());
-    auto lookup(u32 oid) const -> Result<const Type*> EDB_PRE(oid > u32{0});
+    auto lookup(std::string_view name) const -> Result<const Type*>;
+    auto lookup(u32 oid) const -> Result<const Type*>;
     [[nodiscard]] auto size() const -> usize;
 
    private:

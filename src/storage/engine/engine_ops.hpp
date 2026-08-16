@@ -14,7 +14,7 @@
 #include "storage/buffer/eviction_policy.hpp"
 #include "storage/page/page_store.hpp"
 #include "transaction/visibility.hpp"
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -84,19 +84,20 @@ struct StorageEngineOps {
 
     virtual ~StorageEngineOps() = default;
 
-    auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult
-        EDB_PRE(cfg.page_size > usize{0}) {
+    auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult {
+        EDB_ASSERT(cfg.page_size > usize{0});
         return open_impl(store, cfg);
     }
 
     auto close() -> VoidResult { return close_impl(); }
 
-    auto insert(std::span<const std::byte> tuple) -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+    auto insert(std::span<const std::byte> tuple) -> Result<TupleId> {
+        EDB_ASSERT(!tuple.empty());
         return insert_impl(tuple);
     }
 
-    auto insert(const Transaction& tx, std::span<const std::byte> tuple)
-        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+    auto insert(const Transaction& tx, std::span<const std::byte> tuple) -> Result<TupleId> {
+        EDB_ASSERT(!tuple.empty());
         return insert_impl(tx, tuple);
     }
 
@@ -106,13 +107,14 @@ struct StorageEngineOps {
         return delete_tuple_impl(tx, id);
     }
 
-    auto update_tuple(TupleId id, std::span<const std::byte> tuple)
-        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+    auto update_tuple(TupleId id, std::span<const std::byte> tuple) -> Result<TupleId> {
+        EDB_ASSERT(!tuple.empty());
         return update_tuple_impl(id, tuple);
     }
 
     auto update_tuple(const Transaction& tx, TupleId id, std::span<const std::byte> tuple)
-        -> Result<TupleId> EDB_PRE(!tuple.empty()) {
+        -> Result<TupleId> {
+        EDB_ASSERT(!tuple.empty());
         return update_tuple_impl(tx, id, tuple);
     }
 

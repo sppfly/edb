@@ -12,7 +12,7 @@
 
 #include "storage/buffer/eviction_policy.hpp"
 #include "storage/page/page_store.hpp"
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -62,8 +62,7 @@ class BufferPool {
 
     ~BufferPool() = default;
 
-    auto open(PageStore& page_store, const BufferPoolConfig& cfg) -> VoidResult
-        EDB_PRE(cfg.capacity_pages > usize{0});
+    auto open(PageStore& page_store, const BufferPoolConfig& cfg) -> VoidResult;
     auto close() -> VoidResult;
 
     auto fetch(u64 page_id) -> Result<FrameHandle>;

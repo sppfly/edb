@@ -1,5 +1,5 @@
 add_library(edb_utils STATIC
-  contracts.cpp
+  assert.cpp
 )
 
 target_include_directories(edb_utils PUBLIC

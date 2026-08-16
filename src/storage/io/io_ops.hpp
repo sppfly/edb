@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <span>
 
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -65,7 +65,8 @@ struct StorageIOOps {
     /// Open a file or device at `path` using the given config.
     /// Must be called before any I/O method.
     /// Returns EdbError::IoError if the path cannot be opened.
-    auto open(const char* path, const IOConfig& cfg) -> VoidResult EDB_PRE(path != nullptr) {
+    auto open(const char* path, const IOConfig& cfg) -> VoidResult {
+        EDB_ASSERT(path != nullptr);
         return open_impl(path, cfg);
     }
 
@@ -79,14 +80,16 @@ struct StorageIOOps {
     /// Read exactly buf.size() bytes from byte offset `offset`.
     /// Returns the number of bytes actually read (may be < buf.size() at EOF).
     /// Returns EdbError::IoError on OS failure.
-    auto read(u64 offset, std::span<std::byte> buf) -> Result<usize> EDB_PRE(!buf.empty()) {
+    auto read(u64 offset, std::span<std::byte> buf) -> Result<usize> {
+        EDB_ASSERT(!buf.empty());
         return read_impl(offset, buf);
     }
 
     /// Write exactly buf.size() bytes to byte offset `offset`.
     /// Returns the number of bytes actually written.
     /// Returns EdbError::IoError on OS failure.
-    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> EDB_PRE(!buf.empty()) {
+    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> {
+        EDB_ASSERT(!buf.empty());
         return write_impl(offset, buf);
     }
 
@@ -110,12 +113,14 @@ struct StorageIOOps {
     /// Map `len` bytes at `offset` into the process address space.
     /// `prot` is passed directly to mmap(2) (PROT_READ, PROT_WRITE, etc.).
     /// Default returns EdbError::NotSupported; POSIX backend overrides this.
-    auto mmap(u64 offset, usize len, i32 prot) -> Result<std::byte*> EDB_PRE(len > usize{0}) {
+    auto mmap(u64 offset, usize len, i32 prot) -> Result<std::byte*> {
+        EDB_ASSERT(len > usize{0});
         return mmap_impl(offset, len, prot);
     }
 
     /// Unmap a region previously returned by mmap().
-    auto munmap(std::byte* addr, usize len) -> VoidResult EDB_PRE(len > usize{0}) {
+    auto munmap(std::byte* addr, usize len) -> VoidResult {
+        EDB_ASSERT(len > usize{0});
         return munmap_impl(addr, len);
     }
 
@@ -131,7 +136,8 @@ struct StorageIOOps {
 
     /// Flush dirty data in the byte range [offset, offset+len).
     /// Default falls back to datasync().
-    auto sync_range(u64 offset, usize len) -> VoidResult EDB_PRE(len > usize{0}) {
+    auto sync_range(u64 offset, usize len) -> VoidResult {
+        EDB_ASSERT(len > usize{0});
         return sync_range_impl(offset, len);
     }
 

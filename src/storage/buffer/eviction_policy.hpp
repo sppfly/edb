@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -44,7 +44,8 @@ class EvictionPolicy {
     EvictionPolicy& operator=(EvictionPolicy&&) = delete;
     virtual ~EvictionPolicy() = default;
 
-    auto reset(usize capacity) -> VoidResult EDB_PRE(capacity > usize{0}) {
+    auto reset(usize capacity) -> VoidResult {
+        EDB_ASSERT(capacity > usize{0});
         return reset_impl(capacity);
     }
     auto record_access(u64 page_id, usize frame_index) -> VoidResult {

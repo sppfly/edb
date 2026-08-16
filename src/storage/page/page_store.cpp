@@ -6,9 +6,12 @@
 #include <expected>
 #include <limits>
 
+#include "utils/assert.hpp"
+
 namespace edb {
 
 auto PageStore::open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult {
+    EDB_ASSERT(cfg.page_size > usize{0});
     io = &backend;
     config = cfg;
     return {};
@@ -20,6 +23,7 @@ auto PageStore::close() -> VoidResult {
 }
 
 auto PageStore::read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult {
+    EDB_ASSERT(buf.size() >= page_size().value);
     if (auto status = validate_existing_page(page_id); !status) {
         return status;
     }
@@ -41,6 +45,7 @@ auto PageStore::read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult {
 }
 
 auto PageStore::write_page(u64 page_id, std::span<const std::byte> buf) -> VoidResult {
+    EDB_ASSERT(buf.size() >= page_size().value);
     if (auto status = validate_existing_page(page_id); !status) {
         return status;
     }

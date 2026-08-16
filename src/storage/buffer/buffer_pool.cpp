@@ -6,6 +6,8 @@
 #include <expected>
 #include <utility>
 
+#include "utils/assert.hpp"
+
 namespace edb {
 
 FrameHandle::FrameHandle(BufferPool* owner, usize frame_index, u64 page_id,
@@ -53,6 +55,7 @@ auto FrameHandle::release() -> void {
 }
 
 auto BufferPool::open(PageStore& page_store, const BufferPoolConfig& cfg) -> VoidResult {
+    EDB_ASSERT(cfg.capacity_pages > usize{0});
     store = &page_store;
     config = cfg;
     page_bytes = page_store.page_size();

@@ -10,7 +10,7 @@
 #include <span>
 
 #include "storage/io/io_ops.hpp"
-#include "utils/contracts.hpp"
+#include "utils/assert.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
@@ -31,14 +31,11 @@ class PageStore {
 
     ~PageStore() = default;
 
-    auto open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult
-        EDB_PRE(cfg.page_size > usize{0});
+    auto open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult;
     auto close() -> VoidResult;
 
-    auto read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult
-        EDB_PRE(buf.size() >= page_size().value);
-    auto write_page(u64 page_id, std::span<const std::byte> buf) -> VoidResult
-        EDB_PRE(buf.size() >= page_size().value);
+    auto read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult;
+    auto write_page(u64 page_id, std::span<const std::byte> buf) -> VoidResult;
 
     auto allocate_page() -> Result<u64>;
     auto page_count() -> Result<u64>;
