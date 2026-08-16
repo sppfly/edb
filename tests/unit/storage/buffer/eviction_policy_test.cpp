@@ -7,6 +7,10 @@
 #include <array>
 #include <memory>
 
+#include "storage/buffer/arc_policy.hpp"
+#include "storage/buffer/clock_sweep_policy.hpp"
+#include "storage/buffer/lru_k_policy.hpp"
+
 using namespace edb;
 
 TEST(EdbEvictionPolicy, ClockSweepGivesReferencedPagesSecondChance) {
