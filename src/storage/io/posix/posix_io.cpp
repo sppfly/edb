@@ -43,10 +43,11 @@ auto PosixIO::check_open() const -> VoidResult {
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-auto PosixIO::open_impl(const char* path, const IOConfig& cfg) -> VoidResult {
+auto PosixIO::open(const char* path, const IOConfig& cfg) -> VoidResult {
+    EDB_ASSERT(path != nullptr);
     if (fd >= 0) {
         // Already open — close first.
-        if (auto res = close_impl(); !res) {
+        if (auto res = close(); !res) {
             return res;
         }
     }
@@ -71,7 +72,7 @@ auto PosixIO::open_impl(const char* path, const IOConfig& cfg) -> VoidResult {
     return {};
 }
 
-auto PosixIO::close_impl() -> VoidResult {
+auto PosixIO::close() -> VoidResult {
     if (fd < 0) {
         return {};  // Already closed — no-op.
     }
@@ -88,7 +89,8 @@ auto PosixIO::close_impl() -> VoidResult {
 // Synchronous I/O
 // ---------------------------------------------------------------------------
 
-auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> {
+auto PosixIO::read(u64 offset, std::span<std::byte> buf) -> Result<usize> {
+    EDB_ASSERT(!buf.empty());
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -117,7 +119,8 @@ auto PosixIO::read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> {
     return usize{bytes_read};
 }
 
-auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> {
+auto PosixIO::write(u64 offset, std::span<const std::byte> buf) -> Result<usize> {
+    EDB_ASSERT(!buf.empty());
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -146,7 +149,7 @@ auto PosixIO::write_impl(u64 offset, std::span<const std::byte> buf) -> Result<u
 // Memory mapping
 // ---------------------------------------------------------------------------
 
-auto PosixIO::mmap_impl(u64 offset, usize len, i32 prot) -> Result<std::byte*> {
+auto PosixIO::mmap(u64 offset, usize len, i32 prot) -> Result<std::byte*> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }
@@ -161,7 +164,7 @@ auto PosixIO::mmap_impl(u64 offset, usize len, i32 prot) -> Result<std::byte*> {
     return static_cast<std::byte*>(addr);
 }
 
-auto PosixIO::munmap_impl(std::byte* addr, usize len) -> VoidResult {
+auto PosixIO::munmap(std::byte* addr, usize len) -> VoidResult {
     // raw-primitive: munmap takes void*, size_t
     if (::munmap(addr, static_cast<std::size_t>(len.value)) != 0) {
         return std::unexpected(Error::IoError);
@@ -173,7 +176,7 @@ auto PosixIO::munmap_impl(std::byte* addr, usize len) -> VoidResult {
 // Durability
 // ---------------------------------------------------------------------------
 
-auto PosixIO::sync_impl() -> VoidResult {
+auto PosixIO::sync() -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
@@ -184,7 +187,7 @@ auto PosixIO::sync_impl() -> VoidResult {
     return {};
 }
 
-auto PosixIO::datasync_impl() -> VoidResult {
+auto PosixIO::datasync() -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
@@ -195,7 +198,7 @@ auto PosixIO::datasync_impl() -> VoidResult {
     return {};
 }
 
-auto PosixIO::sync_range_impl(u64 offset, usize len) -> VoidResult {
+auto PosixIO::sync_range(u64 offset, usize len) -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
@@ -209,7 +212,7 @@ auto PosixIO::sync_range_impl(u64 offset, usize len) -> VoidResult {
 #else
     (void)offset;
     (void)len;
-    return datasync_impl();
+    return datasync();
 #endif
 }
 
@@ -217,7 +220,7 @@ auto PosixIO::sync_range_impl(u64 offset, usize len) -> VoidResult {
 // File management
 // ---------------------------------------------------------------------------
 
-auto PosixIO::truncate_impl(u64 size) -> VoidResult {
+auto PosixIO::truncate(u64 size) -> VoidResult {
     if (auto s = check_open(); !s) {
         return s;
     }
@@ -228,7 +231,7 @@ auto PosixIO::truncate_impl(u64 size) -> VoidResult {
     return {};
 }
 
-auto PosixIO::file_size_impl() -> Result<u64> {
+auto PosixIO::file_size() -> Result<u64> {
     if (auto s = check_open(); !s) {
         return std::unexpected(s.error());
     }

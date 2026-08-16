@@ -84,20 +84,18 @@ public:
 
 class MockPageIO : public StorageIO {
 private:
-    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
-        return {};
-    }
-    auto close_impl() -> VoidResult override { return {}; }
-    auto read_impl(u64 /*offset*/, std::span<std::byte> /*buf*/) -> Result<usize> override {
+    auto open(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override { return {}; }
+    auto close() -> VoidResult override { return {}; }
+    auto read(u64 /*offset*/, std::span<std::byte> /*buf*/) -> Result<usize> override {
         return usize{0};
     }
-    auto write_impl(u64 /*offset*/, std::span<const std::byte> buf) -> Result<usize> override {
+    auto write(u64 /*offset*/, std::span<const std::byte> buf) -> Result<usize> override {
         return usize{buf.size()};
     }
-    auto sync_impl() -> VoidResult override { return {}; }
-    auto datasync_impl() -> VoidResult override { return {}; }
-    auto truncate_impl(u64 /*size*/) -> VoidResult override { return {}; }
-    auto file_size_impl() -> Result<u64> override { return u64{0}; }
+    auto sync() -> VoidResult override { return {}; }
+    auto datasync() -> VoidResult override { return {}; }
+    auto truncate(u64 /*size*/) -> VoidResult override { return {}; }
+    auto file_size() -> Result<u64> override { return u64{0}; }
 };
 
 TEST(EdbEngineConfig, DefaultPageSize) {

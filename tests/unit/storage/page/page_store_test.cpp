@@ -22,13 +22,11 @@ public:
     auto resize_to(usize size) -> void { storage.resize(size.value); }
 
 private:
-    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
-        return {};
-    }
+    auto open(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override { return {}; }
 
-    auto close_impl() -> VoidResult override { return {}; }
+    auto close() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
+    auto read(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -40,7 +38,7 @@ private:
         return usize{count};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
+    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if ((off + buf.size()) > storage.size()) {
             return std::unexpected(Error::IoError);
@@ -50,19 +48,19 @@ private:
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> VoidResult override {
+    auto sync() -> VoidResult override {
         ++sync_calls;
         return {};
     }
 
-    auto datasync_impl() -> VoidResult override { return {}; }
+    auto datasync() -> VoidResult override { return {}; }
 
-    auto truncate_impl(u64 size) -> VoidResult override {
+    auto truncate(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
 
-    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
+    auto file_size() -> Result<u64> override { return u64{storage.size()}; }
 };
 
 namespace {

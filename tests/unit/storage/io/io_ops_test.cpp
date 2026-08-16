@@ -1,8 +1,8 @@
 // tests/unit/storage/io/io_ops_test.cpp
 //
-// Tests for EdbStorageIOOps interface, EdbIOConfig defaults, EdbIOVec layout,
-// and the default virtual implementations (readv/writev loops, mmap/munmap
-// returning NotSupported, sync_range delegating to datasync).
+// Tests for StorageIO interface, IOConfig defaults, IOVec layout, and the
+// default virtual implementations (readv/writev loops, mmap/munmap returning
+// NotSupported, sync_range delegating to datasync).
 
 #include "storage/io/io_ops.hpp"
 
@@ -16,7 +16,7 @@
 using namespace edb;
 
 // ---------------------------------------------------------------------------
-// Static checks on EdbIOConfig defaults
+// Static checks on IOConfig defaults
 // ---------------------------------------------------------------------------
 
 TEST(EdbIOConfig, DefaultPageSize) {
@@ -43,7 +43,7 @@ TEST(EdbIOConfig, CustomValues) {
 }
 
 // ---------------------------------------------------------------------------
-// EdbIOVec layout
+// IOVec layout
 // ---------------------------------------------------------------------------
 
 TEST(EdbIOVec, FieldTypes) {
@@ -60,15 +60,14 @@ public:
     // Storage: flat byte buffer simulating a file.
     std::vector<std::byte> storage;
 
-private:
-    auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
+    auto open(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         storage.resize(65536);
         return {};
     }
 
-    auto close_impl() -> VoidResult override { return {}; }
+    auto close() -> VoidResult override { return {}; }
 
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
+    auto read(u64 offset, std::span<std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off >= storage.size()) {
             return usize{0};
@@ -80,7 +79,7 @@ private:
         return usize{n};
     }
 
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
+    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> override {
         const auto off = offset.value;
         if (off + buf.size() > storage.size()) {
             storage.resize(off + buf.size());
@@ -90,13 +89,13 @@ private:
         return usize{buf.size()};
     }
 
-    auto sync_impl() -> VoidResult override { return {}; }
-    auto datasync_impl() -> VoidResult override { return {}; }
-    auto truncate_impl(u64 size) -> VoidResult override {
+    auto sync() -> VoidResult override { return {}; }
+    auto datasync() -> VoidResult override { return {}; }
+    auto truncate(u64 size) -> VoidResult override {
         storage.resize(size.value);
         return {};
     }
-    auto file_size_impl() -> Result<u64> override { return u64{storage.size()}; }
+    auto file_size() -> Result<u64> override { return u64{storage.size()}; }
 };
 
 // ---------------------------------------------------------------------------

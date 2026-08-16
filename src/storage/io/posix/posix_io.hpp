@@ -32,28 +32,28 @@ public:
     PosixIO& operator=(PosixIO&&) = delete;
     ~PosixIO() override;
 
-private:
     // Lifecycle
-    auto open_impl(const char* path, const IOConfig& cfg) -> VoidResult override;
-    auto close_impl() -> VoidResult override;
+    auto open(const char* path, const IOConfig& cfg) -> VoidResult override;
+    auto close() -> VoidResult override;
 
     // Synchronous I/O
-    auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> override;
-    auto write_impl(u64 offset, std::span<const std::byte> buf) -> Result<usize> override;
+    auto read(u64 offset, std::span<std::byte> buf) -> Result<usize> override;
+    auto write(u64 offset, std::span<const std::byte> buf) -> Result<usize> override;
 
     // Memory mapping
-    auto mmap_impl(u64 offset, usize len, i32 prot) -> Result<std::byte*> override;
-    auto munmap_impl(std::byte* addr, usize len) -> VoidResult override;
+    auto mmap(u64 offset, usize len, i32 prot) -> Result<std::byte*> override;
+    auto munmap(std::byte* addr, usize len) -> VoidResult override;
 
     // Durability
-    auto sync_impl() -> VoidResult override;
-    auto datasync_impl() -> VoidResult override;
-    auto sync_range_impl(u64 offset, usize len) -> VoidResult override;
+    auto sync() -> VoidResult override;
+    auto datasync() -> VoidResult override;
+    auto sync_range(u64 offset, usize len) -> VoidResult override;
 
     // File management
-    auto truncate_impl(u64 size) -> VoidResult override;
-    auto file_size_impl() -> Result<u64> override;
+    auto truncate(u64 size) -> VoidResult override;
+    auto file_size() -> Result<u64> override;
 
+private:
     // Returns EdbError::IoError if the file is not open.
     [[nodiscard]]
     auto check_open() const -> VoidResult;
