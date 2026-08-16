@@ -136,8 +136,8 @@ TEST_F(HeapEngineTest, InsertAndScanTuples) {
     const auto first = make_tuple({0x10U});
     const auto second = make_tuple({0x20U, 0x21U});
 
-    ASSERT_TRUE(engine.insert(first).has_value());
-    ASSERT_TRUE(engine.insert(second).has_value());
+    ASSERT_TRUE(engine.insert_tuple(first).has_value());
+    ASSERT_TRUE(engine.insert_tuple(second).has_value());
 
     auto tuples = collect_scan(engine);
     ASSERT_TRUE(tuples.has_value());
@@ -152,9 +152,9 @@ TEST_F(HeapEngineTest, DeleteSkipsTupleDuringScan) {
     const auto first = make_tuple({0xA0U});
     const auto second = make_tuple({0xB0U});
 
-    auto first_id = engine.insert(first);
+    auto first_id = engine.insert_tuple(first);
     ASSERT_TRUE(first_id.has_value());
-    ASSERT_TRUE(engine.insert(second).has_value());
+    ASSERT_TRUE(engine.insert_tuple(second).has_value());
     ASSERT_TRUE(engine.delete_tuple(*first_id).has_value());
 
     auto tuples = collect_scan(engine);
@@ -169,7 +169,7 @@ TEST_F(HeapEngineTest, UpdateDeletesOldTupleAndInsertsNewTuple) {
     const auto old_tuple = make_tuple({0x01U});
     const auto new_tuple = make_tuple({0x02U, 0x03U});
 
-    auto id = engine.insert(old_tuple);
+    auto id = engine.insert_tuple(old_tuple);
     ASSERT_TRUE(id.has_value());
     ASSERT_TRUE(engine.update_tuple(*id, new_tuple).has_value());
 
@@ -186,8 +186,8 @@ TEST_F(HeapEngineTest, ReopenScansPersistedTuples) {
     {
         EdbHeapEngine writer;
         open_engine(writer);
-        ASSERT_TRUE(writer.insert(first).has_value());
-        ASSERT_TRUE(writer.insert(second).has_value());
+        ASSERT_TRUE(writer.insert_tuple(first).has_value());
+        ASSERT_TRUE(writer.insert_tuple(second).has_value());
         ASSERT_TRUE(writer.close().has_value());
     }
 
@@ -205,7 +205,7 @@ TEST_F(HeapEngineTest, PersistedSlotHoldsRawPayload) {
     open_engine(engine);
     const auto payload = make_tuple({0xAAU, 0xBBU, 0xCCU});
 
-    auto inserted = engine.insert(payload);
+    auto inserted = engine.insert_tuple(payload);
     ASSERT_TRUE(inserted.has_value());
     ASSERT_TRUE(engine.close().has_value());
 
@@ -223,7 +223,7 @@ TEST_F(HeapEngineTest, OversizedInsertDoesNotGrowFile) {
     {
         EdbHeapEngine writer;
         open_engine(writer);
-        ASSERT_TRUE(writer.insert(valid).has_value());
+        ASSERT_TRUE(writer.insert_tuple(valid).has_value());
         ASSERT_TRUE(writer.close().has_value());
     }
 
@@ -233,7 +233,7 @@ TEST_F(HeapEngineTest, OversizedInsertDoesNotGrowFile) {
     {
         EdbHeapEngine writer;
         open_engine(writer);
-        auto inserted = writer.insert(oversized);
+        auto inserted = writer.insert_tuple(oversized);
         ASSERT_FALSE(inserted.has_value());
         ASSERT_TRUE(writer.close().has_value());
     }
@@ -249,7 +249,7 @@ TEST_F(HeapEngineTest, FailedUpdateLosesOldTuple) {
     const auto old_tuple = make_tuple({0x31U});
     const auto oversized = std::vector<std::byte>(300, std::byte{0xFF});
 
-    auto id = engine.insert(old_tuple);
+    auto id = engine.insert_tuple(old_tuple);
     ASSERT_TRUE(id.has_value());
     auto updated = engine.update_tuple(*id, oversized);
     ASSERT_FALSE(updated.has_value());

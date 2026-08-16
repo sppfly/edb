@@ -26,18 +26,17 @@ public:
 
     ~EdbHeapEngine() override = default;
 
-private:
-    auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
-    auto close_impl() -> VoidResult override;
-    auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> override;
-    auto delete_tuple_impl(TupleId id) -> VoidResult override;
-    auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
-        -> Result<TupleId> override;
-    auto begin_scan_impl() -> Result<ScanHandle> override;
-    auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> override;
-    auto end_scan_impl(ScanHandle& handle) -> VoidResult override;
-    [[nodiscard]] auto page_size_impl() const -> usize override;
+    auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
+    auto close() -> VoidResult override;
+    auto insert_tuple(std::span<const std::byte> tuple) -> Result<TupleId> override;
+    auto delete_tuple(TupleId id) -> VoidResult override;
+    auto update_tuple(TupleId id, std::span<const std::byte> tuple) -> Result<TupleId> override;
+    auto begin_scan() -> Result<ScanHandle> override;
+    auto scan_next(ScanHandle& handle) -> Result<std::optional<Tuple>> override;
+    auto end_scan(ScanHandle& handle) -> VoidResult override;
+    [[nodiscard]] auto page_size() const -> usize override;
 
+private:
     [[nodiscard]] auto check_open() const -> VoidResult;
     auto insert_into_existing_page(u64 page_id, std::span<const std::byte> tuple)
         -> Result<std::optional<TupleId>>;

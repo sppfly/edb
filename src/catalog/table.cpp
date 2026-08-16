@@ -20,7 +20,7 @@ auto Table::insert(std::span<const Value> values) -> Result<TupleId> {
     if (!encoded) {
         return std::unexpected(encoded.error());
     }
-    return storage->insert(*encoded);
+    return storage->insert_tuple(*encoded);
 }
 
 auto Table::scan_rows() -> Result<std::vector<TableRow>> {

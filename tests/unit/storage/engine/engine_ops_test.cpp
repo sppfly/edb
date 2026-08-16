@@ -1,9 +1,7 @@
 // tests/unit/storage/engine/engine_ops_test.cpp
 //
 // Tests for the tuple-level storage engine interface. The mock implementation
-// verifies that public wrappers dispatch to protected *_impl hooks.
-
-#include "storage/engine/engine.hpp"
+// verifies that public virtual methods dispatch to concrete overrides.
 
 #include <gtest/gtest.h>
 
@@ -11,6 +9,8 @@
 #include <optional>
 #include <span>
 #include <vector>
+
+#include "storage/engine/engine.hpp"
 
 using namespace edb;
 
@@ -27,34 +27,32 @@ public:
     usize end_scan_calls{0};
     std::vector<std::byte> last_tuple;
 
-private:
-    auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override {
+    auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult override {
         ++open_calls;
         configured_page_size = cfg.page_size;
         EXPECT_EQ(store.page_size().value, cfg.page_size.value);
         return {};
     }
 
-    auto close_impl() -> VoidResult override {
+    auto close() -> VoidResult override {
         ++close_calls;
         return {};
     }
 
-    auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> override {
+    auto insert_tuple(std::span<const std::byte> tuple) -> Result<TupleId> override {
         ++insert_calls;
         last_tuple.assign(tuple.begin(), tuple.end());
         return TupleId{.page_id = u64{7}, .slot_idx = u16{3}};
     }
 
-    auto delete_tuple_impl(TupleId id) -> VoidResult override {
+    auto delete_tuple(TupleId id) -> VoidResult override {
         ++delete_calls;
         EXPECT_EQ(id.page_id.value, u64{7}.value);
         EXPECT_EQ(id.slot_idx.value, u16{3}.value);
         return {};
     }
 
-    auto update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
-        -> Result<TupleId> override {
+    auto update_tuple(TupleId id, std::span<const std::byte> tuple) -> Result<TupleId> override {
         ++update_calls;
         EXPECT_EQ(id.page_id.value, u64{7}.value);
         EXPECT_EQ(id.slot_idx.value, u16{3}.value);
@@ -62,12 +60,12 @@ private:
         return TupleId{.page_id = u64{8}, .slot_idx = u16{1}};
     }
 
-    auto begin_scan_impl() -> Result<ScanHandle> override {
+    auto begin_scan() -> Result<ScanHandle> override {
         ++begin_scan_calls;
         return ScanHandle{.value = u64{42}};
     }
 
-    auto scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> override {
+    auto scan_next(ScanHandle& handle) -> Result<std::optional<Tuple>> override {
         ++scan_next_calls;
         EXPECT_EQ(handle.value.value, u64{42}.value);
         handle.value = u64{43};
@@ -75,13 +73,13 @@ private:
                      .data = {std::byte{0xAA}, std::byte{0xBB}}};
     }
 
-    auto end_scan_impl(ScanHandle& handle) -> VoidResult override {
+    auto end_scan(ScanHandle& handle) -> VoidResult override {
         ++end_scan_calls;
         EXPECT_EQ(handle.value.value, u64{43}.value);
         return {};
     }
 
-    [[nodiscard]] auto page_size_impl() const -> usize override { return configured_page_size; }
+    [[nodiscard]] auto page_size() const -> usize override { return configured_page_size; }
 };
 
 class MockPageIO : public StorageIOOps {
@@ -112,7 +110,7 @@ TEST(EdbTupleId, FieldTypes) {
     static_assert(std::is_same_v<decltype(TupleId::slot_idx), u16>);
 }
 
-TEST(EdbStorageEngineOps, LifecycleWrappersDispatchToImpl) {
+TEST(EdbStorageEngineOps, LifecycleDispatchesToOverride) {
     MockPageIO io;
     PageStore page_store;
     MockEngineOps engine;
@@ -126,11 +124,11 @@ TEST(EdbStorageEngineOps, LifecycleWrappersDispatchToImpl) {
     EXPECT_EQ(engine.close_calls.value, usize{1}.value);
 }
 
-TEST(EdbStorageEngineOps, DmlWrappersDispatchToImpl) {
+TEST(EdbStorageEngineOps, DmlDispatchesToOverride) {
     MockEngineOps engine;
     const std::vector<std::byte> tuple{std::byte{0x01}, std::byte{0x02}};
 
-    auto inserted = engine.insert(tuple);
+    auto inserted = engine.insert_tuple(tuple);
     ASSERT_TRUE(inserted.has_value());
     EXPECT_EQ(inserted->page_id.value, u64{7}.value);
     EXPECT_EQ(inserted->slot_idx.value, u16{3}.value);
@@ -147,7 +145,7 @@ TEST(EdbStorageEngineOps, DmlWrappersDispatchToImpl) {
     EXPECT_EQ(engine.update_calls.value, usize{1}.value);
 }
 
-TEST(EdbStorageEngineOps, BeginScanWrapperDispatchesToImpl) {
+TEST(EdbStorageEngineOps, BeginScanDispatchesToOverride) {
     MockEngineOps engine;
 
     auto handle = engine.begin_scan();
@@ -156,7 +154,7 @@ TEST(EdbStorageEngineOps, BeginScanWrapperDispatchesToImpl) {
     EXPECT_EQ(engine.begin_scan_calls.value, usize{1}.value);
 }
 
-TEST(EdbStorageEngineOps, ScanNextWrapperDispatchesToImpl) {
+TEST(EdbStorageEngineOps, ScanNextDispatchesToOverride) {
     MockEngineOps engine;
     auto handle = ScanHandle{.value = u64{42}};
 
@@ -172,7 +170,7 @@ TEST(EdbStorageEngineOps, ScanNextWrapperDispatchesToImpl) {
     EXPECT_EQ(engine.scan_next_calls.value, usize{1}.value);
 }
 
-TEST(EdbStorageEngineOps, EndScanWrapperDispatchesToImpl) {
+TEST(EdbStorageEngineOps, EndScanDispatchesToOverride) {
     MockEngineOps engine;
     auto handle = ScanHandle{.value = u64{43}};
 

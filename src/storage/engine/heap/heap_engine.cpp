@@ -17,7 +17,8 @@ constexpr auto CURSOR_PAGE_MASK = std::uint64_t{0xFFFFFFFFULL};
 
 }  // namespace
 
-auto EdbHeapEngine::open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult {
+auto EdbHeapEngine::open(PageStore& store, const EngineConfig& cfg) -> VoidResult {
+    EDB_ASSERT(cfg.page_size > usize{0});
     std::scoped_lock guard{latch};
     page_store = &store;
     config = cfg;
@@ -31,7 +32,7 @@ auto EdbHeapEngine::open_impl(PageStore& store, const EngineConfig& cfg) -> Void
     return {};
 }
 
-auto EdbHeapEngine::close_impl() -> VoidResult {
+auto EdbHeapEngine::close() -> VoidResult {
     std::scoped_lock guard{latch};
     if (!opened.value) {
         return {};
@@ -42,7 +43,8 @@ auto EdbHeapEngine::close_impl() -> VoidResult {
     return status;
 }
 
-auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> {
+auto EdbHeapEngine::insert_tuple(std::span<const std::byte> tuple) -> Result<TupleId> {
+    EDB_ASSERT(!tuple.empty());
     std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
@@ -65,7 +67,7 @@ auto EdbHeapEngine::insert_impl(std::span<const std::byte> tuple) -> Result<Tupl
     return insert_into_new_page(tuple);
 }
 
-auto EdbHeapEngine::delete_tuple_impl(TupleId id) -> VoidResult {
+auto EdbHeapEngine::delete_tuple(TupleId id) -> VoidResult {
     std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return status;
@@ -86,16 +88,15 @@ auto EdbHeapEngine::delete_tuple_impl(TupleId id) -> VoidResult {
     return buffer_pool.unpin(*handle, b8{true});
 }
 
-auto EdbHeapEngine::update_tuple_impl(TupleId id, std::span<const std::byte> tuple)
-    -> Result<TupleId> {
-    auto delete_status = delete_tuple_impl(id);
+auto EdbHeapEngine::update_tuple(TupleId id, std::span<const std::byte> tuple) -> Result<TupleId> {
+    auto delete_status = delete_tuple(id);
     if (!delete_status) {
         return std::unexpected(delete_status.error());
     }
-    return insert_impl(tuple);
+    return insert_tuple(tuple);
 }
 
-auto EdbHeapEngine::begin_scan_impl() -> Result<ScanHandle> {
+auto EdbHeapEngine::begin_scan() -> Result<ScanHandle> {
     std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
@@ -103,7 +104,7 @@ auto EdbHeapEngine::begin_scan_impl() -> Result<ScanHandle> {
     return ScanHandle{.value = encode_cursor(u64{0}, u16{0})};
 }
 
-auto EdbHeapEngine::scan_next_impl(ScanHandle& handle) -> Result<std::optional<Tuple>> {
+auto EdbHeapEngine::scan_next(ScanHandle& handle) -> Result<std::optional<Tuple>> {
     std::scoped_lock guard{latch};
     if (auto status = check_open(); !status) {
         return std::unexpected(status.error());
@@ -148,13 +149,13 @@ auto EdbHeapEngine::scan_next_impl(ScanHandle& handle) -> Result<std::optional<T
     return std::optional<Tuple>{};
 }
 
-auto EdbHeapEngine::end_scan_impl(ScanHandle& handle) -> VoidResult {
+auto EdbHeapEngine::end_scan(ScanHandle& handle) -> VoidResult {
     std::scoped_lock guard{latch};
     handle.value = encode_cursor(u64{0}, u16{0});
     return {};
 }
 
-auto EdbHeapEngine::page_size_impl() const -> usize {
+auto EdbHeapEngine::page_size() const -> usize {
     return config.page_size;
 }
 
