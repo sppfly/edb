@@ -9,6 +9,11 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# gtest 1.15.2 trips clang 22's -Wcharacter-conversion under our -Werror
+foreach(target gtest gtest_main gmock gmock_main)
+  target_compile_options(${target} PRIVATE -Wno-character-conversion)
+endforeach()
+
 add_subdirectory(utils)
 add_subdirectory(storage)
 add_subdirectory(types)

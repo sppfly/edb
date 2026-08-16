@@ -1,22 +1,22 @@
 cmake_minimum_required(VERSION 3.25)
 
-# EDB requires GCC 16 for C++26 contracts via -fcontracts.
-find_program(EDB_GXX16_EXECUTABLE NAMES g++-16 REQUIRED)
+# EDB requires clang++-22 for C++26.
+find_program(EDB_CLANGXX22_EXECUTABLE NAMES clang++-22 REQUIRED)
 
 # Pick the project compiler before project() performs compiler detection.
 if(NOT DEFINED CMAKE_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER ${EDB_GXX16_EXECUTABLE} CACHE FILEPATH "C++ compiler")
+  set(CMAKE_CXX_COMPILER ${EDB_CLANGXX22_EXECUTABLE} CACHE FILEPATH "C++ compiler")
 endif()
 
 project(edb LANGUAGES CXX)
 
-get_filename_component(EDB_REQUIRED_CXX_REAL ${EDB_GXX16_EXECUTABLE} REALPATH)
+get_filename_component(EDB_REQUIRED_CXX_REAL ${EDB_CLANGXX22_EXECUTABLE} REALPATH)
 get_filename_component(EDB_ACTUAL_CXX_REAL ${CMAKE_CXX_COMPILER} REALPATH)
 if(NOT EDB_ACTUAL_CXX_REAL STREQUAL EDB_REQUIRED_CXX_REAL)
   message(FATAL_ERROR
-    "EDB must be built with g++-16. "
-    "Detected '${CMAKE_CXX_COMPILER}', required '${EDB_GXX16_EXECUTABLE}'. "
-    "Reconfigure with -DCMAKE_CXX_COMPILER=${EDB_GXX16_EXECUTABLE} "
+    "EDB must be built with clang++-22. "
+    "Detected '${CMAKE_CXX_COMPILER}', required '${EDB_CLANGXX22_EXECUTABLE}'. "
+    "Reconfigure with -DCMAKE_CXX_COMPILER=${EDB_CLANGXX22_EXECUTABLE} "
     "or clear the build directory."
   )
 endif()
@@ -66,10 +66,10 @@ set(EDB_WARN_FLAGS
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_compile_options(${EDB_WARN_FLAGS} -g -fcontracts)
+  add_compile_options(${EDB_WARN_FLAGS} -g)
   add_compile_definitions(EDB_DEBUG)
 else()
-  add_compile_options(${EDB_WARN_FLAGS} -O2 -DNDEBUG -fcontracts)
+  add_compile_options(${EDB_WARN_FLAGS} -O2 -DNDEBUG)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -101,8 +101,9 @@ add_subdirectory(tests)
 # ---------------------------------------------------------------------------
 # format / format-check / tidy targets
 # ---------------------------------------------------------------------------
-find_program(CLANG_FORMAT clang-format REQUIRED)
-find_program(CLANG_TIDY   clang-tidy REQUIRED)
+# All clang tools must come from the clang 22 toolchain — no version fallback.
+find_program(CLANG_FORMAT NAMES clang-format-22 REQUIRED)
+find_program(CLANG_TIDY   NAMES clang-tidy-22 REQUIRED)
 
 file(GLOB_RECURSE EDB_ALL_SOURCES
   "${CMAKE_SOURCE_DIR}/src/**/*.cpp"
@@ -121,14 +122,6 @@ add_custom_target(format-check
 )
 
 add_custom_target(tidy
-  # clang-tidy uses clang which doesn't understand -fcontracts (GCC-only).
-  # Strip it from compile_commands before running.
-  COMMAND ${CMAKE_COMMAND}
-    -DINPUT=${CMAKE_BINARY_DIR}/compile_commands.json
-      -DOUTPUT=${CMAKE_BINARY_DIR}/tidy/compile_commands.json
-    -P ${CMAKE_SOURCE_DIR}/cmake/StripContracts.cmake
-  COMMAND ${CLANG_TIDY}
-      -p ${CMAKE_BINARY_DIR}/tidy
-          ${EDB_ALL_SOURCES}
+  COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${EDB_ALL_SOURCES}
   COMMENT "Running clang-tidy"
 )
