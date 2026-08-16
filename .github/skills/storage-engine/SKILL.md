@@ -13,14 +13,14 @@ disable-model-invocation: false
 - Adding a new storage I/O backend (POSIX, xNVMe, io_uring, SPDK)
 - Designing page formats or record layouts
 - Implementing buffer pool, replacement policy, or prefetching
-- Adding WAL (write-ahead logging) or checkpointing
+- Adding WAL (write-ahead logging) or checkpointing (future Phase 6)
 - Optimizing I/O performance or latency
 
 ## Two-Level Abstraction
 
 EDB storage is split into two independent layers:
 
-1. **Storage Engine** — Understands pages, tuples, indexes, transactions
+1. **Storage Engine** — Understands pages, tuples, indexes; no transaction state in the current Phase 5 baseline
 2. **Storage I/O Backend** — Understands devices, offsets, commands, sync
 
 A storage engine does NOT call POSIX or NVMe directly. It delegates all I/O to a configured `EdbStorageIOOps` vtable. This lets the same heap engine run on:
@@ -31,29 +31,28 @@ A storage engine does NOT call POSIX or NVMe directly. It delegates all I/O to a
 ## Storage Engine Interface (`src/storage/engine/`)
 
 ```cpp
-struct EdbStorageEngineOps {
-    std::string_view name;
+struct StorageEngineOps {
+    // NVI: public wrappers enforce EDB_ASSERT preconditions, protected
+    // *_impl hooks carry the actual implementation.
 
     // Lifecycle
-    virtual std::expected<void, EdbError> open(const char* db_path, const EdbStorageConfig& cfg) = 0;
-    virtual void close() = 0;
+    virtual std::expected<void, EdbError> open(PageStore& store, const EngineConfig& cfg) = 0;
+    virtual std::expected<void, EdbError> close() = 0;
 
-    // Page-level I/O
-    virtual std::expected<void, EdbError> read_page(uint64_t page_id, std::span<std::byte> buf) = 0;
-    virtual std::expected<void, EdbError> write_page(uint64_t page_id, std::span<const std::byte> buf) = 0;
-    virtual std::expected<uint64_t, EdbError> allocate_page() = 0;
-    virtual std::expected<void, EdbError> free_page(uint64_t page_id) = 0;
+    // Tuple-level DML (raw opaque payload bytes; no MVCC headers)
+    virtual std::expected<TupleId, EdbError> insert(std::span<const std::byte> tuple) = 0;
+    virtual std::expected<void, EdbError> delete_tuple(TupleId id) = 0;
+    virtual std::expected<TupleId, EdbError> update_tuple(TupleId id, std::span<const std::byte> tuple) = 0;
 
-    // Transaction integration
-    virtual std::expected<void, EdbError> begin_transaction(EdbTransaction& txn) = 0;
-    virtual std::expected<void, EdbError> commit(EdbTransaction& txn) = 0;
-    virtual std::expected<void, EdbError> abort(EdbTransaction& txn) = 0;
+    // Scanning
+    virtual std::expected<ScanHandle, EdbError> begin_scan() = 0;
+    virtual std::expected<std::optional<Tuple>, EdbError> scan_next(ScanHandle& handle) = 0;
+    virtual std::expected<void, EdbError> end_scan(ScanHandle& handle) = 0;
 
-    // Checkpoint / recovery
-    virtual std::expected<void, EdbError> checkpoint() = 0;
-    virtual std::expected<void, EdbError> recover() = 0;
+    // Transaction integration (future Phase 6)
+    // virtual begin_transaction / commit / abort / checkpoint / recover
 
-    virtual ~EdbStorageEngineOps() = default;
+    virtual ~StorageEngineOps() = default;
 };
 ```
 
@@ -142,12 +141,15 @@ Default page size: 8KB (configurable at init time).
 
 ```
 +--------------------------------------------------+
-| Page Header (24 bytes)                           |
-|   - checksum (4)                                 |
-|   - page_id (8)                                  |
-|   - lsn (8)                                      |
-|   - flags (2)                                    |
-|   - free_space_offset (2)                        |
+| Page Header (28 bytes)                           |
+|   - checksum (4)          offset  0              |
+|   - flags (2)             offset  4              |
+|   - slot_count (2)        offset  6              |
+|   - free_start (2)        offset  8              |
+|   - free_end (2)          offset 10              |
+|   - page_id (8)           offset 12              |
+|   - reserved (8)          offset 20 (formerly    |
+|                            page LSN)             |
 +--------------------------------------------------+
 | Tuple Directory (slot array, grows downward)     |
 +--------------------------------------------------+
@@ -165,7 +167,9 @@ Default page size: 8KB (configurable at init time).
 - Write-back via storage I/O backend (not directly to POSIX)
 - **Important**: Buffer pool is storage-engine-agnostic but I/O-backend-aware
 
-## WAL (`src/storage/wal/`)
+## WAL (`src/storage/wal/` — future Phase 6)
+
+Not currently implemented. When reintroduced:
 
 - Append-only log, sequential writes via storage I/O backend
 - LSN monotonically increasing

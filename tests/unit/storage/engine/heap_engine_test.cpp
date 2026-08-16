@@ -6,12 +6,10 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <map>
 #include <span>
 #include <vector>
 
 #include "storage/engine/heap/page.hpp"
-#include "transaction/visibility.hpp"
 
 using namespace edb;
 
@@ -25,36 +23,6 @@ namespace {
         result.push_back(std::byte{static_cast<unsigned char>(value)});
     }
     return result;
-}
-
-class FakeStatusReader final : public TransactionStatusReader {
-   public:
-    auto set(TxId id, TxStatus status) -> void { statuses[id] = status; }
-
-    [[nodiscard]] auto status(TxId id) const -> Result<TxStatus> override {
-        const auto found = statuses.find(id);
-        if (found == statuses.end()) {
-            return std::unexpected(Error::NotFound);
-        }
-        return found->second;
-    }
-
-   private:
-    std::map<TxId, TxStatus> statuses;
-};
-
-[[nodiscard]] auto make_snapshot(TxId xmax, std::vector<TxId> active = {}) -> Snapshot {
-    auto xmin = xmax;
-    for (const auto id : active) {
-        if (id.value < xmin.value) {
-            xmin = id;
-        }
-    }
-    return Snapshot{.xmin = xmin, .xmax = xmax, .active = std::move(active)};
-}
-
-[[nodiscard]] auto make_tx(TxId id, std::vector<TxId> active = {}) -> Transaction {
-    return Transaction{.id = id, .snapshot = make_snapshot(id, std::move(active))};
 }
 
 }  // namespace
@@ -116,32 +84,6 @@ class HeapEngineTest : public ::testing::Test {
     [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine)
         -> Result<std::vector<std::vector<std::byte>>> {
         auto handle = engine.begin_scan();
-        if (!handle) {
-            return std::unexpected(handle.error());
-        }
-
-        std::vector<std::vector<std::byte>> tuples;
-        while (true) {
-            auto next = engine.scan_next(*handle);
-            if (!next) {
-                return std::unexpected(next.error());
-            }
-            if (!next->has_value()) {
-                break;
-            }
-            tuples.push_back((*next)->data);
-        }
-        auto status = engine.end_scan(*handle);
-        if (!status) {
-            return std::unexpected(status.error());
-        }
-        return tuples;
-    }
-
-    [[nodiscard]] static auto collect_scan(EdbHeapEngine& engine, const VisibilityContext& context,
-                                           const TransactionStatusReader& statuses)
-        -> Result<std::vector<std::vector<std::byte>>> {
-        auto handle = engine.begin_scan(context, statuses);
         if (!handle) {
             return std::unexpected(handle.error());
         }
@@ -258,154 +200,61 @@ TEST_F(HeapEngineTest, ReopenScansPersistedTuples) {
     EXPECT_EQ((*tuples)[1], second);
 }
 
-TEST_F(HeapEngineTest, TransactionalInsertIsVisibleToOwningTransaction) {
+TEST_F(HeapEngineTest, PersistedSlotHoldsRawPayload) {
     EdbHeapEngine engine;
     open_engine(engine);
-    FakeStatusReader statuses;
-    const auto tx = make_tx(TxId{u64{1}});
-    const auto payload = make_tuple({0x31U});
+    const auto payload = make_tuple({0xAAU, 0xBBU, 0xCCU});
 
-    ASSERT_TRUE(engine.insert(tx, payload).has_value());
+    auto inserted = engine.insert(payload);
+    ASSERT_TRUE(inserted.has_value());
+    ASSERT_TRUE(engine.close().has_value());
 
-    auto tuples = collect_scan(
-        engine, VisibilityContext{.snapshot = tx.snapshot, .current_tx = tx.id}, statuses);
-    ASSERT_TRUE(tuples.has_value());
-    ASSERT_EQ(tuples->size(), std::size_t{1});
-    EXPECT_EQ((*tuples)[0], payload);
+    std::vector<std::byte> page(usize{256}.value);
+    ASSERT_TRUE(page_store.read_page(inserted->page_id, page).has_value());
+    auto slot = heap::read_tuple(page, inserted->slot_idx);
+    ASSERT_TRUE(slot.has_value());
+    EXPECT_EQ(*slot, payload);
 }
 
-TEST_F(HeapEngineTest, TransactionalScanHidesOtherInProgressInsert) {
-    EdbHeapEngine engine;
-    open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::InProgress);
+TEST_F(HeapEngineTest, OversizedInsertDoesNotGrowFile) {
+    const auto valid = make_tuple({0x01U});
+    const auto oversized = std::vector<std::byte>(300, std::byte{0xFF});
 
-    const auto writer = make_tx(TxId{u64{1}});
-    const auto reader =
-        Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{3}}, {writer.id})};
-    ASSERT_TRUE(engine.insert(writer, make_tuple({0x41U})).has_value());
+    {
+        EdbHeapEngine writer;
+        open_engine(writer);
+        ASSERT_TRUE(writer.insert(valid).has_value());
+        ASSERT_TRUE(writer.close().has_value());
+    }
 
-    auto tuples = collect_scan(
-        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
-    ASSERT_TRUE(tuples.has_value());
-    EXPECT_TRUE(tuples->empty());
+    auto count_before = page_store.page_count();
+    ASSERT_TRUE(count_before.has_value());
+
+    {
+        EdbHeapEngine writer;
+        open_engine(writer);
+        auto inserted = writer.insert(oversized);
+        ASSERT_FALSE(inserted.has_value());
+        ASSERT_TRUE(writer.close().has_value());
+    }
+
+    auto count_after = page_store.page_count();
+    ASSERT_TRUE(count_after.has_value());
+    EXPECT_EQ(count_after->value, count_before->value);
 }
 
-TEST_F(HeapEngineTest, TransactionalScanShowsCommittedInsertToLaterSnapshot) {
+TEST_F(HeapEngineTest, FailedUpdateLosesOldTuple) {
     EdbHeapEngine engine;
     open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::Committed);
-    const auto writer = make_tx(TxId{u64{1}});
-    const auto reader = Transaction{.id = TxId{u64{2}}, .snapshot = make_snapshot(TxId{u64{3}})};
-    const auto payload = make_tuple({0x51U});
+    const auto old_tuple = make_tuple({0x31U});
+    const auto oversized = std::vector<std::byte>(300, std::byte{0xFF});
 
-    ASSERT_TRUE(engine.insert(writer, payload).has_value());
-
-    auto tuples = collect_scan(
-        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
-    ASSERT_TRUE(tuples.has_value());
-    ASSERT_EQ(tuples->size(), std::size_t{1});
-    EXPECT_EQ((*tuples)[0], payload);
-}
-
-TEST_F(HeapEngineTest, TransactionalDeleteUsesXmaxVisibility) {
-    EdbHeapEngine engine;
-    open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::Committed);
-    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
-
-    const auto inserter = make_tx(TxId{u64{1}});
-    const auto deleter = make_tx(TxId{u64{2}});
-    const auto payload = make_tuple({0x61U});
-    auto id = engine.insert(inserter, payload);
+    auto id = engine.insert(old_tuple);
     ASSERT_TRUE(id.has_value());
-    ASSERT_TRUE(engine.delete_tuple(deleter, *id).has_value());
+    auto updated = engine.update_tuple(*id, oversized);
+    ASSERT_FALSE(updated.has_value());
 
-    auto own_scan = collect_scan(
-        engine, VisibilityContext{.snapshot = deleter.snapshot, .current_tx = deleter.id},
-        statuses);
-    ASSERT_TRUE(own_scan.has_value());
-    EXPECT_TRUE(own_scan->empty());
-
-    const auto concurrent_reader =
-        Transaction{.id = TxId{u64{3}}, .snapshot = make_snapshot(TxId{u64{4}}, {deleter.id})};
-    auto concurrent_scan = collect_scan(engine,
-                                        VisibilityContext{.snapshot = concurrent_reader.snapshot,
-                                                          .current_tx = concurrent_reader.id},
-                                        statuses);
-    ASSERT_TRUE(concurrent_scan.has_value());
-    ASSERT_EQ(concurrent_scan->size(), std::size_t{1});
-    EXPECT_EQ((*concurrent_scan)[0], payload);
-
-    statuses.set(deleter.id, TxStatus::Committed);
-    const auto later_reader =
-        Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
-    auto later_scan = collect_scan(
-        engine, VisibilityContext{.snapshot = later_reader.snapshot, .current_tx = later_reader.id},
-        statuses);
-    ASSERT_TRUE(later_scan.has_value());
-    EXPECT_TRUE(later_scan->empty());
-}
-
-TEST_F(HeapEngineTest, TransactionalDeleteRejectsInProgressDeleteConflict) {
-    EdbHeapEngine engine;
-    open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::Committed);
-    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
-
-    const auto inserter = make_tx(TxId{u64{1}});
-    const auto first_deleter = make_tx(TxId{u64{2}});
-    const auto second_deleter = make_tx(TxId{u64{3}});
-    auto id = engine.insert(inserter, make_tuple({0x71U}));
-    ASSERT_TRUE(id.has_value());
-    ASSERT_TRUE(engine.delete_tuple(first_deleter, *id).has_value());
-
-    auto conflict = engine.delete_tuple(second_deleter, *id, statuses);
-    ASSERT_FALSE(conflict.has_value());
-    EXPECT_EQ(conflict.error(), Error::TransactionAborted);
-}
-
-TEST_F(HeapEngineTest, TransactionalDeleteCanReplaceAbortedDeleteMarker) {
-    EdbHeapEngine engine;
-    open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::Committed);
-    statuses.set(TxId{u64{2}}, TxStatus::Aborted);
-    statuses.set(TxId{u64{3}}, TxStatus::Committed);
-
-    const auto inserter = make_tx(TxId{u64{1}});
-    const auto aborted_deleter = make_tx(TxId{u64{2}});
-    const auto committed_deleter = make_tx(TxId{u64{3}});
-    auto id = engine.insert(inserter, make_tuple({0x81U}));
-    ASSERT_TRUE(id.has_value());
-    ASSERT_TRUE(engine.delete_tuple(aborted_deleter, *id).has_value());
-    ASSERT_TRUE(engine.delete_tuple(committed_deleter, *id, statuses).has_value());
-
-    const auto reader = Transaction{.id = TxId{u64{4}}, .snapshot = make_snapshot(TxId{u64{5}})};
-    auto tuples = collect_scan(
-        engine, VisibilityContext{.snapshot = reader.snapshot, .current_tx = reader.id}, statuses);
+    auto tuples = collect_scan(engine);
     ASSERT_TRUE(tuples.has_value());
     EXPECT_TRUE(tuples->empty());
-}
-
-TEST_F(HeapEngineTest, TransactionalUpdateRejectsInProgressDeleteConflict) {
-    EdbHeapEngine engine;
-    open_engine(engine);
-    FakeStatusReader statuses;
-    statuses.set(TxId{u64{1}}, TxStatus::Committed);
-    statuses.set(TxId{u64{2}}, TxStatus::InProgress);
-
-    const auto inserter = make_tx(TxId{u64{1}});
-    const auto deleter = make_tx(TxId{u64{2}});
-    const auto updater = make_tx(TxId{u64{3}});
-    auto id = engine.insert(inserter, make_tuple({0x91U}));
-    ASSERT_TRUE(id.has_value());
-    ASSERT_TRUE(engine.delete_tuple(deleter, *id).has_value());
-
-    auto conflict = engine.update_tuple(updater, *id, make_tuple({0x92U}), statuses);
-    ASSERT_FALSE(conflict.has_value());
-    EXPECT_EQ(conflict.error(), Error::TransactionAborted);
 }

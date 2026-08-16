@@ -2,7 +2,7 @@
 
 The long-term distributed shape should be a shared-nothing database with explicit sharding, replicated shard groups, and a stateless SQL-facing coordinator tier. Single-node remains the primary implementation path until the local engine is solid.
 
-The important design rule is that distributed mode should reuse as much of the single-node engine as possible. A distributed node is still an EDB instance with catalog, storage engine, executor, transaction manager, and WAL; the cluster layer adds routing, replication, metadata placement, and cross-shard coordination.
+The important design rule is that distributed mode should reuse as much of the single-node engine as possible. A distributed node would still be an EDB instance with catalog, storage engine, executor, and — once Phase 6 exists — transaction manager and WAL; the cluster layer adds routing, replication, metadata placement, and cross-shard coordination.
 
 Just as importantly, the distributed roadmap must not erase EDB's single-node extensibility story. New storage engines, access methods, and executor backends should remain implementable and testable locally before they are made distributed.
 

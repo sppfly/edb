@@ -16,7 +16,7 @@ constexpr auto SLOT_COUNT_OFFSET = usize{6};
 constexpr auto FREE_START_OFFSET = usize{8};
 constexpr auto FREE_END_OFFSET = usize{10};
 constexpr auto PAGE_ID_OFFSET = usize{12};
-constexpr auto LSN_OFFSET = usize{20};
+// Bytes 20-27 are reserved for future metadata (formerly page LSN).
 constexpr auto MAX_U16 = std::uint64_t{0xFFFFU};
 
 [[nodiscard]] auto fits_u16(usize value) -> b8 {
@@ -45,14 +45,6 @@ auto write_u64(std::span<std::byte> page, usize offset, u64 value) -> void {
         page[offset.value + index.value] =
             std::byte{static_cast<unsigned char>((value.value >> (index.value * 8U)) & 0xFFU)};
     }
-}
-
-[[nodiscard]] auto read_u64(std::span<const std::byte> page, usize offset) -> u64 {
-    auto value = std::uint64_t{0};
-    for (usize index{0}; index < usize{8}; ++index) {
-        value |= static_cast<std::uint64_t>(page[offset.value + index.value]) << (index.value * 8U);
-    }
-    return u64{value};
 }
 
 [[nodiscard]] auto slot_offset(u16 slot_idx) -> usize {
@@ -98,22 +90,6 @@ auto initialize_page(std::span<std::byte> page, u64 page_id) -> VoidResult {
     write_u16(page, FREE_START_OFFSET, u16{static_cast<std::uint16_t>(PAGE_HEADER_SIZE.value)});
     write_u16(page, FREE_END_OFFSET, u16{static_cast<std::uint16_t>(page.size())});
     write_u64(page, PAGE_ID_OFFSET, page_id);
-    write_u64(page, LSN_OFFSET, u64{0});
-    return {};
-}
-
-auto page_lsn(std::span<const std::byte> page) -> Result<u64> {
-    if (auto status = validate_page_size(page); !status) {
-        return std::unexpected(status.error());
-    }
-    return read_u64(page, LSN_OFFSET);
-}
-
-auto set_page_lsn(std::span<std::byte> page, u64 lsn) -> VoidResult {
-    if (auto status = validate_page_size(page); !status) {
-        return status;
-    }
-    write_u64(page, LSN_OFFSET, lsn);
     return {};
 }
 

@@ -46,16 +46,6 @@ auto value_as_bool(const Value& value, const TypeRegistry& types) -> Result<b8> 
     return b8{(*type)->to_text(value.bytes) == std::string{"true"}};
 }
 
-auto acquire_relation_lock(const ExecTransactionContext& tx_context, u32 relation_oid,
-                           LockMode mode) -> VoidResult {
-    if (tx_context.tx == nullptr || tx_context.locks == nullptr) {
-        return {};
-    }
-    return tx_context.locks->acquire(
-        tx_context.tx->id, LockTag{.kind = LockTagKind::Relation, .relation_oid = relation_oid},
-        mode);
-}
-
 auto compare_values(BinaryOp op, const Value& left, const Value& right, const TypeRegistry& types)
     -> Result<b8> {
     if (static_cast<bool>(left.is_null) || static_cast<bool>(right.is_null)) {
@@ -230,17 +220,12 @@ class CreateTableExecNode final : public ExecNode {
 
 class InsertExecNode final : public ExecNode {
    public:
-    InsertExecNode(Catalog& catalog, ExecTransactionContext tx_context, BoundInsertStmt stmt)
-        : catalog{&catalog}, tx_context{tx_context}, stmt{std::move(stmt)} {}
+    InsertExecNode(Catalog& catalog, BoundInsertStmt stmt)
+        : catalog{&catalog}, stmt{std::move(stmt)} {}
 
     auto open() -> VoidResult override {
         if (catalog == nullptr) {
             return std::unexpected(Error::InvalidArgument);
-        }
-        if (auto locked =
-                acquire_relation_lock(tx_context, stmt.table.relation_oid, LockMode::Exclusive);
-            !locked) {
-            return locked;
         }
         auto table = catalog->open_table(stmt.table.name);
         if (!table) {
@@ -253,8 +238,7 @@ class InsertExecNode final : public ExecNode {
             for (const auto& literal : row) {
                 values.push_back(literal.value);
             }
-            auto inserted = tx_context.tx == nullptr ? (*table)->insert(values)
-                                                     : (*table)->insert(*tx_context.tx, values);
+            auto inserted = (*table)->insert(values);
             if (!inserted) {
                 return std::unexpected(inserted.error());
             }
@@ -283,7 +267,6 @@ class InsertExecNode final : public ExecNode {
 
    private:
     Catalog* catalog{nullptr};
-    ExecTransactionContext tx_context{};
     BoundInsertStmt stmt;
     b8 opened{b8{false}};
     b8 done{b8{false}};
@@ -291,27 +274,18 @@ class InsertExecNode final : public ExecNode {
 
 class SeqScanExecNode final : public ExecNode {
    public:
-    SeqScanExecNode(Catalog& catalog, ExecTransactionContext tx_context, BoundTableRef table)
-        : catalog{&catalog}, tx_context{tx_context}, table{std::move(table)} {}
+    SeqScanExecNode(Catalog& catalog, BoundTableRef table)
+        : catalog{&catalog}, table{std::move(table)} {}
 
     auto open() -> VoidResult override {
         if (catalog == nullptr) {
             return std::unexpected(Error::InvalidArgument);
         }
-        if (auto locked = acquire_relation_lock(tx_context, table.relation_oid, LockMode::Shared);
-            !locked) {
-            return locked;
-        }
         auto opened_table = catalog->open_table(table.name);
         if (!opened_table) {
             return std::unexpected(opened_table.error());
         }
-        auto scanned = tx_context.tx == nullptr || tx_context.statuses == nullptr
-                           ? (*opened_table)->scan()
-                           : (*opened_table)
-                                 ->scan(VisibilityContext{.snapshot = tx_context.tx->snapshot,
-                                                          .current_tx = tx_context.tx->id},
-                                        *tx_context.statuses);
+        auto scanned = (*opened_table)->scan();
         if (!scanned) {
             return std::unexpected(scanned.error());
         }
@@ -342,7 +316,6 @@ class SeqScanExecNode final : public ExecNode {
 
    private:
     Catalog* catalog{nullptr};
-    ExecTransactionContext tx_context{};
     BoundTableRef table;
     std::vector<std::vector<Value>> rows;
     std::size_t index{0};
@@ -471,11 +444,7 @@ class ProjectExecNode final : public ExecNode {
 }  // namespace
 
 ExecBuilder::ExecBuilder(Catalog& catalog, const TypeRegistry& types) noexcept
-    : ExecBuilder{catalog, types, ExecTransactionContext{}} {}
-
-ExecBuilder::ExecBuilder(Catalog& catalog, const TypeRegistry& types,
-                         ExecTransactionContext tx_context) noexcept
-    : catalog{&catalog}, types{&types}, tx_context{tx_context} {}
+    : catalog{&catalog}, types{&types} {}
 
 auto ExecBuilder::build(PhysicalPlan plan) -> Result<std::unique_ptr<ExecNode>> {
     return build_node(std::move(plan.node));
@@ -494,10 +463,10 @@ auto ExecBuilder::build_node(PhysicalPlan::Node node) -> Result<std::unique_ptr<
         return std::make_unique<CreateTableExecNode>(*catalog, std::move(create_stmt->stmt));
     }
     if (auto* insert_stmt = std::get_if<PhysicalInsert>(&node); insert_stmt != nullptr) {
-        return std::make_unique<InsertExecNode>(*catalog, tx_context, std::move(insert_stmt->stmt));
+        return std::make_unique<InsertExecNode>(*catalog, std::move(insert_stmt->stmt));
     }
     if (auto* scan = std::get_if<PhysicalSeqScan>(&node); scan != nullptr) {
-        return std::make_unique<SeqScanExecNode>(*catalog, tx_context, std::move(scan->table));
+        return std::make_unique<SeqScanExecNode>(*catalog, std::move(scan->table));
     }
     if (auto* filter = std::get_if<PhysicalFilter>(&node); filter != nullptr) {
         if (filter->input == nullptr) {

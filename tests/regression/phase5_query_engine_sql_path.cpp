@@ -217,13 +217,4 @@ TEST_F(Phase5QueryEngineRegression, BasicSqlFileMatchesExpectedOutput) {
     EXPECT_EQ(stored_rows->size(), std::size_t{2});
 }
 
-TEST_F(Phase5QueryEngineRegression, Phase6TransactionsFileMatchesExpectedOutput) {
-    QueryEngine engine{catalog, registry};
-
-    const auto root = std::filesystem::path{EDB_REGRESSION_SOURCE_DIR};
-    const auto sql = read_text_file(root / "sql" / "phase6_transactions.sql");
-    const auto expected = read_text_file(root / "expected" / "phase6_transactions.out");
-    EXPECT_EQ(run_regression_script(sql, engine, registry), expected);
-}
-
 }  // namespace

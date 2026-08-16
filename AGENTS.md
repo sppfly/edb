@@ -21,14 +21,18 @@ See [docs/PLAN.md](docs/PLAN.md) for the full phased plan with interface designs
 | **3** | Type system + typed value encoding | ✅ |
 | **4** | Table/catalog layer (system tables, bootstrap, cache, engine factory boundary) | ✅ |
 | **5** | Query engine — basic SQL front-end and reference executor | ✅ |
-| **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔄 |
+| **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | � |
 | **7** | Embedded session API + local REPL; network optional later | 🔲 |
 | **8** | Async I/O foundation + io_uring/xNVMe + Disk Scheduler | 🔲 |
 | **9** | Distributed — Raft, partitioning, 2PC (future) | 🔲 |
 
-**Current priority**: Phase 6 hardening → Phase 7a. Goal: connect WAL to the normal SQL commit path and introduce explicit database/session ownership before adding REPL, network, or async I/O work.
+**Current priority**: Phase 7a. Introduce explicit database/session ownership over the non-transactional SQL path before adding REPL, network, or async I/O work.
 
 Status legend: 🔲 not started · 🔄 in progress · ✅ done
+
+> Note: The current SQL path is intentionally non-transactional. Statements apply
+> writes directly; a failed multi-row statement can leave earlier rows in place.
+> Phase 6 (MVCC, WAL, locks) is deferred future work.
 
 ## Development Workflow
 
@@ -98,7 +102,6 @@ edb/
 │   │   └── io/         # Storage I/O backend interface + implementations
 │   │       ├── posix/  # POSIX file I/O backend (pread/pwrite, mmap, fsync)
 │   │       └── xnvme/  # xNVMe backend (direct NVMe command submission)
-│   ├── transaction/    # MVCC, WAL, lock manager
 │   ├── index/          # Pluggable index access methods (btree, hash, gin, gist)
 │   ├── network/        # Wire protocol (PostgreSQL-compatible if feasible)
 │   ├── distributed/    # Placeholder: raft/paxos, sharding, replication
@@ -256,7 +259,6 @@ tests/
 │   │   └── io/
 │   ├── catalog/
 │   ├── query/
-│   └── transaction/
 └── regression/         # One test file per bug/PR, named <issue-id>_<description>.cpp
 ```
 
@@ -282,9 +284,8 @@ typedef struct EdbStorageEngineOps {
     void  (*destroy)(void* engine);
     int   (*read_page)(void* engine, uint64_t page_id, void* buf);
     int   (*write_page)(void* engine, uint64_t page_id, const void* buf);
-    int   (*begin_transaction)(void* engine);
-    int   (*commit)(void* engine);
-    int   (*abort)(void* engine);
+    int   (*insert_tuple)(void* engine, const void* tuple, size_t len, uint64_t* tuple_id);
+    int   (*scan_next)(void* engine, void** tuple, size_t* len);
 } EdbStorageEngineOps;
 ```
 

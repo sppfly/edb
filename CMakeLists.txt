@@ -84,10 +84,7 @@ endif()
 # Subsystem libraries
 # ---------------------------------------------------------------------------
 add_subdirectory(src/utils)
-add_subdirectory(src/transaction)
 add_subdirectory(src/storage)
-add_subdirectory(src/wal)
-add_subdirectory(src/lock)
 add_subdirectory(src/types)
 add_subdirectory(src/catalog)
 add_subdirectory(src/query)

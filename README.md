@@ -1,6 +1,6 @@
 # EDB
 
-EDB is a compact, extensible database kernel written in C++26. It is aimed at being a strong single-node foundation first, with clear internal boundaries for storage, types, query execution, and transactions.
+EDB is a compact, extensible database kernel written in C++26. It is aimed at being a strong single-node foundation first, with clear internal boundaries for storage, types, and query execution.
 
 ## What It Is
 
@@ -12,9 +12,8 @@ EDB is not trying to be a full production database all at once. The project is b
 - typed row encoding and type registry
 - catalog and table layer
 - basic SQL path
-- transaction and recovery machinery
 
-The current implementation already includes a working storage stack, type system, catalog, and a minimal SQL execution path. Transaction support is in progress and is being hardened.
+The current implementation includes a working storage stack, type system, catalog, and a minimal non-transactional SQL execution path: `CREATE TABLE`, `INSERT`, and `SELECT`. Transactions (MVCC, WAL, locks) are future work and are not part of the current codebase.
 
 ## Design Goals
 
@@ -50,6 +49,5 @@ The goal is to have a database codebase where new ideas can be added without rew
 
 Current priorities are:
 
-- decouple catalog relation opening from direct heap-engine ownership
-- connect WAL to the normal SQL commit path
 - introduce explicit database/session ownership before REPL or async I/O work
+- revisit transactions (MVCC, WAL, locks) once the local session boundary is stable

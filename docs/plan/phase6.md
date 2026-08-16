@@ -1,10 +1,8 @@
-# Phase 6 - Transactions 🔄
+# Phase 6 - Transactions �
 
 Phase 6 adds transactional correctness to the SQL path without turning the storage engine into one untestable mega-change. The target is a PostgreSQL-like first implementation: MVCC tuple versions, transaction status tracking, redo WAL for crash recovery, and transaction locks for write conflicts. Serializable isolation, predicate locking, vacuum, and advanced group commit are later phases.
 
-Current status: Phase 6 is partially implemented. EDB has transaction IDs, snapshots, transaction status tracking, pure MVCC visibility, transaction-aware heap tuples and scans, autocommit wrapping for single-statement `QueryEngine::execute()`, a lock manager with wait-for graph deadlock detection, and WAL/recovery primitives with CRC, LSNs, heap insert redo, checkpoint redo LSN, and recovery tests.
-
-Phase 6 is not done until WAL is connected to the normal SQL execution path and commit path. The current WAL tests prove the record format and recovery machinery, but ordinary SQL execution does not yet append heap WAL records, append and flush commit records, or recover a catalog/table state through the same path users exercise.
+Status: **not started — deferred future work.** The previous transaction, WAL, and lock manager implementation was removed to keep the Phase 5 baseline simple. The current SQL path is intentionally non-transactional: statements apply writes directly and a failed multi-row statement can leave earlier rows in place. This document retains the design for when the transaction layer is reintroduced.
 
 The implementation must stay shared-nothing ready: transaction, lock, WAL, buffer, catalog, and storage state are owned by explicit database/session context handles, not process-wide globals.
 
@@ -42,7 +40,7 @@ The first committed isolation level is **snapshot isolation**.
 - `UPDATE` and `DELETE` acquire tuple exclusive locks and detect write-write conflicts.
 - Serializable isolation is out of scope for Phase 6 because it needs predicate locks or SSI conflict tracking.
 
-Implementation note: the current SQL reference path uses coarse relation shared/exclusive locks for simple `SELECT` and `INSERT`. This is acceptable as a temporary correctness boundary, but it does not fully match the long-term snapshot-isolation goal that reads and writes avoid blocking each other. Phase 6 hardening should move write conflicts toward tuple-level locks and keep read paths governed by MVCC visibility.
+Implementation note: the future implementation may start with coarse relation shared/exclusive locks for simple `SELECT` and `INSERT` as a temporary correctness boundary, then move write conflicts toward tuple-level locks and keep read paths governed by MVCC visibility.
 
 ## Lock vs Latch
 
@@ -288,7 +286,7 @@ Do not add explicit SQL transaction statements until autocommit transaction boun
 
 ### 6a. Transaction Core
 
-Status: ✅ implemented.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -306,7 +304,7 @@ Validation:
 
 ### 6b. MVCC Visibility Pure Layer
 
-Status: ✅ implemented.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -326,46 +324,42 @@ Validation:
 
 ### 6c. Heap Tuple Header Integration
 
-Status: ✅ implemented for heap storage APIs and compatibility table scans/inserts.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
 - heap tuple header wrapping row payload
 - transaction-aware `insert`, `delete`, `update`, and `scan`
 - page latch around slot/free-space mutation
-- compatibility wrappers for existing autocommit-style table APIs
 
 Validation:
 
-- existing heap/table/query tests still pass through compatibility path
 - scan applies snapshot visibility
 - update is represented as delete old + insert new
 
 ### 6d. Query Autocommit Transactions
 
-Status: ✅ implemented for single-statement `QueryEngine::execute()`.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
 - `QueryEngine::execute()` wraps one statement in begin/commit/abort
 - executor passes transaction context into table/storage operations
-- SQL regression continues to pass
 
 Validation:
 
 - successful insert commits and is visible later
 - failed statement aborts and leaves no visible partial write
-- existing `sql/expected` regression remains stable
 
 ### 6e. WAL Record Format and WAL Manager
 
-Status: ✅ implemented as a WAL subsystem primitive.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
 - WAL record header with LSN, previous LSN, XID, resource manager, type, payload length, and CRC
 - append/read/flush APIs backed by `StorageIOOps`
-- synchronous commit flush policy for WAL API callers; normal SQL commit integration remains in 6f
+- synchronous commit flush policy for WAL API callers
 - concurrent append test
 
 Validation:
@@ -377,7 +371,7 @@ Validation:
 
 ### 6f. Heap WAL Redo and Recovery
 
-Status: 🔄 partially implemented. Heap insert redo, transaction status rebuild, page LSN idempotence, and checkpoint redo LSN support exist in recovery tests. Normal heap/table/query execution still needs to produce WAL records directly.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -395,7 +389,7 @@ Validation:
 
 ### 6g. Delete / Update MVCC
 
-Status: 🔄 implemented at heap API level; SQL `UPDATE` / `DELETE` and tuple-lock integration remain.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -412,7 +406,7 @@ Validation:
 
 ### 6h. Lock Manager and Deadlock Detection
 
-Status: ✅ lock manager implemented. SQL lock policy still needs refinement as 6g grows beyond relation-level locks.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -431,7 +425,7 @@ Validation:
 
 ### 6i. Checkpoint and Group Commit Groundwork
 
-Status: 🔄 partially implemented. Checkpoint redo LSN and append/flush LSN tracking exist; group-commit API shape remains future work.
+Status: 🔲 not started (design only).
 
 Deliverables:
 
@@ -447,7 +441,7 @@ Validation:
 
 ### 6j. Threading and Latch Discipline
 
-Status: 🔄 partially implemented through manager-level tests and code comments; must be re-reviewed when WAL is connected to normal execution.
+Status: 🔲 not started (design only).
 
 Deliverables:
 

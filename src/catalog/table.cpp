@@ -23,18 +23,6 @@ auto Table::insert(std::span<const Value> values) -> Result<TupleId> {
     return storage->insert(*encoded);
 }
 
-auto Table::insert(const Transaction& tx, std::span<const Value> values) -> Result<TupleId> {
-    if (storage == nullptr) {
-        return std::unexpected(Error::InvalidArgument);
-    }
-
-    auto encoded = row_codec.encode(values);
-    if (!encoded) {
-        return std::unexpected(encoded.error());
-    }
-    return storage->insert(tx, *encoded);
-}
-
 auto Table::scan_rows() -> Result<std::vector<TableRow>> {
     if (storage == nullptr) {
         return std::unexpected(Error::InvalidArgument);
@@ -69,58 +57,8 @@ auto Table::scan_rows() -> Result<std::vector<TableRow>> {
     return rows;
 }
 
-auto Table::scan_rows(const VisibilityContext& context, const TransactionStatusReader& statuses)
-    -> Result<std::vector<TableRow>> {
-    if (storage == nullptr) {
-        return std::unexpected(Error::InvalidArgument);
-    }
-
-    auto handle = storage->begin_scan(context, statuses);
-    if (!handle) {
-        return std::unexpected(handle.error());
-    }
-
-    std::vector<TableRow> rows;
-    while (true) {
-        auto next = storage->scan_next(*handle);
-        if (!next) {
-            return std::unexpected(next.error());
-        }
-        if (!next->has_value()) {
-            break;
-        }
-
-        auto decoded = row_codec.decode((*next)->data);
-        if (!decoded) {
-            return std::unexpected(decoded.error());
-        }
-        rows.push_back(TableRow{.id = (*next)->id, .values = std::move(*decoded)});
-    }
-
-    auto status = storage->end_scan(*handle);
-    if (!status) {
-        return std::unexpected(status.error());
-    }
-    return rows;
-}
-
 auto Table::scan() -> Result<std::vector<std::vector<Value>>> {
     auto rows = scan_rows();
-    if (!rows) {
-        return std::unexpected(rows.error());
-    }
-
-    std::vector<std::vector<Value>> values;
-    values.reserve(rows->size());
-    for (auto& row : *rows) {
-        values.push_back(std::move(row.values));
-    }
-    return values;
-}
-
-auto Table::scan(const VisibilityContext& context, const TransactionStatusReader& statuses)
-    -> Result<std::vector<std::vector<Value>>> {
-    auto rows = scan_rows(context, statuses);
     if (!rows) {
         return std::unexpected(rows.error());
     }

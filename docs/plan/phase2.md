@@ -179,7 +179,7 @@ Offset  Size  Field
 8       2     free_start (u16, offset of start of free space)
 10      2     free_end   (u16, offset of end of free space)
 12      8     page_id   (u64)
-20      8     lsn       (u64, filled in by WAL in Phase 6)
+20      8     reserved  (u64, zero; formerly page LSN, kept for layout stability)
 28      ...   slot array: slot[i] = {offset: u16, len: u16}, grows ↓
               free space
               tuple data, grows ↑
@@ -198,4 +198,4 @@ Each tuple is opaque bytes from the engine's perspective; the type system (Phase
 
 ### Deferred Follow-up
 
-- `vacuum`: compact dead slots and reclaim free space after MVCC / WAL semantics are defined
+- `vacuum`: compact dead slots and reclaim free space (currently tombstones are never reclaimed)

@@ -13,9 +13,8 @@ The correct goal for this phase is:
 
 Phase 8 should wait until the local engine has enough stable behavior to measure. The entry criteria are:
 
-- a `Database` / `Session` boundary owns storage, WAL, transaction, and lock state explicitly
-- normal SQL commits use the WAL durability path rather than only WAL unit tests
-- at least one workload can naturally issue multiple useful page requests, such as scan prefetch, batched page fetch, background flush, or WAL/background sync
+- a `Database` / `Session` boundary owns storage state explicitly
+- at least one workload can naturally issue multiple useful page requests, such as scan prefetch, batched page fetch, background flush, or background sync
 - the benchmark harness can report queue depth, buffered/direct I/O mode, access pattern, latency, and throughput separately
 
 Without these, an async backend can be implemented but not evaluated honestly.

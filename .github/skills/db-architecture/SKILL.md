@@ -14,7 +14,7 @@ disable-model-invocation: false
 - Designing catalog tables or system schemas
 - Modifying query planner, executor, or optimizer
 - Adding new index access methods
-- Designing transaction/MVCC behavior
+- Designing transaction/MVCC behavior (future Phase 6 work — no transaction subsystem exists yet)
 
 ## Core Principles
 
@@ -46,7 +46,9 @@ disable-model-invocation: false
 - **Planner**: Cost-based optimizer with extensible statistics
 - **Executor**: Volcano-style iterator model initially; consider vectorized execution for OLAP later
 
-### Transaction (`src/transaction/`)
+### Transaction (`src/transaction/` — future Phase 6)
+
+Not currently implemented. When reintroduced, plan for:
 
 - MVCC with tuple visibility rules (xmin/xmax like PostgreSQL)
 - WAL: append-only log with LSN, group commit, fsync policy configurable per I/O backend
@@ -74,7 +76,7 @@ disable-model-invocation: false
 1. Add SQL DDL to `src/catalog/bootstrap.sql`
 2. Generate C headers via bootstrap script
 3. Implement cache invalidation in `src/catalog/cache.c`
-4. Add recovery/replay logic if table is WAL-logged
+5. Add recovery/replay logic if the table becomes WAL-logged in a future Phase 6
 
 ## Anti-patterns
 

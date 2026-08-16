@@ -13,5 +13,4 @@ target_include_directories(edb_engine
 
 target_link_libraries(edb_engine
     PUBLIC edb_buffer
-    PUBLIC edb_transaction
 )

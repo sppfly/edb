@@ -21,7 +21,7 @@ Remaining Phase 5 work is hardening rather than proving first usability:
 - stabilize the physical execution boundary before adding a second backend
 - make result and expression representation easier to reuse for batches later
 - keep scan work splittable for future prefetch, morsel scheduling, and async I/O
-- defer the second execution backend until the session/transaction boundary is stable
+- introduce explicit session ownership before growing the executor further
 
 ## Stable Skeleton
 

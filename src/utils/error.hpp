@@ -44,11 +44,6 @@ enum class Error : uint8_t {  // raw-primitive: enum base type requires stdint t
     BufferPoolFull,  // all frames pinned; cannot evict
     InvalidPageId,
 
-    // Transactions
-    TransactionAborted,
-    DeadlockDetected,
-    SnapshotTooOld,
-
     // Catalog / types
     TypeNotFound,
     TypeAlreadyRegistered,
@@ -102,12 +97,6 @@ constexpr std::string_view edb_error_name(Error e) noexcept {
             return "BufferPoolFull";
         case Error::InvalidPageId:
             return "InvalidPageId";
-        case Error::TransactionAborted:
-            return "TransactionAborted";
-        case Error::DeadlockDetected:
-            return "DeadlockDetected";
-        case Error::SnapshotTooOld:
-            return "SnapshotTooOld";
         case Error::TypeNotFound:
             return "TypeNotFound";
         case Error::TypeAlreadyRegistered:

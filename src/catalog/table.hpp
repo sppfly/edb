@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "storage/engine/engine_ops.hpp"
-#include "transaction/visibility.hpp"
 #include "types/row_codec.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
@@ -36,16 +35,8 @@ class Table {
     ~Table() = default;
 
     [[nodiscard]] auto insert(std::span<const Value> values) -> Result<TupleId>;
-    [[nodiscard]] auto insert(const Transaction& tx, std::span<const Value> values)
-        -> Result<TupleId>;
     [[nodiscard]] auto scan_rows() -> Result<std::vector<TableRow>>;
-    [[nodiscard]] auto scan_rows(const VisibilityContext& context,
-                                 const TransactionStatusReader& statuses)
-        -> Result<std::vector<TableRow>>;
     [[nodiscard]] auto scan() -> Result<std::vector<std::vector<Value>>>;
-    [[nodiscard]] auto scan(const VisibilityContext& context,
-                            const TransactionStatusReader& statuses)
-        -> Result<std::vector<std::vector<Value>>>;
 
     [[nodiscard]] auto schema() const -> const TableSchema&;
 

@@ -2,7 +2,7 @@
 
 > Status legend: 🔲 not started · 🔄 in progress · ✅ done
 >
-> **Current priority**: Phase 6 hardening → Phase 7a. Goal: turn the current autocommit transaction slice into a durable, session-scoped database context before adding a REPL or async I/O work.
+> **Current priority**: Phase 7a. Introduce explicit database/session ownership over the non-transactional SQL path before adding a REPL or async I/O work.
 >
 > Detailed per-phase plans live in [`docs/plan/`](plan/).
 
@@ -18,7 +18,7 @@
 | **3** | Type system + typed value encoding (`EdbTypeRegistry`, built-in types, row serialization) | ✅ | [phase3.md](plan/phase3.md) |
 | **4** | Table/catalog layer (developer table API, catalog persistence, initdb, cache, engine factory boundary) | ✅ | [phase4.md](plan/phase4.md) |
 | **5** | Query engine — basic SQL front-end over the table/catalog API | ✅ | [phase5.md](plan/phase5.md) |
-| **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔄 | [phase6.md](plan/phase6.md) |
+| **6** | Transactions (MVCC, WAL, row locks, deadlock detection) | 🔲 | [phase6.md](plan/phase6.md) |
 | **7** | Embedded database/session API + local REPL; optional network later | 🔲 | [phase7.md](plan/phase7.md) |
 | **8** | Async I/O foundation + io_uring/xNVMe + Disk Scheduler | 🔲 | [phase8.md](plan/phase8.md) |
 | **9** | Distributed shared-nothing cluster — coordinators, shard groups, Raft, 2PC | 🔲 | [phase9.md](plan/phase9.md) |
@@ -31,14 +31,14 @@ The plan tracks two different things: completed vertical slices and full product
 
 Phase 4 is now architecturally closed as well as functionally usable. Catalog relation opening now goes through a `StorageEngineFactory`, while heap remains the default policy via `HeapStorageEngineFactory`. Catalog no longer owns `EdbHeapEngine` directly inside its opened-table bundle, so alternate storage engines can plug into the same relation-opening path without changing catalog code.
 
-Phase 6 is in progress, not fully complete. EDB now has transaction IDs, snapshots, MVCC tuple visibility, transaction-aware heap scans/inserts/deletes/updates, autocommit wrapping in `QueryEngine::execute()`, a lock manager with deadlock detection, and WAL/recovery primitives. The remaining Phase 6 work is to connect WAL to the normal SQL commit path, introduce explicit database/session transaction ownership, expose SQL update/delete and later explicit transaction statements, and add cleanup for obsolete MVCC versions.
+Phase 6 (transactions, MVCC, WAL, locks) is deferred future work. The current execution path is intentionally non-transactional: statements apply writes directly, a failed multi-row statement can leave earlier rows in place, and there is no crash recovery. The previous Phase 6 implementation was removed to keep the baseline simple; `phase6.md` retains the design as a future plan.
 
 Updated near-term priorities:
 
-- finish the Phase 6 durability path: heap WAL append, commit record, flush rule, and recovery through the normal execution path
-- introduce a `Database` / `Session` context that owns transaction, lock, WAL, catalog, and storage state explicitly
-- keep the existing single-statement autocommit API as a compatibility path over the session API
-- delay REPL, network, and async I/O until the local session and durability boundary is stable
+- introduce a `Database` / `Session` context that owns catalog, storage, and execution state explicitly
+- keep the existing single-statement API as a compatibility path over the session API
+- revisit transactions (MVCC, WAL, locks) only after the local session boundary is stable
+- delay REPL, network, and async I/O until the local session boundary is stable
 
 ---
 
@@ -146,11 +146,11 @@ Sub-phases: **5a** SQL frontend ✅ · **5b** Binder ✅ · **5c** Logical plan 
 
 ---
 
-## Phase 6 — Transactions 🔄
+## Phase 6 — Transactions �
 
 → See [plan/phase6.md](plan/phase6.md) for full detail.
 
-Sub-phases: **6a** Transaction core ✅ · **6b** MVCC visibility ✅ · **6c** Heap tuple header integration ✅ · **6d** Query autocommit ✅ · **6e** WAL manager ✅ · **6f** Heap WAL/recovery 🔄 · **6g** Delete/update MVCC 🔄 · **6h** Lock manager/deadlock detection ✅ · **6i** Checkpoint/group-commit groundwork 🔄
+Deferred future work: **6a** Transaction core · **6b** MVCC visibility · **6c** Heap tuple header integration · **6d** Query autocommit · **6e** WAL manager · **6f** Heap WAL/recovery · **6g** Delete/update MVCC · **6h** Lock manager/deadlock detection · **6i** Checkpoint/group-commit groundwork
 
 ---
 

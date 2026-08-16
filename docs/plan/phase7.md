@@ -1,8 +1,8 @@
 # Phase 7 — Embedded Session First, Local REPL Next 🔲
 
-Phase 7 should not block core database progress on external networking. Before building a shell, EDB needs an embedded database/session API that owns the same parser, binder, planner, executor, transaction, lock, WAL, catalog, and storage state used by tests.
+Phase 7 should not block core database progress on external networking. Before building a shell, EDB needs an embedded database/session API that owns the same parser, binder, planner, executor, catalog, and storage state used by tests.
 
-The current `QueryEngine::execute()` autocommit path is useful, but it is not yet a full session boundary. Phase 7 starts by making that ownership explicit, then layers a local in-process REPL on top.
+The current `QueryEngine::execute()` single-statement path is useful, but it is not yet a full session boundary. Phase 7 starts by making that ownership explicit, then layers a local in-process REPL on top.
 
 PostgreSQL wire protocol support is still desirable, but it is explicitly a later sub-phase rather than the immediate next milestone.
 
@@ -15,12 +15,11 @@ PostgreSQL wire protocol support is still desirable, but it is explicitly a late
 
 ## Phase 7 Entry Criteria
 
-Phase 7 should start after Phase 6 has a stable local durability boundary:
+Phase 7 can start directly on top of the Phase 5 non-transactional baseline:
 
-- normal SQL execution emits heap and transaction WAL records where required
-- commit appends and flushes the durable commit record before exposing committed status
-- transaction, lock, WAL, catalog, and storage ownership is explicit enough to move from one `QueryEngine` object into a database/session context
-- single-statement autocommit remains covered by regression tests
+- catalog, storage, and execution ownership is explicit enough to move from one `QueryEngine` object into a database/session context
+- single-statement SQL remains covered by regression tests
+- transaction support (Phase 6) is deferred and can be added under the session boundary later
 
 ## Phase 7 Sub-Phases
 
@@ -51,7 +50,7 @@ public:
 };
 ```
 
-The exact names may change, but ownership should not: database-level state owns catalog, storage factories, WAL, transaction manager, and lock manager; session-level state owns current transaction scope, error state, and eventually protocol/session options.
+The exact names may change, but ownership should not: database-level state owns catalog and storage factories; session-level state owns error state and eventually transaction scope, protocol/session options. Transaction, WAL, and lock managers arrive with Phase 6 and are owned at the same database level when they exist.
 
 ### 7b. Local REPL
 

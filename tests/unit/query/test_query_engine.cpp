@@ -136,7 +136,7 @@ TEST_F(QueryEngineTest, ExecuteRejectsMultipleStatements) {
               std::string_view{"execute expects exactly one SQL statement"});
 }
 
-TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
+TEST_F(QueryEngineTest, FailedMultiRowInsertRetainsEarlierRows) {
     QueryEngine engine{catalog, registry};
 
     auto create = engine.execute("CREATE TABLE events (id INTEGER, payload TEXT)");
@@ -149,10 +149,13 @@ TEST_F(QueryEngineTest, FailedStatementDoesNotExposePartialWrites) {
 
     auto selected = engine.execute("SELECT * FROM events");
     ASSERT_TRUE(selected.has_value()) << engine.error_message();
-    EXPECT_TRUE(selected->rows.empty());
+    ASSERT_EQ(selected->rows.size(), std::size_t{1});
+    EXPECT_EQ(selected->rows[0].columns[0].name, std::string{"id"});
+    EXPECT_EQ(value_text(registry, selected->rows[0].values[0]), std::string{"1"});
+    EXPECT_EQ(value_text(registry, selected->rows[0].values[1]), std::string{"ok"});
 }
 
-TEST_F(QueryEngineTest, TwoThreadAutocommitInsertsAreVisible) {
+TEST_F(QueryEngineTest, TwoThreadInsertsAreVisible) {
     QueryEngine engine{catalog, registry};
     auto create = engine.execute("CREATE TABLE events (id INTEGER, payload TEXT)");
     ASSERT_TRUE(create.has_value()) << engine.error_message();

@@ -56,10 +56,6 @@ Catalog::Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_f
       engines{&engine_factory},
       config{engine_config} {}
 
-auto Catalog::set_wal_emitter(WalEmitter& wal_emitter) noexcept -> void {
-    config.wal = &wal_emitter;
-}
-
 auto Catalog::OpenedTableBundle::open(const TypeRegistry& registry,
                                       RelationBackendFactory& backend_factory,
                                       StorageEngineFactory& engine_factory,
