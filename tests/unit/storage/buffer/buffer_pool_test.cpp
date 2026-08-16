@@ -12,7 +12,7 @@
 
 using namespace edb;
 
-class MockIOOps : public StorageIOOps {
+class MockIOOps : public StorageIO {
 public:
     std::vector<std::byte> storage;
     usize sync_calls{0};

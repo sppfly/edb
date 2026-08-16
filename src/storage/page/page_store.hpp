@@ -31,7 +31,7 @@ public:
 
     ~PageStore() = default;
 
-    auto open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult;
+    auto open(StorageIO& backend, const PageStoreConfig& cfg) -> VoidResult;
     auto close() -> VoidResult;
 
     auto read_page(u64 page_id, std::span<std::byte> buf) -> VoidResult;
@@ -48,7 +48,7 @@ private:
     [[nodiscard]] auto byte_offset_for_page(u64 page_id) const -> Result<u64>;
     [[nodiscard]] auto validate_existing_page(u64 page_id) -> VoidResult;
 
-    StorageIOOps* io{nullptr};
+    StorageIO* io{nullptr};
     PageStoreConfig config{};
 };
 

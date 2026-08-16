@@ -55,7 +55,7 @@ public:
     virtual ~RelationBackendFactory() = default;
 
     [[nodiscard]] virtual auto open_backend(u32 relation_oid, std::string_view relation_name)
-        -> Result<std::unique_ptr<StorageIOOps>> = 0;
+        -> Result<std::unique_ptr<StorageIO>> = 0;
 };
 
 class Catalog {
@@ -85,7 +85,7 @@ public:
 
 private:
     struct OpenedTableBundle {
-        std::unique_ptr<StorageIOOps> backend;
+        std::unique_ptr<StorageIO> backend;
         PageStore page_store;
         std::unique_ptr<StorageEngine> engine;
         std::unique_ptr<Table> table;

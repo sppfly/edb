@@ -27,7 +27,7 @@ namespace {
 
 }  // namespace
 
-class MockHeapIOOps : public StorageIOOps {
+class MockHeapIOOps : public StorageIO {
 public:
     std::vector<std::byte> storage;
 

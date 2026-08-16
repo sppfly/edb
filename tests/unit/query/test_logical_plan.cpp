@@ -21,7 +21,7 @@ using namespace edb;
 
 namespace {
 
-class SharedMemoryIO final : public StorageIOOps {
+class SharedMemoryIO final : public StorageIO {
 public:
     explicit SharedMemoryIO(std::shared_ptr<std::vector<std::byte>> bytes)
         : storage{std::move(bytes)} {}
@@ -69,7 +69,7 @@ private:
 class MemoryRelationBackendFactory final : public RelationBackendFactory {
 public:
     auto open_backend(u32 relation_oid, std::string_view /*relation_name*/)
-        -> Result<std::unique_ptr<StorageIOOps>> override {
+        -> Result<std::unique_ptr<StorageIO>> override {
         auto& bytes = relations[relation_oid];
         if (bytes == nullptr) {
             bytes = std::make_shared<std::vector<std::byte>>();

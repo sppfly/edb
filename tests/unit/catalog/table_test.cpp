@@ -17,7 +17,7 @@ using namespace edb;
 
 namespace {
 
-class MockCatalogIOOps : public StorageIOOps {
+class MockCatalogIOOps : public StorageIO {
 public:
     std::vector<std::byte> storage;
 

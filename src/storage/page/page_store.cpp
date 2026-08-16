@@ -10,7 +10,7 @@
 
 namespace edb {
 
-auto PageStore::open(StorageIOOps& backend, const PageStoreConfig& cfg) -> VoidResult {
+auto PageStore::open(StorageIO& backend, const PageStoreConfig& cfg) -> VoidResult {
     EDB_ASSERT(cfg.page_size > usize{0});
     io = &backend;
     config = cfg;

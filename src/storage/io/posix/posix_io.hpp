@@ -23,7 +23,7 @@
 
 namespace edb {
 
-class PosixIO final : public StorageIOOps {
+class PosixIO final : public StorageIO {
 public:
     PosixIO() = default;
     PosixIO(const PosixIO&) = delete;

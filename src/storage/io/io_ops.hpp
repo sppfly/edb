@@ -47,16 +47,16 @@ struct IOVec {
 // ---------------------------------------------------------------------------
 // EdbStorageIOOps — abstract I/O backend interface
 // ---------------------------------------------------------------------------
-struct StorageIOOps {
-    StorageIOOps() = default;
+struct StorageIO {
+    StorageIO() = default;
 
     // Non-copyable, non-movable (backends own OS resources).
-    StorageIOOps(const StorageIOOps&) = delete;
-    StorageIOOps& operator=(const StorageIOOps&) = delete;
-    StorageIOOps(StorageIOOps&&) = delete;
-    StorageIOOps& operator=(StorageIOOps&&) = delete;
+    StorageIO(const StorageIO&) = delete;
+    StorageIO& operator=(const StorageIO&) = delete;
+    StorageIO(StorageIO&&) = delete;
+    StorageIO& operator=(StorageIO&&) = delete;
 
-    virtual ~StorageIOOps() = default;
+    virtual ~StorageIO() = default;
 
     // -----------------------------------------------------------------------
     // Lifecycle
@@ -172,7 +172,7 @@ protected:
 // Default implementations (defined inline — no .cpp needed for the interface)
 // ---------------------------------------------------------------------------
 
-inline auto StorageIOOps::readv_impl(std::span<IOVec> iov) -> Result<usize> {
+inline auto StorageIO::readv_impl(std::span<IOVec> iov) -> Result<usize> {
     usize total{0};
     for (auto& vec : iov) {
         auto res = read(vec.offset, vec.buf);
@@ -184,7 +184,7 @@ inline auto StorageIOOps::readv_impl(std::span<IOVec> iov) -> Result<usize> {
     return total;
 }
 
-inline auto StorageIOOps::writev_impl(std::span<const IOVec> iov) -> Result<usize> {
+inline auto StorageIO::writev_impl(std::span<const IOVec> iov) -> Result<usize> {
     usize total{0};
     for (const auto& vec : iov) {
         auto res = write(vec.offset, vec.buf);
@@ -196,17 +196,17 @@ inline auto StorageIOOps::writev_impl(std::span<const IOVec> iov) -> Result<usiz
     return total;
 }
 
-inline auto StorageIOOps::mmap_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len,
+inline auto StorageIO::mmap_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len,
                                     [[maybe_unused]] i32 prot) -> Result<std::byte*> {
     return std::unexpected(Error::NotSupported);
 }
 
-inline auto StorageIOOps::munmap_impl([[maybe_unused]] std::byte* addr, [[maybe_unused]] usize len)
+inline auto StorageIO::munmap_impl([[maybe_unused]] std::byte* addr, [[maybe_unused]] usize len)
     -> VoidResult {
     return std::unexpected(Error::NotSupported);
 }
 
-inline auto StorageIOOps::sync_range_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len)
+inline auto StorageIO::sync_range_impl([[maybe_unused]] u64 offset, [[maybe_unused]] usize len)
     -> VoidResult {
     return datasync();
 }

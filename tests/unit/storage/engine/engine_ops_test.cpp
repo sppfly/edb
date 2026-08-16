@@ -82,7 +82,7 @@ public:
     [[nodiscard]] auto page_size() const -> usize override { return configured_page_size; }
 };
 
-class MockPageIO : public StorageIOOps {
+class MockPageIO : public StorageIO {
 private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};

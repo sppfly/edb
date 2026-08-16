@@ -55,7 +55,7 @@ TEST(EdbIOVec, FieldTypes) {
 // MockIOOps — minimal concrete backend for testing defaults
 // ---------------------------------------------------------------------------
 
-class MockIOOps : public StorageIOOps {
+class MockIOOps : public StorageIO {
 public:
     // Storage: flat byte buffer simulating a file.
     std::vector<std::byte> storage;
