@@ -47,12 +47,13 @@ endif()
 # ---------------------------------------------------------------------------
 # Linker: mold
 # ---------------------------------------------------------------------------
+set(EDB_USE_MOLD ON CACHE BOOL "Use mold linker when available")
 find_program(EDB_MOLD_LINKER mold)
-if(EDB_MOLD_LINKER)
+if(EDB_USE_MOLD AND EDB_MOLD_LINKER)
   add_link_options(-fuse-ld=mold)
   message(STATUS "Using linker: mold (${EDB_MOLD_LINKER})")
 else()
-  message(STATUS "mold not found; using default linker")
+  message(STATUS "mold disabled or not found; using default linker")
 endif()
 
 # ---------------------------------------------------------------------------
