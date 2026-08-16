@@ -26,7 +26,7 @@ struct BufferPoolConfig {
 class BufferPool;
 
 class FrameHandle {
-   public:
+public:
     FrameHandle() = default;
     FrameHandle(BufferPool* owner, usize frame_index, u64 page_id, std::span<std::byte> bytes);
 
@@ -40,7 +40,7 @@ class FrameHandle {
     [[nodiscard]] auto page_id() const -> u64;
     [[nodiscard]] auto is_valid() const -> b8;
 
-   private:
+private:
     friend class BufferPool;
 
     auto release() -> void;
@@ -52,7 +52,7 @@ class FrameHandle {
 };
 
 class BufferPool {
-   public:
+public:
     BufferPool() = default;
 
     BufferPool(const BufferPool&) = delete;
@@ -75,7 +75,7 @@ class BufferPool {
     [[nodiscard]] auto capacity() const -> usize;
     [[nodiscard]] auto page_size() const -> usize;
 
-   private:
+private:
     struct Frame {
         u64 page_id{0};
         std::vector<std::byte> data;

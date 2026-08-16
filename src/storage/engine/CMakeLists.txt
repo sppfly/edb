@@ -2,7 +2,7 @@
 
 add_library(edb_engine STATIC
     engine_factory.cpp
-    engine_ops.cpp
+    engine.cpp
     heap/page.cpp
     heap/heap_engine.cpp
 )

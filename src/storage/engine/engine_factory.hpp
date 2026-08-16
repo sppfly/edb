@@ -5,12 +5,12 @@
 #include <memory>
 #include <string_view>
 
-#include "storage/engine/engine_ops.hpp"
+#include "storage/engine/engine.hpp"
 
 namespace edb {
 
 class StorageEngineFactory {
-   public:
+public:
     StorageEngineFactory() = default;
     StorageEngineFactory(const StorageEngineFactory&) = delete;
     StorageEngineFactory& operator=(const StorageEngineFactory&) = delete;
@@ -20,14 +20,14 @@ class StorageEngineFactory {
 
     [[nodiscard]] virtual auto open_engine(u32 relation_oid, std::string_view relation_name,
                                            PageStore& page_store, const EngineConfig& config)
-        -> Result<std::unique_ptr<StorageEngineOps>> = 0;
+        -> Result<std::unique_ptr<StorageEngine>> = 0;
 };
 
 class HeapStorageEngineFactory final : public StorageEngineFactory {
-   public:
+public:
     [[nodiscard]] auto open_engine(u32 relation_oid, std::string_view relation_name,
                                    PageStore& page_store, const EngineConfig& config)
-        -> Result<std::unique_ptr<StorageEngineOps>> override;
+        -> Result<std::unique_ptr<StorageEngine>> override;
 };
 
 }  // namespace edb

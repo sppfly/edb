@@ -1,6 +1,6 @@
 #pragma once
 
-// src/storage/engine/engine_ops.hpp
+// src/storage/engine/engine.hpp
 //
 // Tuple-level storage engine abstraction. Query execution talks to this layer;
 // concrete engines decide whether to use the buffer pool, mmap, or specialized
@@ -42,15 +42,15 @@ struct ScanHandle {
     u64 value;
 };
 
-struct StorageEngineOps {
-    StorageEngineOps() = default;
+struct StorageEngine {
+    StorageEngine() = default;
 
-    StorageEngineOps(const StorageEngineOps&) = delete;
-    StorageEngineOps& operator=(const StorageEngineOps&) = delete;
-    StorageEngineOps(StorageEngineOps&&) = delete;
-    StorageEngineOps& operator=(StorageEngineOps&&) = delete;
+    StorageEngine(const StorageEngine&) = delete;
+    StorageEngine& operator=(const StorageEngine&) = delete;
+    StorageEngine(StorageEngine&&) = delete;
+    StorageEngine& operator=(StorageEngine&&) = delete;
 
-    virtual ~StorageEngineOps() = default;
+    virtual ~StorageEngine() = default;
 
     auto open(PageStore& store, const EngineConfig& cfg) -> VoidResult {
         EDB_ASSERT(cfg.page_size > usize{0});
@@ -81,7 +81,7 @@ struct StorageEngineOps {
 
     [[nodiscard]] auto page_size() const -> usize { return page_size_impl(); }
 
-   protected:
+protected:
     virtual auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult = 0;
     virtual auto close_impl() -> VoidResult = 0;
     virtual auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> = 0;

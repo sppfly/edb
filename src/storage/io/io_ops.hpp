@@ -152,7 +152,7 @@ struct StorageIOOps {
     /// Return the current file/device size in bytes.
     auto file_size() -> Result<u64> { return file_size_impl(); }
 
-   protected:
+protected:
     virtual auto open_impl(const char* path, const IOConfig& cfg) -> VoidResult = 0;
     virtual auto close_impl() -> VoidResult = 0;
     virtual auto read_impl(u64 offset, std::span<std::byte> buf) -> Result<usize> = 0;

@@ -28,7 +28,7 @@
 namespace edb {
 
 class Lexer {
-   public:
+public:
     explicit Lexer(std::string_view src) noexcept;
 
     // Return the next token and advance past it.
@@ -37,7 +37,7 @@ class Lexer {
     // Return the next token without advancing (idempotent).
     [[nodiscard]] auto peek() -> Token;
 
-   private:
+private:
     std::string_view src;
     usize pos;
     u32 line{u32{1}};

@@ -28,10 +28,10 @@ namespace {
 }  // namespace
 
 class MockHeapIOOps : public StorageIOOps {
-   public:
+public:
     std::vector<std::byte> storage;
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
@@ -69,7 +69,7 @@ class MockHeapIOOps : public StorageIOOps {
 };
 
 class HeapEngineTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{256}}).has_value());
     }
@@ -106,7 +106,7 @@ class HeapEngineTest : public ::testing::Test {
         return tuples;
     }
 
-   public:
+public:
     MockHeapIOOps io;
     PageStore page_store;
 };

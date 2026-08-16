@@ -1,23 +1,33 @@
 cmake_minimum_required(VERSION 3.25)
 
-# EDB requires clang++-22 for C++26.
-find_program(EDB_CLANGXX22_EXECUTABLE NAMES clang++-22 REQUIRED)
+# EDB requires a Clang compiler of major version 22 or newer for C++26. The
+# binary may be named clang++-22 or plain clang++ (e.g. a distro where clang++
+# is 22).
+find_program(EDB_CLANGXX_EXECUTABLE NAMES clang++-22 clang++)
 
 # Pick the project compiler before project() performs compiler detection.
-if(NOT DEFINED CMAKE_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER ${EDB_CLANGXX22_EXECUTABLE} CACHE FILEPATH "C++ compiler")
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EDB_CLANGXX_EXECUTABLE)
+  set(CMAKE_CXX_COMPILER ${EDB_CLANGXX_EXECUTABLE} CACHE FILEPATH "C++ compiler")
 endif()
 
 project(edb LANGUAGES CXX)
 
-get_filename_component(EDB_REQUIRED_CXX_REAL ${EDB_CLANGXX22_EXECUTABLE} REALPATH)
-get_filename_component(EDB_ACTUAL_CXX_REAL ${CMAKE_CXX_COMPILER} REALPATH)
-if(NOT EDB_ACTUAL_CXX_REAL STREQUAL EDB_REQUIRED_CXX_REAL)
+# Accept any compiler that really is Clang 22 or newer, regardless of the
+# binary name (clang++-22 vs plain clang++).
+if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   message(FATAL_ERROR
-    "EDB must be built with clang++-22. "
-    "Detected '${CMAKE_CXX_COMPILER}', required '${EDB_CLANGXX22_EXECUTABLE}'. "
-    "Reconfigure with -DCMAKE_CXX_COMPILER=${EDB_CLANGXX22_EXECUTABLE} "
-    "or clear the build directory."
+    "EDB must be built with Clang 22 or newer. "
+    "Detected '${CMAKE_CXX_COMPILER}' (compiler ID '${CMAKE_CXX_COMPILER_ID}'). "
+    "Reconfigure with -DCMAKE_CXX_COMPILER=clang++-22 (or clang++) "
+    "and clear the build directory."
+  )
+endif()
+if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "22.0.0")
+  message(FATAL_ERROR
+    "EDB requires Clang 22 or newer; detected '${CMAKE_CXX_COMPILER}' "
+    "version ${CMAKE_CXX_COMPILER_VERSION}. "
+    "Reconfigure with -DCMAKE_CXX_COMPILER=clang++-22 (or clang++) "
+    "and clear the build directory."
   )
 endif()
 
@@ -98,9 +108,35 @@ add_subdirectory(tests)
 # ---------------------------------------------------------------------------
 # format / format-check / tidy targets
 # ---------------------------------------------------------------------------
-# All clang tools must come from the clang 22 toolchain — no version fallback.
-find_program(CLANG_FORMAT NAMES clang-format-22 REQUIRED)
-find_program(CLANG_TIDY   NAMES clang-tidy-22 REQUIRED)
+# Locate a clang tool (version 22 or newer): prefer the -22 suffixed binary,
+# fall back to the plain name, and verify the tool's actual version.
+function(edb_find_clang_tool tool_name out_var)
+  find_program(${out_var} NAMES ${tool_name}-22 ${tool_name})
+  if(NOT ${out_var})
+    message(FATAL_ERROR
+      "EDB requires ${tool_name} version 22 or newer; "
+      "neither '${tool_name}-22' nor '${tool_name}' was found on PATH."
+    )
+  endif()
+  execute_process(
+    COMMAND ${${out_var}} --version
+    OUTPUT_VARIABLE EDB_TOOL_VERSION_RAW
+    ERROR_QUIET
+  )
+  string(REGEX MATCH "version [0-9]+(\\.[0-9]+)*" EDB_TOOL_VERSION_STR "${EDB_TOOL_VERSION_RAW}")
+  string(REPLACE "version " "" EDB_TOOL_VERSION "${EDB_TOOL_VERSION_STR}")
+  if(EDB_TOOL_VERSION VERSION_LESS "22")
+    message(FATAL_ERROR
+      "EDB requires ${tool_name} version 22 or newer; "
+      "'${${out_var}}' reported '${EDB_TOOL_VERSION_STR}'."
+    )
+  endif()
+  message(STATUS "Using ${tool_name}: ${${out_var}} (${EDB_TOOL_VERSION})")
+  set(${out_var} "${${out_var}}" PARENT_SCOPE)
+endfunction()
+
+edb_find_clang_tool(clang-format CLANG_FORMAT)
+edb_find_clang_tool(clang-tidy CLANG_TIDY)
 
 file(GLOB_RECURSE EDB_ALL_SOURCES
   "${CMAKE_SOURCE_DIR}/src/**/*.cpp"

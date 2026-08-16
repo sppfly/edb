@@ -25,7 +25,7 @@ struct ColumnSchema {
 };
 
 class RowCodec {
-   public:
+public:
     RowCodec(const TypeRegistry& registry, std::vector<ColumnSchema> schema);
 
     RowCodec(const RowCodec&) = delete;
@@ -40,7 +40,7 @@ class RowCodec {
 
     [[nodiscard]] auto columns() const -> std::span<const ColumnSchema>;
 
-   private:
+private:
     [[nodiscard]] auto lookup_type(u32 oid) const -> Result<const Type*>;
 
     const TypeRegistry* registry{nullptr};

@@ -13,11 +13,11 @@
 using namespace edb;
 
 class MockIOOps : public StorageIOOps {
-   public:
+public:
     std::vector<std::byte> storage;
     usize sync_calls{0};
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
@@ -58,7 +58,7 @@ class MockIOOps : public StorageIOOps {
 };
 
 class BufferPoolTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{64}}).has_value());
     }

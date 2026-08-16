@@ -21,7 +21,7 @@ using namespace edb;
 // ---------------------------------------------------------------------------
 
 class PosixIOTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         // Create a unique temp file that survives for the test body.
         // mkstemp requires a mutable template.
@@ -46,7 +46,7 @@ class PosixIOTest : public ::testing::Test {
     auto backend() -> PosixIO& { return io; }
     [[nodiscard]] auto temp_path() const -> const std::string& { return tmp_path; }
 
-   private:
+private:
     PosixIO io;
     std::string tmp_path;
     int tmp_fd{-1};  // raw-primitive: unused after SetUp; kept for type documentation

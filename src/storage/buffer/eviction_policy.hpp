@@ -36,7 +36,7 @@ struct EvictionFrameState {
 };
 
 class EvictionPolicy {
-   public:
+public:
     EvictionPolicy() = default;
     EvictionPolicy(const EvictionPolicy&) = delete;
     EvictionPolicy& operator=(const EvictionPolicy&) = delete;
@@ -62,7 +62,7 @@ class EvictionPolicy {
         return choose_victim_impl(frames);
     }
 
-   private:
+private:
     virtual auto reset_impl(usize capacity) -> VoidResult = 0;
     virtual auto record_access_impl(u64 page_id, usize frame_index) -> VoidResult = 0;
     virtual auto record_miss_impl(u64 page_id) -> VoidResult = 0;
@@ -73,7 +73,7 @@ class EvictionPolicy {
 };
 
 class ClockSweepPolicy final : public EvictionPolicy {
-   private:
+private:
     auto reset_impl(usize capacity) -> VoidResult override;
     auto record_access_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_miss_impl(u64 page_id) -> VoidResult override;
@@ -86,10 +86,10 @@ class ClockSweepPolicy final : public EvictionPolicy {
 };
 
 class LruKPolicy final : public EvictionPolicy {
-   public:
+public:
     explicit LruKPolicy(usize history_count);
 
-   private:
+private:
     auto reset_impl(usize capacity) -> VoidResult override;
     auto record_access_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_miss_impl(u64 page_id) -> VoidResult override;
@@ -103,7 +103,7 @@ class LruKPolicy final : public EvictionPolicy {
 };
 
 class ArcPolicy final : public EvictionPolicy {
-   public:
+public:
     enum class Location : std::uint8_t {
         T1,
         T2,
@@ -111,7 +111,7 @@ class ArcPolicy final : public EvictionPolicy {
         B2,
     };
 
-   private:
+private:
     auto reset_impl(usize capacity) -> VoidResult override;
     auto record_access_impl(u64 page_id, usize frame_index) -> VoidResult override;
     auto record_miss_impl(u64 page_id) -> VoidResult override;

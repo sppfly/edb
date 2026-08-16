@@ -46,7 +46,7 @@ struct CreateTableSpec {
 };
 
 class RelationBackendFactory {
-   public:
+public:
     RelationBackendFactory() = default;
     RelationBackendFactory(const RelationBackendFactory&) = delete;
     RelationBackendFactory& operator=(const RelationBackendFactory&) = delete;
@@ -59,7 +59,7 @@ class RelationBackendFactory {
 };
 
 class Catalog {
-   public:
+public:
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
             const EngineConfig& engine_config);
     Catalog(const TypeRegistry& registry, RelationBackendFactory& backend_factory,
@@ -83,11 +83,11 @@ class Catalog {
 
     [[nodiscard]] auto open_table(std::string_view name) -> Result<Table*>;
 
-   private:
+private:
     struct OpenedTableBundle {
         std::unique_ptr<StorageIOOps> backend;
         PageStore page_store;
-        std::unique_ptr<StorageEngineOps> engine;
+        std::unique_ptr<StorageEngine> engine;
         std::unique_ptr<Table> table;
 
         auto open(const TypeRegistry& registry, RelationBackendFactory& backend_factory,

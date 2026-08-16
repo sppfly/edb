@@ -19,13 +19,13 @@ struct QueryResult {
 };
 
 class QueryEngine {
-   public:
+public:
     QueryEngine(Catalog& catalog, const TypeRegistry& types) noexcept;
 
     [[nodiscard]] auto execute(std::string_view sql) -> Result<QueryResult>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     auto query_err(std::string_view msg, Error error) -> Result<QueryResult>;
 
     Catalog* catalog{nullptr};

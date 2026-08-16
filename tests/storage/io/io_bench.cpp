@@ -54,14 +54,14 @@ double elapsed_s(std::chrono::steady_clock::time_point start,
 
 // Simple LCG for pseudo-random page order (reproducible, no stdlib overhead).
 class Lcg {
-   public:
+public:
     explicit Lcg(std::uint64_t seed) : state(seed) {}
     std::uint64_t next() {
         state = (state * 6364136223846793005ULL) + 1442695040888963407ULL;
         return state;
     }
 
-   private:
+private:
     std::uint64_t state;
 };
 

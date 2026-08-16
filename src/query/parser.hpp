@@ -34,7 +34,7 @@
 namespace edb {
 
 class Parser {
-   public:
+public:
     explicit Parser(std::string_view src) noexcept;
 
     // Parse all statements separated by optional semicolons.
@@ -44,7 +44,7 @@ class Parser {
     // Human-readable description of the last parse error.
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     Lexer lexer;
     Token cur{};
     std::string last_error;

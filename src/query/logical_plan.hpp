@@ -46,13 +46,13 @@ struct LogicalPlan {
 };
 
 class LogicalPlanner {
-   public:
+public:
     LogicalPlanner() = default;
 
     [[nodiscard]] auto build(BoundStmt stmt) -> Result<LogicalPlan>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     [[nodiscard]] static auto build_select(BoundSelectStmt stmt) -> Result<LogicalPlan>;
     auto plan_err(std::string_view msg) -> Result<LogicalPlan>;
 

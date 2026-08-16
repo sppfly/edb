@@ -21,7 +21,7 @@ struct PageStoreConfig {
 };
 
 class PageStore {
-   public:
+public:
     PageStore() = default;
 
     PageStore(const PageStore&) = delete;
@@ -42,7 +42,7 @@ class PageStore {
     [[nodiscard]] auto page_size() const -> usize;
     auto sync() -> VoidResult;
 
-   private:
+private:
     [[nodiscard]] auto check_open() const -> VoidResult;
     [[nodiscard]] auto byte_size_for_page_count(u64 count) const -> Result<u64>;
     [[nodiscard]] auto byte_offset_for_page(u64 page_id) const -> Result<u64>;

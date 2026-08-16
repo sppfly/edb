@@ -15,13 +15,13 @@
 using namespace edb;
 
 class MockIOOps : public StorageIOOps {
-   public:
+public:
     std::vector<std::byte> storage;
     usize sync_calls{0};
 
     auto resize_to(usize size) -> void { storage.resize(size.value); }
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }

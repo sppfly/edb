@@ -9,14 +9,14 @@
 #include <span>
 
 #include "storage/buffer/buffer_pool.hpp"
-#include "storage/engine/engine_ops.hpp"
+#include "storage/engine/engine.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
 
 namespace edb {
 
-class EdbHeapEngine final : public StorageEngineOps {
-   public:
+class EdbHeapEngine final : public StorageEngine {
+public:
     EdbHeapEngine() = default;
 
     EdbHeapEngine(const EdbHeapEngine&) = delete;
@@ -26,7 +26,7 @@ class EdbHeapEngine final : public StorageEngineOps {
 
     ~EdbHeapEngine() override = default;
 
-   private:
+private:
     auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override;
     auto close_impl() -> VoidResult override;
     auto insert_impl(std::span<const std::byte> tuple) -> Result<TupleId> override;

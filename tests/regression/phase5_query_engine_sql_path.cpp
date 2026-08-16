@@ -27,11 +27,11 @@ using namespace edb;
 namespace {
 
 class SharedMemoryIO final : public StorageIOOps {
-   public:
+public:
     explicit SharedMemoryIO(std::shared_ptr<std::vector<std::byte>> bytes)
         : storage{std::move(bytes)} {}
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
@@ -72,7 +72,7 @@ class SharedMemoryIO final : public StorageIOOps {
 };
 
 class MemoryRelationBackendFactory final : public RelationBackendFactory {
-   public:
+public:
     auto open_backend(u32 relation_oid, std::string_view /*relation_name*/)
         -> Result<std::unique_ptr<StorageIOOps>> override {
         auto& bytes = relations[relation_oid];
@@ -82,7 +82,7 @@ class MemoryRelationBackendFactory final : public RelationBackendFactory {
         return std::make_unique<SharedMemoryIO>(bytes);
     }
 
-   private:
+private:
     std::unordered_map<u32, std::shared_ptr<std::vector<std::byte>>> relations;
 };
 
@@ -186,7 +186,7 @@ auto run_regression_script(std::string_view sql, QueryEngine& engine, const Type
 }
 
 class Phase5QueryEngineRegression : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         ASSERT_TRUE(register_builtin_types(registry).has_value());
         ASSERT_TRUE(catalog.open().has_value());
@@ -196,7 +196,7 @@ class Phase5QueryEngineRegression : public ::testing::Test {
         return EngineConfig{.page_size = usize{512}, .buffer_pool_pages = usize{4}};
     }
 
-   public:
+public:
     TypeRegistry registry;
     MemoryRelationBackendFactory factory;
     Catalog catalog{registry, factory, default_engine_config()};

@@ -21,7 +21,7 @@ struct ExecRow {
 };
 
 class ExecNode {
-   public:
+public:
     ExecNode() = default;
     ExecNode(const ExecNode&) = delete;
     auto operator=(const ExecNode&) -> ExecNode& = delete;
@@ -35,13 +35,13 @@ class ExecNode {
 };
 
 class ExecBuilder {
-   public:
+public:
     ExecBuilder(Catalog& catalog, const TypeRegistry& types) noexcept;
 
     [[nodiscard]] auto build(PhysicalPlan plan) -> Result<std::unique_ptr<ExecNode>>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     [[nodiscard]] auto build_node(PhysicalPlan::Node node) -> Result<std::unique_ptr<ExecNode>>;
     auto exec_err(std::string_view msg) -> Result<std::unique_ptr<ExecNode>>;
 

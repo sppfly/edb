@@ -1,13 +1,8 @@
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        v1.15.2
-)
-# Prevent GoogleTest from overriding our compiler/linker settings
+# Vendored googletest v1.15.2 (BSD-3-Clause) in third_party/googletest.
+# To update: replace that directory with the new release.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../third_party/googletest"
+                 "${CMAKE_CURRENT_BINARY_DIR}/googletest")
 
 # gtest 1.15.2 trips clang 22's -Wcharacter-conversion under our -Werror
 foreach(target gtest gtest_main gmock gmock_main)

@@ -24,7 +24,7 @@
 namespace edb {
 
 class PosixIO final : public StorageIOOps {
-   public:
+public:
     PosixIO() = default;
     PosixIO(const PosixIO&) = delete;
     PosixIO& operator=(const PosixIO&) = delete;
@@ -32,7 +32,7 @@ class PosixIO final : public StorageIOOps {
     PosixIO& operator=(PosixIO&&) = delete;
     ~PosixIO() override;
 
-   private:
+private:
     // Lifecycle
     auto open_impl(const char* path, const IOConfig& cfg) -> VoidResult override;
     auto close_impl() -> VoidResult override;

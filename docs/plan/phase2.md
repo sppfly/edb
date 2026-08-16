@@ -73,7 +73,7 @@ public:
 
 Define the tuple-level interface that **all** storage engines implement. This must be stable before any concrete engine is written.
 
-### Interface (`src/storage/engine/engine_ops.hpp`)
+### Interface (`src/storage/engine/engine.hpp`)
 
 ```cpp
 struct EdbStorageEngineOps {

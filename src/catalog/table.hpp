@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "storage/engine/engine_ops.hpp"
+#include "storage/engine/engine.hpp"
 #include "types/row_codec.hpp"
 #include "utils/error.hpp"
 #include "utils/primitives.hpp"
@@ -25,8 +25,8 @@ struct TableRow {
 };
 
 class Table {
-   public:
-    Table(const TypeRegistry& registry, StorageEngineOps& engine, TableSchema schema);
+public:
+    Table(const TypeRegistry& registry, StorageEngine& engine, TableSchema schema);
 
     Table(const Table&) = delete;
     Table& operator=(const Table&) = delete;
@@ -40,8 +40,8 @@ class Table {
 
     [[nodiscard]] auto schema() const -> const TableSchema&;
 
-   private:
-    StorageEngineOps* storage{nullptr};
+private:
+    StorageEngine* storage{nullptr};
     TableSchema table_schema;
     RowCodec row_codec;
 };

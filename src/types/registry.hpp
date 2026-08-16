@@ -15,7 +15,7 @@
 namespace edb {
 
 class TypeRegistry {
-   public:
+public:
     TypeRegistry() = default;
 
     TypeRegistry(const TypeRegistry&) = delete;
@@ -43,7 +43,7 @@ class TypeRegistry {
     auto lookup(u32 oid) const -> Result<const Type*>;
     [[nodiscard]] auto size() const -> usize;
 
-   private:
+private:
     auto register_type_impl(Type type) -> VoidResult;
 
     std::deque<Type> types;

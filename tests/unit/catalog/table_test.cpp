@@ -18,10 +18,10 @@ using namespace edb;
 namespace {
 
 class MockCatalogIOOps : public StorageIOOps {
-   public:
+public:
     std::vector<std::byte> storage;
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }
@@ -81,7 +81,7 @@ auto to_text(TypeRegistry& registry, const Value& value) -> std::string {
 }  // namespace
 
 class EdbTableTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         ASSERT_TRUE(register_builtin_types(registry).has_value());
         ASSERT_TRUE(page_store.open(io, PageStoreConfig{.page_size = usize{512}}).has_value());

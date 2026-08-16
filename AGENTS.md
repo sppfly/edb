@@ -146,7 +146,7 @@ make -j$(nproc)
 - Root `CMakeLists.txt` sets `CMAKE_CXX_STANDARD 26` and `CMAKE_CXX_STANDARD_REQUIRED ON`
 - Each subsystem (`src/storage/`, `src/types/`, etc.) has its own `CMakeLists.txt` as a library target
 - Use `target_link_libraries` with visibility (`PRIVATE`/`PUBLIC`) — no `include_directories` globally
-- Compiler: `clang++-22` (pinned in root `CMakeLists.txt`; a hard `FATAL_ERROR` fires if a different compiler is configured)
+- Compiler: any Clang with major version ≥ 22 (`clang++-22` or plain `clang++`; root `CMakeLists.txt` fires a hard `FATAL_ERROR` if the compiler is older than Clang 22)
 - Compiler flags: `-Wall -Wextra -Werror -Wpedantic` in Debug; `-O2 -DNDEBUG` in Release
 - `CMAKE_CXX_EXTENSIONS OFF` — **no compiler extensions permitted**
 - `format` target: runs `clang-format -i` over all `src/**` and `tests/**`

@@ -3,7 +3,7 @@
 // Tests for the tuple-level storage engine interface. The mock implementation
 // verifies that public wrappers dispatch to protected *_impl hooks.
 
-#include "storage/engine/engine_ops.hpp"
+#include "storage/engine/engine.hpp"
 
 #include <gtest/gtest.h>
 
@@ -14,8 +14,8 @@
 
 using namespace edb;
 
-class MockEngineOps : public StorageEngineOps {
-   public:
+class MockEngineOps : public StorageEngine {
+public:
     usize configured_page_size{0};
     usize open_calls{0};
     usize close_calls{0};
@@ -27,7 +27,7 @@ class MockEngineOps : public StorageEngineOps {
     usize end_scan_calls{0};
     std::vector<std::byte> last_tuple;
 
-   private:
+private:
     auto open_impl(PageStore& store, const EngineConfig& cfg) -> VoidResult override {
         ++open_calls;
         configured_page_size = cfg.page_size;
@@ -85,7 +85,7 @@ class MockEngineOps : public StorageEngineOps {
 };
 
 class MockPageIO : public StorageIOOps {
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         return {};
     }

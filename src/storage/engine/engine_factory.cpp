@@ -11,7 +11,7 @@ namespace edb {
 
 auto HeapStorageEngineFactory::open_engine(u32 relation_oid, std::string_view relation_name,
                                            PageStore& page_store, const EngineConfig& config)
-    -> Result<std::unique_ptr<StorageEngineOps>> {
+    -> Result<std::unique_ptr<StorageEngine>> {
     (void)relation_oid;
     (void)relation_name;
 
@@ -19,7 +19,7 @@ auto HeapStorageEngineFactory::open_engine(u32 relation_oid, std::string_view re
     if (auto status = engine->open(page_store, config); !status) {
         return std::unexpected(status.error());
     }
-    return std::unique_ptr<StorageEngineOps>{std::move(engine)};
+    return std::unique_ptr<StorageEngine>{std::move(engine)};
 }
 
 }  // namespace edb

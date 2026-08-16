@@ -46,13 +46,13 @@ struct PhysicalPlan {
 };
 
 class PhysicalPlanner {
-   public:
+public:
     PhysicalPlanner() = default;
 
     [[nodiscard]] auto build(LogicalPlan plan) -> Result<PhysicalPlan>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     [[nodiscard]] auto build_node(LogicalPlan::Node node) -> Result<PhysicalPlan>;
     [[nodiscard]] auto build_unary_input(std::unique_ptr<LogicalPlan> input)
         -> Result<std::unique_ptr<PhysicalPlan>>;

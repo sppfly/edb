@@ -95,13 +95,13 @@ struct BoundSelectStmt {
 using BoundStmt = std::variant<BoundCreateTableStmt, BoundInsertStmt, BoundSelectStmt>;
 
 class Binder {
-   public:
+public:
     Binder(Catalog& catalog, const TypeRegistry& types) noexcept;
 
     [[nodiscard]] auto bind(const Stmt& stmt) -> Result<BoundStmt>;
     [[nodiscard]] auto error_message() const noexcept -> std::string_view;
 
-   private:
+private:
     [[nodiscard]] auto bind_create_table(const CreateTableStmt& stmt)
         -> Result<BoundCreateTableStmt>;
     [[nodiscard]] auto bind_insert(const InsertStmt& stmt) -> Result<BoundInsertStmt>;

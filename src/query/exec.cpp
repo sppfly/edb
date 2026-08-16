@@ -161,7 +161,7 @@ auto output_column(const BoundExpr& expr, const std::optional<std::string>& alia
 }
 
 class CreateTableExecNode final : public ExecNode {
-   public:
+public:
     CreateTableExecNode(Catalog& catalog, BoundCreateTableStmt stmt)
         : catalog{&catalog}, stmt{std::move(stmt)} {}
 
@@ -211,7 +211,7 @@ class CreateTableExecNode final : public ExecNode {
         return {};
     }
 
-   private:
+private:
     Catalog* catalog{nullptr};
     BoundCreateTableStmt stmt;
     b8 opened{b8{false}};
@@ -219,7 +219,7 @@ class CreateTableExecNode final : public ExecNode {
 };
 
 class InsertExecNode final : public ExecNode {
-   public:
+public:
     InsertExecNode(Catalog& catalog, BoundInsertStmt stmt)
         : catalog{&catalog}, stmt{std::move(stmt)} {}
 
@@ -265,7 +265,7 @@ class InsertExecNode final : public ExecNode {
         return {};
     }
 
-   private:
+private:
     Catalog* catalog{nullptr};
     BoundInsertStmt stmt;
     b8 opened{b8{false}};
@@ -273,7 +273,7 @@ class InsertExecNode final : public ExecNode {
 };
 
 class SeqScanExecNode final : public ExecNode {
-   public:
+public:
     SeqScanExecNode(Catalog& catalog, BoundTableRef table)
         : catalog{&catalog}, table{std::move(table)} {}
 
@@ -314,7 +314,7 @@ class SeqScanExecNode final : public ExecNode {
         return {};
     }
 
-   private:
+private:
     Catalog* catalog{nullptr};
     BoundTableRef table;
     std::vector<std::vector<Value>> rows;
@@ -323,7 +323,7 @@ class SeqScanExecNode final : public ExecNode {
 };
 
 class FilterExecNode final : public ExecNode {
-   public:
+public:
     FilterExecNode(std::unique_ptr<ExecNode> input, const TypeRegistry& types, BoundExpr predicate)
         : input{std::move(input)}, types{&types}, predicate{std::move(predicate)} {}
 
@@ -371,14 +371,14 @@ class FilterExecNode final : public ExecNode {
         return input->close();
     }
 
-   private:
+private:
     std::unique_ptr<ExecNode> input;
     const TypeRegistry* types{nullptr};
     BoundExpr predicate;
 };
 
 class ProjectExecNode final : public ExecNode {
-   public:
+public:
     ProjectExecNode(std::unique_ptr<ExecNode> input, const TypeRegistry& types,
                     std::vector<BoundSelectItem> items)
         : input{std::move(input)}, types{&types}, items{std::move(items)} {}
@@ -435,7 +435,7 @@ class ProjectExecNode final : public ExecNode {
         return input->close();
     }
 
-   private:
+private:
     std::unique_ptr<ExecNode> input;
     const TypeRegistry* types{nullptr};
     std::vector<BoundSelectItem> items;

@@ -56,11 +56,11 @@ TEST(EdbIOVec, FieldTypes) {
 // ---------------------------------------------------------------------------
 
 class MockIOOps : public StorageIOOps {
-   public:
+public:
     // Storage: flat byte buffer simulating a file.
     std::vector<std::byte> storage;
 
-   private:
+private:
     auto open_impl(const char* /*path*/, const IOConfig& /*cfg*/) -> VoidResult override {
         storage.resize(65536);
         return {};
