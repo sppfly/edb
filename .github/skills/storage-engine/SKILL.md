@@ -177,7 +177,7 @@ Default page size: 8KB (configurable at init time).
 ### Adding a New Storage Engine
 
 1. Create directory under `src/storage/engine/<name>/`
-2. Define abstract class extending `EdbStorageEngineOps`; write C++26 `pre`/`post` contracts on every method
+2. Define abstract class extending `EdbStorageEngineOps`; add `EDB_ASSERT` preconditions on every public method
 3. Write unit tests in `tests/unit/storage/engine/<name>/` before any implementation
 4. Implement the vtable methods
 5. Register in `src/storage/engine/registry.cpp`
@@ -186,7 +186,7 @@ Default page size: 8KB (configurable at init time).
 ### Adding a New I/O Backend
 
 1. Create directory under `src/storage/io/<name>/`
-2. Define class extending `EdbStorageIOOps`; add `pre` contracts (e.g., alignment requirements for xNVMe)
+2. Define class extending `EdbStorageIOOps`; add `EDB_ASSERT` preconditions (e.g., alignment requirements for xNVMe)
 3. Write tests **before** implementing — verify behavior matches POSIX backend for the same byte sequences
 4. Implement `open`/`close`, `read`/`write`, `sync`, `truncate`
 5. Register in `src/storage/io/registry.cpp`

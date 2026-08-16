@@ -38,8 +38,8 @@ When working on any task, break it into the smallest independently buildable and
 
 ```
 1. Identify the next atomic unit of work (one interface / one struct / one function)
-2. Write the interface + C++26 contracts  (pre/post clauses)
-3. Write tests  (happy path · boundary · contract-violation)
+2. Write the interface + invariants  (EDB_ASSERT preconditions)
+3. Write tests  (happy path · boundary · assertion-failure)
 4. Implement until tests pass
 5. ninja format  →  fix any issues
 6. ninja -j$(nproc) && ctest --output-on-failure  →  must be green
@@ -53,7 +53,7 @@ When working on any task, break it into the smallest independently buildable and
 <phase>(<module>): <imperative summary>
 
 - <what changed and why, if not obvious>
-- <contract / invariant added>
+- <invariant added>
 - <test coverage added>
 ```
 
@@ -67,7 +67,7 @@ phase2(buffer): add clock-sweep eviction with pin-count guard
 ### What counts as one atomic unit
 
 - A single header with a new struct/class/concept (no implementation yet)
-- A single interface method + its contracts + its tests
+- A single interface method + its invariants + its tests
 - A single concrete implementation of an existing interface
 - A bug fix + its regression test (always together, never separately)
 
@@ -115,7 +115,7 @@ edb/
 ```bash
 # Build
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=26 -DCMAKE_CXX_COMPILER=g++-16
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=26 -DCMAKE_CXX_COMPILER=clang++-22
 make -j$(nproc)
 
 # Run all tests (unit + regression)
@@ -143,9 +143,9 @@ make -j$(nproc)
 - Root `CMakeLists.txt` sets `CMAKE_CXX_STANDARD 26` and `CMAKE_CXX_STANDARD_REQUIRED ON`
 - Each subsystem (`src/storage/`, `src/types/`, etc.) has its own `CMakeLists.txt` as a library target
 - Use `target_link_libraries` with visibility (`PRIVATE`/`PUBLIC`) — no `include_directories` globally
-- Compiler: `g++-16` (`-DCMAKE_CXX_COMPILER=g++-16`)
-- Compiler flags: `-Wall -Wextra -Werror -Wpedantic -fcontracts` in Debug; `-O2 -DNDEBUG -fcontracts` in Release
-- `-fno-gnu-extensions` / `-fno-ms-extensions` always on — **no compiler extensions permitted**
+- Compiler: `clang++-22` (pinned in root `CMakeLists.txt`; a hard `FATAL_ERROR` fires if a different compiler is configured)
+- Compiler flags: `-Wall -Wextra -Werror -Wpedantic` in Debug; `-O2 -DNDEBUG` in Release
+- `CMAKE_CXX_EXTENSIONS OFF` — **no compiler extensions permitted**
 - `format` target: runs `clang-format -i` over all `src/**` and `tests/**`
 - `format-check` target: runs `clang-format --dry-run --Werror` (used in CI)
 - `tidy` target: runs `clang-tidy` with `compile_commands.json` over all sources
@@ -193,9 +193,11 @@ int result = read_page(42, buf, 4096);   // what do the return values mean?
 
 // GOOD — wrapped types, explicit, self-documenting
 auto read_page(u64 page_id, std::span<std::byte> buf)
-    -> std::expected<void, EdbError>
-    pre { page_id < max_page_count() }
-    pre { buf.size() >= page_size() };
+    -> std::expected<void, EdbError> {
+    EDB_ASSERT(page_id < max_page_count());
+    EDB_ASSERT(buf.size() >= page_size());
+    // ...
+};
 
 // BAD — implicit construction, implicit narrowing
 struct PageId { PageId(uint64_t v); };   // missing explicit
@@ -224,21 +226,22 @@ Exceptions (must be commented with `// raw-primitive: <reason>`):
   - `readability-*`
   - `performance-*`
 - **Never suppress a tidy warning without a comment** explaining the exception.
-4. **Write the implementation**: Code that satisfies the contracts and passes all tests.
+4. **Write the implementation**: Code that satisfies the invariants and passes all tests.
 
 ```cpp
-// Step 1+2: Signature with contracts
-auto read_page(uint64_t page_id, std::span<std::byte> buf)
-    -> std::expected<void, EdbError>
-    pre  { page_id < max_page_count() }        // precondition
-    pre  { buf.size() >= page_size() }         // precondition
-    post (result) { !result || buf[0] != std::byte{0xFF} }; // postcondition (example)
+// Step 1+2: Signature with invariants
+auto read_page(u64 page_id, std::span<std::byte> buf)
+    -> std::expected<void, EdbError> {
+    EDB_ASSERT(page_id < max_page_count());        // precondition
+    EDB_ASSERT(buf.size() >= page_size());         // precondition
+    // ...
+}
 
 // Step 3: Tests written before implementation (see tests/ layout below)
 // Step 4: Implementation body
 ```
 
-Contracts are compiled in **Check_Semantic_Equivalent** mode in Debug, and **Ignore** in Release unless `EDB_CONTRACTS_RELEASE=1` is set.
+`EDB_ASSERT` (in `src/utils/assert.hpp`) expands to `assert()`: it fires in Debug builds and compiles out under `NDEBUG` in Release. Interface preconditions live at the top of each implementation; the NVI pattern (public non-virtual wrapper + virtual `*_impl` hook) keeps those checks centralized so every derived class enforces them.
 
 ## Testing Requirements
 
@@ -258,7 +261,7 @@ tests/
 ```
 
 **Rules:**
-- Every public function has at least one unit test covering: happy path, boundary values, and contract-violation behavior
+- Every public function has at least one unit test covering: happy path, boundary values, and assertion-failure behavior
 - Regression tests are mandatory for every bug fix — add before fixing the bug
 - Tests must be deterministic and hermetic (no shared state, no relying on filesystem side effects)
 - Use Google Test (`gtest`) as the test framework

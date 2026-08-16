@@ -113,7 +113,7 @@ This backend is valuable, but it should not be the only success criterion for Ph
 ### xNVMe Constraints
 
 - I/O buffers **must** be aligned to device sector size (typically 4 KB) — use `posix_memalign` or an xNVMe DMA allocator
-- offsets **must** be sector-aligned: `EDB_PRE(offset % sector_size == u64{0})`
+- offsets **must** be sector-aligned: `EDB_ASSERT(offset % sector_size == u64{0})`
 - no kernel page cache involvement — explicit buffer management required
 - command queue depth is configured at `open()` time; never exceed it
 

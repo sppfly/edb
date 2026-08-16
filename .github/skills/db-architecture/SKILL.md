@@ -19,8 +19,8 @@ disable-model-invocation: false
 ## Core Principles
 
 1. **Pluggable by default**: Every subsystem must expose a registration/extension API. No hardcoded type lists, storage format assumptions, or global singletons.
-2. **Interface-first + Contract-first**: Define the C++26 interface (abstract class or concept) and write `pre`/`post` contracts before any implementation. Changing interfaces later is expensive.
-3. **Test-before-implement**: Contracts are written, then tests, then code — in that order always.
+2. **Interface-first + invariant-first**: Define the C++26 interface (abstract class or concept) and write `EDB_ASSERT` preconditions before any implementation. Changing interfaces later is expensive.
+3. **Test-before-implement**: Invariants are written, then tests, then code — in that order always.
 4. **Shared-nothing ready**: Even single-node code must work if data is sharded. Always pass a context handle (database instance, transaction, session) instead of global variables.
 
 ## Subsystems
