@@ -138,6 +138,16 @@ endfunction()
 edb_find_clang_tool(clang-format CLANG_FORMAT)
 edb_find_clang_tool(clang-tidy CLANG_TIDY)
 
+# run-clang-tidy is a versionless Python wrapper; pin it to the verified
+# clang-tidy binary instead of relying on its own version.
+find_program(EDB_RUN_CLANG_TIDY NAMES run-clang-tidy-22 run-clang-tidy)
+if(NOT EDB_RUN_CLANG_TIDY)
+  message(FATAL_ERROR
+    "EDB requires run-clang-tidy (clang 22 toolchain); "
+    "neither 'run-clang-tidy-22' nor 'run-clang-tidy' was found on PATH."
+  )
+endif()
+
 file(GLOB_RECURSE EDB_ALL_SOURCES
   "${CMAKE_SOURCE_DIR}/src/**/*.cpp"
   "${CMAKE_SOURCE_DIR}/src/**/*.hpp"
@@ -154,7 +164,12 @@ add_custom_target(format-check
   COMMENT "Checking format (no files modified)"
 )
 
+cmake_host_system_information(RESULT EDB_NPROC QUERY NUMBER_OF_LOGICAL_CORES)
+
 add_custom_target(tidy
-  COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${EDB_ALL_SOURCES}
-  COMMENT "Running clang-tidy"
+  COMMAND ${EDB_RUN_CLANG_TIDY} -p ${CMAKE_BINARY_DIR}
+          -clang-tidy-binary ${CLANG_TIDY}
+          -source-filter "${CMAKE_SOURCE_DIR}/src/.*"
+          -j ${EDB_NPROC}
+  COMMENT "Running clang-tidy (src only)"
 )
